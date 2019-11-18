@@ -1,0 +1,22 @@
+{
+  "name": "kingsland-university-decentralized-marketplace-decentralized-application-project-2019",
+  "version": "1.0.0",
+  "description": "Kingsland-University-Decentralized-Marketplace-Decentralized-Application-with-Smart-Contract-Project-2019",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/perezfranklin1962/Kingsland-University-Decentralized-Marketplace-Decentralized-Application-Project-2019.git"
+  },
+  "author": "Franklin Perez",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/perezfranklin1962/Kingsland-University-Decentralized-Marketplace-Decentralized-Application-Project-2019/issues"
+  },
+  "homepage": "https://github.com/perezfranklin1962/Kingsland-University-Decentralized-Marketplace-Decentralized-Application-Project-2019#readme",
+  "devDependencies": {
+    "solidity-coverage": "^0.6.7"
+  }
+}
