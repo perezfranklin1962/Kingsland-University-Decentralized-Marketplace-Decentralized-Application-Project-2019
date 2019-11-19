@@ -3,7 +3,7 @@ pragma solidity >=0.4.22 <0.6.0;
 import "./GeneralUtilities.sol";
 import "./FranklinDecentralizedMarketplaceMediation.sol";
 
-contract FranklinDecentralizedMartketplace {
+contract FranklinDecentralizedMarketplace {
     using GeneralUtilities for *;
     
     // This Smart Contract serves as a Decentralized Marketplace of Buyers, Sellers, and Mediators. 
