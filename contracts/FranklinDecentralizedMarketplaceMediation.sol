@@ -6,12 +6,21 @@ contract FranklinDecentralizedMarketplaceMediation {
     using GeneralUtilities for *;
     
     // Constants used for the Double-Linked list and other uses.
-    bool constant public PREV = false;
-    bool constant public NEXT = true;
-    string constant public EMPTY_STRING = "";
+    bool constant private PREV = false;
+    bool constant private NEXT = true;
+    string constant private EMPTY_STRING = "";
     
     // This Smart Contract handles Sales Transactions that involve a Mediator. Thus, these would be referred to as Mediated Sales Transactions that involve a Buyer, Seller, and 
     // Mediator. Each Buyer, Seller, and Mediator will have a different Ethereum Address.
+    
+    // The "franklinDecentralizedMarketplaceContractAddress" variable is the Contract Address of the FranklinDecentralizedMarketplace Contract that deployed this Contract - the 
+    // FranklinDecentralizedMarketplaceMediation Contract - via the constructor of the FranklinDecentralizedMarketplace Contract.
+    // The Contract code had to be split in two, because the Etherum Virtual Machine (EVM) would not allow deployment of a Contract
+    // that has more than 24576 bytes. So, the decision was made to SPLIT the code into the FranklinDecentralizedMarketplace 
+    // and FranklinDecentralizedMarketplaceMediation Contracts where the FranklinDecentralizedMarketplace would deploy the
+    // FranklinDecentralizedMarketplaceMediation Contract via it's Constructor.  
+    
+    // Function calls relating to Mediated Sales Transactions should be done by making the apprioptate function calls on this Smart Contract.
     
     // This Contract will be used to store the Escrow ETH/WEI (i.e., "totalAmountOfWeiNeededToPurchase") used to pay for Items involved in ALL Mediated Sales Transactions. 
     // The Mediated Sales Transaction works as follows:
@@ -125,11 +134,6 @@ contract FranklinDecentralizedMarketplaceMediation {
     // that has more than 24576 bytes. So, the decision was made to SPLIT the code into the FranklinDecentralizedMarketplace 
     // and FranklinDecentralizedMarketplaceMediation Contracts where the FranklinDecentralizedMarketplace would deploy the
     // FranklinDecentralizedMarketplaceMediation Contract via it's Constructor. 
-    //
-    // The code of the FranklinDecentralizedMarketplaceMediation Contract is written so that ONLY the "franklinDecentralizedMarketplaceContractAddress"
-    // that spawned and deployed this FranklinDecentralizedMarketplaceMediation Contract may execute athe public functions of this 
-    // FranklinDecentralizedMarketplaceMediation Contract with the exception of the "getOnlyAddressThatMayAccessThisContract method, which may be accessed 
-    // by any Ethereum Address.
     address public franklinDecentralizedMarketplaceContractAddress;
     
     modifier onlyContractOwnerMayExecute {
@@ -144,9 +148,8 @@ contract FranklinDecentralizedMarketplaceMediation {
     }
     
     // Returns back the Contract Address of the FranklinDecentralizedMarketplace Contract that deployed THIS FranklinDecentralizedMarketplaceMediation 
-    // Contract via the constructor of the FranklinDecentralizedMarketplace Contract. Only the returned Address may execute ANY of the main public methods of THIS
-    // FranklinDecentralizedMarketplace Contract. This is the ONLY public method in this Contract that may be accessed by any Ethereum Address.
-    function getOnlyAddressThatMayAccessThisContract() onlyContractOwnerMayExecute external view returns (address) {
+    // Contract via the constructor of the FranklinDecentralizedMarketplace Contract. 
+    function getFranklinDecentralizedMarketplaceContractAddress() external view returns (address) {
         return franklinDecentralizedMarketplaceContractAddress;
     }
     
@@ -174,13 +177,13 @@ contract FranklinDecentralizedMarketplaceMediation {
     }
 
     // Adds or Updates a Mediator with the given "_mediatorIpfsHashDescription", which refers to a JSON-formatted string stored in the IPFS Storage System.
-    // The "_mediatorAddress" will be the Ethereum Address of the entity wishing to become a Mediator in this Smart Contract. This method allows anyone with an Ethereum 
+    // The "msg.sender" will be the Ethereum Address of the entity wishing to become a Mediator in this Smart Contract. This method allows anyone with an Ethereum 
     // Address to add himself/herself as a Mediator.
-    function addOrUpdateMediator(address _mediatorAddress, string memory _mediatorIpfsHashDescription) onlyContractOwnerMayExecute public {
+    function addOrUpdateMediator(string memory _mediatorIpfsHashDescription) public {
         require(!GeneralUtilities._compareStringsEqual(_mediatorIpfsHashDescription, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key Description of a Mediator!");
-        descriptionInfoAboutMediators[_mediatorAddress] = _mediatorIpfsHashDescription;
+        descriptionInfoAboutMediators[msg.sender] = _mediatorIpfsHashDescription;
         
-        _addMediator(_mediatorAddress);
+        _addMediator(msg.sender);
     }
     
     // Private Utility function used to remove a given Ethereum Address as a Mediator in the "listOfMediators". The given Ethereum Address - "_mediatorAddressString" - used 
@@ -209,11 +212,11 @@ contract FranklinDecentralizedMarketplaceMediation {
         // to keep such information around.
     }
     
-    // Removes a Mediator from this Smart Contract. The "_mediatorAddress" will be the Ethereum Address of the entity wishing to remove himself/herself as a Mediator in this Smart Contract. 
+    // Removes a Mediator from this Smart Contract. The "msg.sender" will be the Ethereum Address of the entity wishing to remove himself/herself as a Mediator in this Smart Contract. 
     // If there are any pending Sales that the Mediator is involved, the Sales and other information will still be kept.
     // This method allows anyone with an Ethereum  Address to remove himself/herself as a Mediator in this Smart Contract. 
-    function removeMediator(address _mediatorAddress) onlyContractOwnerMayExecute external {
-        _removeMediator(_mediatorAddress);
+    function removeMediator()  external {
+        _removeMediator(msg.sender);
     }
     
     // Gets the Mediator Ethereum Address at the given "_index" from the "listOfMediators" double-linked list.
@@ -226,7 +229,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     // 1) If the "_index" is less than the "numberOfMediators", then the Etheruem Address of the Mediator at the given "_index" into the "listOfMediators" double-linked list
     //    is returned.
     // 2) If the "_index" is greater than or equal to the "numberOfMediators", then an Exception is thrown via the "require" below.
-    function getMediatorAddress(uint _index) onlyContractOwnerMayExecute external view returns (address) {
+    function getMediatorAddress(uint _index) external view returns (address) {
         require(_index < numberOfMediators, "Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!");
         
         // The "key" below is the Ethereum Address in string format that is in the "listOfMediators" double-linked list.
@@ -246,12 +249,12 @@ contract FranklinDecentralizedMarketplaceMediation {
     }
     
     // Gets the Number of Mediators in the "listOfMediators".
-    function getNumberOfMediators() onlyContractOwnerMayExecute external view returns (uint) {
+    function getNumberOfMediators() external view returns (uint) {
         return numberOfMediators;
     }
     
     // Returns back a boolean value to determine if the given "_mediatorAddres" is in the "listOfMediators".
-    function mediatorExists(address _mediatorAddress) onlyContractOwnerMayExecute external view returns (bool) {
+    function mediatorExists(address _mediatorAddress) external view returns (bool) {
         return mediatorExistsMap[_mediatorAddress];
     }
     
@@ -282,19 +285,18 @@ contract FranklinDecentralizedMarketplaceMediation {
     }    
     
     // This method allows one of the parties involved in a Mediated Sales Transaction to Approve the given "_mediatedSalesTransactionIpfsHash" Mediated 
-    // Sales Transaction. This method will and should be called ONLY by the "franklinDecentralizedMarketplaceContractAddress.approveMediatedSalesTransaction" 
-    // method.
+    // Sales Transaction. 
     //
     // Input Parameters:
-    // 1) _approverAddress : The Ethereum Address of one of the parties
+    // 1) msg.sender : The Ethereum Address of one of the parties
     // 2) _mediatedSalesTransactionIpfsHash : IPFS Hash string value that uniquely identifies the Mediated Sales Transaction. This IPFS Hash string value refers to   
     //    what should be JSON-formatted string describing the Sale stored in the IPFS Storage System.
-    function approveMediatedSalesTransaction(address _approverAddress, string memory _mediatedSalesTransactionIpfsHash) onlyContractOwnerMayExecute public {
+    function approveMediatedSalesTransaction(string memory _mediatedSalesTransactionIpfsHash) public {
         require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Given Mediated Sales Transaction IPFS Hash does not exist!");
         
-        bool allowedToApprove = (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX] == _approverAddress) ||
-                                (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX] == _approverAddress) ||
-                                (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX] == _approverAddress);
+        bool allowedToApprove = (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX] == msg.sender) ||
+                                (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX] == msg.sender) ||
+                                (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX] == msg.sender);
         require(allowedToApprove, "Not allowed to Approve Mediated Sales Transaction, because Message Sender is neither the Buyer, Seller, or Mediator!");
         
         // If 2-out-of-3 of the Buyer, Seller, and/or Mediator have Disapproved the Mediated Sales Transaction, then it's status cannot be changed, because the Buyer has already been refunded 
@@ -304,7 +306,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         uint indexBuyerSellerOrMediator = 0;
         for (uint i = 0; i < 3; i++) {
-            if (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][i] == _approverAddress) {
+            if (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][i] == msg.sender) {
                 indexBuyerSellerOrMediator = i;
             }
         }
@@ -316,7 +318,7 @@ contract FranklinDecentralizedMarketplaceMediation {
             return;
         }
         
-        // Note the approval from the "_approverAddress". If one approves, than one cannot disapprove. Perhaps their's been a change of mind before FINAL Approval or Disapproval.
+        // Note the approval from the "msg.sender" Address. If one approves, than one cannot disapprove. Perhaps their's been a change of mind before FINAL Approval or Disapproval.
         mediatedSalesTransactionApprovedByParties[_mediatedSalesTransactionIpfsHash][indexBuyerSellerOrMediator] = true;
         mediatedSalesTransactionDisapprovedByParties[_mediatedSalesTransactionIpfsHash][indexBuyerSellerOrMediator] = false;
         
@@ -336,19 +338,19 @@ contract FranklinDecentralizedMarketplaceMediation {
     }
     
     // This method allows one of the parties involved in a Mediated Sales Transaction to Disapprove the given "_mediatedSalesTransactionIpfsHash" Mediated 
-    // Sales Transaction. This method will and should be called ONLY by the "franklinDecentralizedMarketplaceContractAddress.disapproveMediatedSalesTransaction" 
-    // method.
+    // Sales Transaction. The "msg.sender" is the Ethereaum Address of one of the parties involved in the given "_mediatedSalesTransactionIpfsHash" Mediated 
+    // Sales Transaction.
     //
-    // Input Parameters:
-    // 1) _disapproverAddress : The Ethereum Address of one of the parties
-    // 2) _mediatedSalesTransactionIpfsHash : IPFS Hash string value that uniquely identifies the Mediated Sales Transaction. This IPFS Hash string value refers to   
-    //    what should be JSON-formatted string describing the Sale stored in the IPFS Storage System.    
-    function disapproveMediatedSalesTransaction(address _disapproverAddress, string memory _mediatedSalesTransactionIpfsHash) onlyContractOwnerMayExecute public {
+    // Input Parameter:
+    // 1) _mediatedSalesTransactionIpfsHash : IPFS Hash string value that uniquely identifies the Mediated Sales Transaction. This IPFS Hash string value refers to   
+    //    what should be JSON-formatted string describing the Sale stored in the IPFS Storage System.
+    // 2) msg.sender : Ethereum Address of the party attempting to Disapprove the Mediated Sales Transaction
+    function disapproveMediatedSalesTransaction(string memory _mediatedSalesTransactionIpfsHash) public {
         require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Given Mediated Sales Transaction IPFS Hash does not exist!");
         
-        bool allowedToDisapprove = (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX] == _disapproverAddress) ||
-                                (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX] == _disapproverAddress) ||
-                                (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX] == _disapproverAddress);
+        bool allowedToDisapprove = (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX] == msg.sender) ||
+                                (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX] == msg.sender) ||
+                                (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX] == msg.sender);
         require(allowedToDisapprove, "Not allowed to Disapprove Mediated Sales Transaction, because Message Sender is neither the Buyer, Seller, or Mediator!");
         
         // If 2-out-of-3 of the Buyer, Seller, and/or Mediator have Disapproved the Mediated Sales Transaction, then it's status cannot be changed, because the Seller has already been 
@@ -358,19 +360,19 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         uint indexBuyerSellerOrMediator = 0;
         for (uint i = 0; i < 3; i++) {
-            if (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][i] == _disapproverAddress) {
+            if (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][i] == msg.sender) {
                 indexBuyerSellerOrMediator = i;
             }
         }
         
-        // If the Mediated Sales Transaction has already been Disapproved by 2-out-of-3 Buyer, Seller, and/or Mediator, then just note the disapproval from the "_disapproverAddress" 
+        // If the Mediated Sales Transaction has already been Disapproved by 2-out-of-3 Buyer, Seller, and/or Mediator, then just note the disapproval from the "msg.sender" 
         // and that's it, because at this point the Buyer has alreaady been refunded the Sales Amount.
         if (_mediatedSalesTransactionHasBeenDisapproved(_mediatedSalesTransactionIpfsHash)) {
             mediatedSalesTransactionDisapprovedByParties[_mediatedSalesTransactionIpfsHash][indexBuyerSellerOrMediator] = true;
             return;
         }
         
-        // Note the disapproval from the "_disapproverAddress". If one disapproves, than one cannot approve. Perhaps their's been a change of mind before FINAL Approval or Disapproval.
+        // Note the disapproval from the "msg.sender" Address. If one disapproves, than one cannot approve. Perhaps their's been a change of mind before FINAL Approval or Disapproval.
         mediatedSalesTransactionApprovedByParties[_mediatedSalesTransactionIpfsHash][indexBuyerSellerOrMediator] = false;
         mediatedSalesTransactionDisapprovedByParties[_mediatedSalesTransactionIpfsHash][indexBuyerSellerOrMediator] = true;
         
@@ -386,7 +388,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     
     // Gets the Description of a Mediator identified by the given "_mediatorAddress". The Description will be the IPFS Hash where the JSON-formatted Description of the Mediator exists.
     // If no such IPFS Hash Key Description exists, then an EMPTY_STRING will be returned. 
-    function getMediatorIpfsHashDescription(address _mediatorAddress) onlyContractOwnerMayExecute external view returns (string memory) {
+    function getMediatorIpfsHashDescription(address _mediatorAddress) external view returns (string memory) {
         return descriptionInfoAboutMediators[_mediatorAddress];
     }   
     
@@ -437,7 +439,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     }
     
     // Gets the Number of Mediations that the given "_mediatorAddress" Mediator has been involved.
-    function getNumberOfMediationsMediatorInvolved(address _mediatorAddress) onlyContractOwnerMayExecute external view returns (uint) {
+    function getNumberOfMediationsMediatorInvolved(address _mediatorAddress) external view returns (uint) {
         require(mediatorExistsMap[_mediatorAddress], "Given Mediator Address does not exist as a Mediator!");
         return numberOfMediationsMediatorInvolved[_mediatorAddress];
     }
