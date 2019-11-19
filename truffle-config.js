@@ -82,6 +82,11 @@ module.exports = {
   // Set default mocha options here, use special reporters etc.
   mocha: {
     // timeout: 100000
+
+    // References:
+    // 1) https://mochajs.org/#timeouts
+    // 2) https://ethereum.stackexchange.com/questions/19641/how-to-set-the-timeout-for-truffle-tests-before-block
+    timeout: 300000000
   },
 
   // Configure your compilers
