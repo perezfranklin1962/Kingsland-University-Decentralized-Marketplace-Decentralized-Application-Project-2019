@@ -50,6 +50,18 @@ module.exports = {
       gasPrice: 10000000000		// Based Gas Price to use via https://ethgasstation.info
     },
 
+    // Options used when running the following --> npm run test:coverage
+    // It pertains to: solidity-coverage
+    // Reference --> https://www.npmjs.com/package/solidity-coverage
+    coverage: {
+      host: "localhost",
+      network_id: "*",
+      port: 8555,         // <-- If you change this, also set the port option in .solcover.js.
+      // port: 7545,  // Did not work! Apparently it wants to instatiate a NEW Ethereum Node of it's own!
+      gas: 0xfffffffffff, // <-- Use this high gas value
+      gasPrice: 0x01      // <-- Use this low gas price
+    },
+
     // Another network with more advanced options...
     // advanced: {
       // port: 8777,             // Custom port

@@ -51,7 +51,6 @@ contract("FranklinDecentralizedMarketplace", async accounts => {
 
 	// Below Unit Test done due to being suggested by Patrick Galloway. It took about 896392 milli-seconds to complete.
 	// It should be commented out, since it's highly repetitve and takes a long time to run. If run, it should be the last one to run.
-	/*
 	it("test capability to add 100 sellers with 10 items each as suggested by Patrick Galloway", async () => {
 		for (let sellerAccountIndex = 0; sellerAccountIndex < 100; sellerAccountIndex++) {
 			for (let itemIndex = 0; itemIndex < 10; itemIndex++) {
@@ -107,6 +106,5 @@ contract("FranklinDecentralizedMarketplace", async accounts => {
 			}
 		}
 	});
-	*/
 
 });

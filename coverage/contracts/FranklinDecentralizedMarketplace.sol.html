@@ -1,0 +1,2024 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/FranklinDecentralizedMarketplace.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> FranklinDecentralizedMarketplace.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">34.4% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>43/125</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">10.98% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>9/82</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">36% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>9/25</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">32.61% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>45/138</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512
+513
+514
+515
+516
+517
+518
+519
+520
+521
+522
+523
+524
+525
+526
+527
+528
+529
+530
+531
+532
+533
+534
+535
+536
+537
+538
+539
+540
+541
+542
+543
+544
+545
+546
+547
+548
+549
+550
+551
+552
+553
+554
+555
+556
+557
+558
+559
+560
+561
+562
+563
+564
+565
+566
+567
+568
+569
+570
+571
+572
+573
+574
+575
+576
+577
+578
+579
+580
+581
+582
+583
+584
+585
+586
+587
+588
+589
+590
+591
+592
+593
+594
+595
+596
+597
+598
+599
+600
+601
+602
+603
+604
+605
+606
+607
+608
+609
+610
+611
+612
+613
+614
+615
+616
+617
+618
+619
+620
+621
+622
+623
+624
+625
+626
+627
+628
+629
+630
+631
+632
+633
+634
+635
+636
+637
+638
+639
+640
+641
+642
+643
+644
+645
+646
+647
+648
+649
+650
+651
+652
+653
+654</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">530×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">59×</span>
+<span class="cline-any cline-yes">59×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">59×</span>
+<span class="cline-any cline-yes">59×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">59×</span>
+<span class="cline-any cline-yes">59×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-yes">589×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity &gt;=0.4.22 &lt;0.6.0;
+&nbsp;
+import "./GeneralUtilities.sol";
+import "./FranklinDecentralizedMarketplaceMediation.sol";
+&nbsp;
+contract FranklinDecentralizedMarketplace {
+    using GeneralUtilities for *;
+    
+    // This Smart Contract serves as a Decentralized Marketplace of Buyers, Sellers, and Mediators. 
+&nbsp;
+    // The Contract code had to be split in two, because the Etherum Virtual Machine (EVM) would not allow deployment of a Contract
+    // that has more than 24576 bytes. So, the decision was made to SPLIT the code into the FranklinDecentralizedMarketplace 
+    // and FranklinDecentralizedMarketplaceMediation Contracts where the FranklinDecentralizedMarketplace would deploy the
+    // FranklinDecentralizedMarketplaceMediation Contract via it's Constructor. 
+    //
+    // So, this FranklinDecentralizedMarketplace Contract handles most of the functionality pertaining to the Franklin Decentralized Marketplace Smart Contract functionality, while MOST of the
+    // functionality dealing with Mediated Sales Transactions is done by the FranklinDecentralizedMarketplaceMediation Smart Contract. All the public methods - with the exception of 
+    // the "getOnlyAddressThatMayAccessThisContract" method - of the FranklinDecentralizedMarketplaceMediation may ONLY be accessed by this FranklinDecentralizedMarketplace Contract.
+    // Accessing of a public method of the FranklinDecentralizedMarketplaceMediation Contract is done via an equivalent Proxy method in this FranklinDecentralizedMarketplace Contract, thus 
+    // simplifying the interaction with the Franklin Decentralized Marketplace Smart Contract functionality with the public.
+    
+    // Each Item being sold in this Decentralized Marketplace is identified by it's IPFS (InterPlanetary File System) Hash. Information about each item being sold is in a JSON-formatted
+    // string stored in the IPFS (InterPlanetary File System) that may be accessed via the Infura IPFS Gateway URL. So, for example, let's say that an Item being sold by a Seller has an
+    // IPFS Hash of QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnHH. Then, the information about this Item may be seen in one of the following URLs:
+    // 1) https://ipfs.infura.io/ipfs/QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnHH
+    // 2) https://gateway.ipfs.io/ipfs/QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnH
+    
+    // Each Seller in this Decentralized Marketplace is identified by it's Ethereum Address, but should also have information about himself/herself that is in the 
+    // IPFS (InterPlanetary File System) Hash. Information about each Seller is in a JSON-formatted
+    // string stored in the IPFS (InterPlanetary File System) that may be accessed via the Infura IPFS Gateway URL. So, for example, let's say that Seller has an
+    // IPFS Hash of QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnHH describing himself/herself. Then, the information about this Seller may be seen in one of the following URLs:
+    // 1) https://ipfs.infura.io/ipfs/QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnHH
+    // 2) https://gateway.ipfs.io/ipfs/QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnHH
+    
+    // Each Mediator in this Decentralized Marketplace is identified by it's Ethereum Address, but should also have information about himself/herself that is accessed  
+    // in the IPFS Stoarge Systemn via it's IPFS (InterPlanetary File System) Hash string key.
+    // Each Mediator in this Decentralized Marketplace is also identified by it's IPFS (InterPlanetary File System) Hash. Information about each Mediator is in a JSON-formatted
+    // string stored in the IPFS (InterPlanetary File System) that may be accessed via the Infura IPFS Gateway URL. So, for example, let's say that the Mediator has an
+    // IPFS Hash of QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnHH. Then, the information about this Mediator may be seen in one of the following URLs:
+    // 1) https://ipfs.infura.io/ipfs/QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnHH
+    // 2) https://gateway.ipfs.io/ipfs/QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnH
+    
+    // Each Mediated Sales Transaction in this Decentralized Marketplace is identified by it's IPFS (InterPlanetary File System) Hash. Information about each Mediated Sales Transaction 
+    // is in a JSON-formatted string stored in the IPFS (InterPlanetary File System) that may be accessed via the Infura IPFS Gateway URL. So, for example, let's say that the 
+    // Mediated Sales Transaction has an IPFS Hash of QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnHH. Then, the information about this Mediated Sales Transaction may be seen in one of 
+    // the following URLs:
+    // 1) https://ipfs.infura.io/ipfs/QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnHH
+    // 2) https://gateway.ipfs.io/ipfs/QmZ4DZ1spT2eQhUC5mfQGugM4AhLjq8ZvuZvHdQvnvKnH
+    
+    // WARNING! Befor a Seller places infomation about himself/herself in this Smart Contract, the Seller must first have at least one Item placed For Sale.
+    
+    // WARNING!! It is the responsibility of the Users of this Smart Contract to enter valid IPFS Hash String values for each of the Items Sold and of the Seller's Description!
+    
+    // Constants used for the Double-Linked list and other uses.
+    bool constant private PREV = false;
+    bool constant private NEXT = true;
+    string constant private EMPTY_STRING = "";
+    string constant private UNDER_SCORE_STRING = "_";
+    
+    // This is the price of all specific Items being sold y Sellers identified by their Ethereum Address in Wei.
+    // The price is on a per-Item basis for one Item.
+    //
+    // Mapping is as follows:
+    // 1) Key: Concatenation of Ethereum Address of Seller followed by IPFS Hash of Item being sold with an UNDER_SCORE_STRING in between.
+    // 2) Value: Price of item being sold in Wei.
+    //
+    // Only the Seller may change or set the price of an Item.
+    // The Seller is identified by an Ethereum Address.
+    mapping(string =&gt; uint) private pricesOfItems;
+    
+    // This is the quantity of each Item that is being sold by a Seller. Thus, for each Item that is being sold their is a certain number of such items available for sale.
+    // 
+    // Mapping is as follows:
+    // 1) Key: Concatenation of Ethereum Address of Seller followed by IPFS Hash of Item being sold with an UNDER_SCORE_STRING in between.
+    // 2) Value: Quanity available to be sold for the Item.
+    //
+    // Only the Seller may change or set the quantity of the item that is available for sale..
+    // The Seller is identified by an Ethereum Address.
+    mapping(string =&gt; uint) private quantityAvailableForSaleOfEachItem; 
+    
+    // This is all the Items being sold on a per-seller basis where each seller is identified by it's Ethereum Address. The "mapping(string =&gt; mapping(bool =&gt; string))" is a
+    // double-linked list used to maintain such a list of Items for a seller. The reason for using a double-linked list over an array is that it's difficult to delete items of an array
+    // and still map back the Item to the Seller; use of arrays to maintain a dynamic list leads to having the array grow forever. Use of below technique solves this problem via use of "delete"
+    // on a "mapping" where such a resource does get deleted. Use of Double-Linked list technique explained and code borrowed from the 
+    // https://ethereum.stackexchange.com/questions/15337/can-we-get-all-elements-stored-in-a-mapping-in-the-contract web page.
+    //
+    // For an explanation as to how the "mapping(string =&gt; mapping(bool =&gt; string))" double linked-list works and the code pertaining to it from which was borrowed, please go to the
+    // https://ethereum.stackexchange.com/questions/15337/can-we-get-all-elements-stored-in-a-mapping-in-the-contract web page.
+    //
+    // Mapping is as follows:
+    // 1) First Key: Ethereum Address of the Seller
+    // 2) First Value: The "mapping(string =&gt; mapping(bool =&gt; string))" double-linked list consisting of the IPFS Hashes of the various Items the Seller is selling. Each "string" in this mapping is
+    //    either an empty string or the IPFS Hash of an Item being sold by the Seller. The "bool" is either the PREV or NEXT boolean value above.
+    mapping(address =&gt; mapping(string =&gt; mapping(bool =&gt; string)) ) private itemsBeingSoldBySpecificSeller;
+    
+    // Used strictly to determine if an Item being sold by a Seller is in it's "itemsBeingSoldBySpecificSeller" double-linked list.
+    //
+    // Mapping is as follows:
+    // 1) Key: Concatenation of Ethereum Address of Seller followed by IPFS Hash of Item being sold with an UNDER_SCORE_STRING in between.
+    // 2) Value: Boolean value indicating if the Item is in the "itemsBeingSoldBySpecificSeller" double-linked list of the Seller.
+    mapping(string =&gt; bool) private itemsKeysMap;
+    
+    // Used to determine the number of Items being sold by a Seller. This is NOT the quantity being sold for each Item, but the number of different types of Items.
+    // It contains the number of Items in the seller's "mapping(string =&gt; mapping(bool =&gt; string))" double-linked list of the "itemsBeingSoldBySpecificSeller" mapping.
+    //
+    // Mapping is as follows:
+    // 1) Key: Ethereum Address of the Seller.
+    // 2) Value: Number of different types of Items being sold that is in the Seller's  "mapping(string =&gt; mapping(bool =&gt; string))" double-linked list of the 
+    //    "itemsBeingSoldBySpecificSeller" mapping.
+    mapping(address =&gt; uint) private numberOfDifferentItemsBeingSoldBySellerMap;
+    
+    // A double-linked list that lists all the Sellers by their Ethereum Address in string format.
+    //
+    // For an explanation as to how the "mapping(string =&gt; mapping(bool =&gt; string))" double linked-list works and the code pertaining to it from which was borrowed, please go to the
+    // https://ethereum.stackexchange.com/questions/15337/can-we-get-all-elements-stored-in-a-mapping-in-the-contract web page.
+    //
+    // Each "string" below refers to the Ethereum Address of the Seller in string format.
+    mapping(string =&gt; mapping(bool =&gt; string)) private listOfSellers; 
+    
+    // Map that keeps track of whether a Seller exists. The "address" key is the Ethereum Address of the Seller.
+    mapping(address =&gt; bool) private sellerExistsMap;
+    
+    // Keeps a count on the Number of Sellers selling on this platform.
+    uint private numberOfSellers; 
+    
+    // This Mapping contains the Description Information about the Sellers. The Seller is responsible for adding this information.
+    // A Seller must first have in it's "itemsBeingSoldBySpecificSeller" double-linked list at least one Item to sell BEFORE being able to add Information about
+    // about himself/herself. The IPFS Hash string should refer to a JSON-formatted string describing the seller in the IPFS Storage System.
+    //
+    // Mapping is as follows:
+    // 1) Key: Ethereum Address of the Seller
+    // 2) Value: IPFS Hash string of the information pertaining to the Seller. This information is stored in the IPFS Storage Network.
+    mapping(address =&gt; string) private descriptionInfoAboutSellers;
+    
+    // This Mapping is used to determine if a Seller is willing to sell his/her Items via the use of a Mediator. The Mediator is used to determine that BOTH parties are BOTH satisfied with the 
+    // Sale of the Item. One iten of contention is that the Buyer actualy got the Item he/she purchased. 
+    // In these types of Sales involving a Mediator, two out of the three parties - Buyer, Seller, and/or Mediator - must approve the sale transaction BEFORE the ETH is sent to the Seller.
+    // In such cases involving a Mediator, the Buyer's ETH is not sent to the Seller, but sent to this Smart Contract. Once two out of the three parties gives the OK for the Sale, then 95% of the
+    // Sales Price of the Item goes to the Seller and 5% goes to the Mediator.
+    //
+    // The "key" is the Ethereum Seller Address and the value is a boolen. If the Seller is willing to sell via a Mediator, then this value if boolean true. 
+    // If the Seller is NOT willing to sell via a Mediator, then this value if boolean false.
+    mapping(address =&gt; bool) private sellerWillingToSellItemsViaMediator;
+    
+    // Refers to the instance of the FranklinDecentralizedMarketplaceMediation Contract that was instantiated and deployed in the below "constructor".
+    //
+    // The Contract code had to be split in two, because the Etherum Virtual Machine (EVM) would not allow deployment of a Contract
+    // that has more than 24576 bytes. So, the decision was made to SPLIT the code into the FranklinDecentralizedMarketplace 
+    // and FranklinDecentralizedMarketplaceMediation Contracts where the FranklinDecentralizedMarketplace would deploy the
+    // FranklinDecentralizedMarketplaceMediation Contract via it's Constructor. 
+    //
+    // So, this FranklinDecentralizedMarketplace Contract handles most of the functionality pertaining to the Franklin Decentralized Marketplace Smart Contract functionality, while MOST of the
+    // functionality dealing with Mediated Sales Transactions is done by the FranklinDecentralizedMarketplaceMediation Smart Contract. Public method calls to the FranklinDecentralizedMarketplaceMediation
+    // Smart Contfact should be done by FIRST obating a "handle" to the "mediationMarketplace" via a call to the "getFranklinDecentralizedMarketplaceMediationContract" method and then making the appropriate 
+    // function calss on the "handle".
+    FranklinDecentralizedMarketplaceMediation public mediationMarketplace;
+    
+    constructor() public {
+        mediationMarketplace = new FranklinDecentralizedMarketplaceMediation();
+    }
+    
+    // Gets the Contract Owner of the FranklinDecentralizedMarketplaceMediation Contract that was instantiated and deployed by this FranklinDecentralizedMarketplace Smart Contract.
+    // Thus, the returned Ethereum Address should be "address(this)".
+    function getContractOwnerOfFranklinDecentralizedMarketplaceMediation() external view returns (address) {
+        address contractOwnerOfMediationMarketplace = mediationMarketplace.getFranklinDecentralizedMarketplaceContractAddress();
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(contractOwnerOfMediationMarketplace == address(this), 
+            string(abi.encodePacked("Something horribly wrong! FranklinDecentralizedMarketplaceMediation Contract that this ", 
+            "FranklinDecentralizedMarketplace Contract references is NOT owned or deployed by THIS FranklinDecentralizedMarketplace Contract!")));
+        return contractOwnerOfMediationMarketplace;
+    }
+    
+    // Gets the Contract Address of the FranklinDecentralizedMarketplaceMediation Contract that THIS FranklinDecentralizedMarketplace instantiated and deployed.
+    function getFranklinDecentralizedMarketplaceMediationContractAddress() external view returns (address) {
+        return address(mediationMarketplace);
+    }
+    
+    // Gets the Contract Instance/Interface of the FranklinDecentralizedMarketplaceMediation Contract that THIS FranklinDecentralizedMarketplace instantiated and deployed.
+    // This will be needed to be able to call the various public functions of the FranklinDecentralizedMarketplaceMediation dealinh with Mediation Sales Transactions.
+<span class="fstat-no" title="function not covered" >    function getFranklinDecentralizedMarketplaceMediationContract() external view returns (FranklinDecentralizedMarketplaceMediation</span>) {
+<span class="cstat-no" title="statement not covered" >        return mediationMarketplace;</span>
+    }
+    
+    // Determines if a Seller with the given "_sellerAddres" is willing to make sales of it's Items via a Mediator. 
+    // A return of boolean false indicates that the Seller is NOT willing to sell his/her items via a Mediator. 
+    // A return of boolean true indicates that the Seller IS willing to sell his/her items via a Mediator.
+<span class="fstat-no" title="function not covered" >    function sellerIsWillingToSellItemsViaMediator(address _sellerAddress) public view returns (bool</span>) {
+<span class="cstat-no" title="statement not covered" >        return sellerWillingToSellItemsViaMediator[_sellerAddress];</span>
+    }
+    
+    // This function allows a Seller to set into this Smart Contract whether he/she is willing to sell his/her Items via the use of a Mediator.
+    // The Seller in this function is the "msg.sender".
+    //
+    // A "_flag" value of boolean true, indicates that the Seller IS willing to make sales via a Mediator.
+    // A "_flag" value of boolean false, indicates that the Seller is NOT willing to make sales via a Mediator.
+<span class="fstat-no" title="function not covered" >    function setSellerWillingToSellItemsViaMediator(bool _flag) publi</span>c {
+<span class="cstat-no" title="statement not covered" >        if (!sellerExistsMap[msg.sender]) {</span>
+<span class="cstat-no" title="statement not covered" >            return;</span>
+        }
+        
+<span class="cstat-no" title="statement not covered" >        sellerWillingToSellItemsViaMediator[msg.sender] = _flag</span>;
+    }
+    
+    // This method allows a Seller to add/update a Description about himself/herself feeding in the "_ipfsHashKeyDescription" that should point to a JSON-formatted string in the IPFS Storage System.
+    // The "msg.sender" is the Seller.
+<span class="fstat-no" title="function not covered" >    function addOrUpdateSellerDescription(string memory _ipfsHashKeyDescription) publi</span>c {
+<span class="cstat-no" title="statement not covered" >        require(numberOfDifferentItemsBeingSoldBySellerMap[msg.sender] &gt; 0, "You must first add at least ONE Item For Sale before adding a description of yourself!")</span>;
+<span class="cstat-no" title="statement not covered" >        require(!GeneralUtilities._compareStringsEqual(_ipfsHashKeyDescription, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key Description of a Seller!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        descriptionInfoAboutSellers[msg.sender] = _ipfsHashKeyDescription</span>;
+    }
+    
+    // Gets the Description of a Seller identified by the given "_sellerAddress". The Description will be the IPFS Hash where the JSON-formatted Description of the Seller exists.
+    // If no such IPFS Hash Key Description exists, then an EMPTY_STRING will be returned.
+<span class="fstat-no" title="function not covered" >    function getSellerIpfsHashDescription(address _sellerAddress) public view returns (string memory</span>) {
+<span class="cstat-no" title="statement not covered" >        return descriptionInfoAboutSellers[_sellerAddress];</span>
+    }
+    
+    // Adds a Seller - identified by it's Ethereum Address - to the "listOfSellers" double-linked list.
+    //
+    // Source --&gt; https://ethereum.stackexchange.com/questions/15337/can-we-get-all-elements-stored-in-a-mapping-in-the-contract
+    function _addSeller(address _sellerAddress) private {
+        string memory sellerAddressStringKey = GeneralUtilities._addressToString(_sellerAddress);
+        
+        // Will not bother to check for valid "address", because Ethereum Virtual Machine does that for us automatically and will just throw an Error that caller of this 
+        // method will have to catch.
+        
+        if (sellerExistsMap[_sellerAddress]) {
+            return;
+        }
+        
+        // Link the new node 
+        listOfSellers[sellerAddressStringKey][PREV] = EMPTY_STRING;
+        listOfSellers[sellerAddressStringKey][NEXT] = listOfSellers[EMPTY_STRING][NEXT];
+    
+        // Insert the new node
+        listOfSellers[listOfSellers[EMPTY_STRING][NEXT]][PREV] = sellerAddressStringKey;
+        listOfSellers[EMPTY_STRING][NEXT] = sellerAddressStringKey;
+    
+        numberOfSellers = GeneralUtilities._safeMathAdd(numberOfSellers, 1);
+        sellerExistsMap[_sellerAddress] = true;
+    }
+    
+    // Removes a Seller - identified by it's Ethereum Address - from the "listOfSellers" double-linked list.
+    //
+    // No need to check for empty string on returned Ethereum Address string, because if the "_sellerAddress" is an invalid Ethereum Address, then Ethereum Virtual Machine will
+    // throw an Error. Caller of this method will have to check if an Error was thrown.
+    // 
+    // Source --&gt; https://ethereum.stackexchange.com/questions/15337/can-we-get-all-elements-stored-in-a-mapping-in-the-contract
+<span class="fstat-no" title="function not covered" >    function _removeSeller(address _sellerAddress) privat</span>e {
+<span class="cstat-no" title="statement not covered" >        string memory sellerAddressStringKey = GeneralUtilities._addressToString(_sellerAddress);</span>
+        
+<span class="cstat-no" title="statement not covered" >        if (!sellerExistsMap[_sellerAddress]) {</span>
+<span class="cstat-no" title="statement not covered" >            return;</span>
+        }
+        
+        // Stitch the neighbours together
+<span class="cstat-no" title="statement not covered" >        listOfSellers[ listOfSellers[sellerAddressStringKey][PREV] ][NEXT] = listOfSellers[sellerAddressStringKey][NEXT]</span>;
+<span class="cstat-no" title="statement not covered" >        listOfSellers[ listOfSellers[sellerAddressStringKey][NEXT] ][PREV] = listOfSellers[sellerAddressStringKey][PREV]</span>;
+    
+        // Delete state storage
+        delete listOfSellers[sellerAddressStringKey][PREV];
+        delete listOfSellers[sellerAddressStringKey][NEXT];
+        
+<span class="cstat-no" title="statement not covered" >        numberOfSellers = GeneralUtilities._safeMathSubtract(numberOfSellers, 1)</span>;
+        delete sellerExistsMap[_sellerAddress];
+        delete sellerWillingToSellItemsViaMediator[_sellerAddress];
+        
+        // Decided to NOT delete this information, because a Seller may be involved in a Mediator type of Sale, and we still wish to keep information 
+        // about the Seller.
+        // delete descriptionInfoAboutSellers[_sellerAddress];
+    }
+    
+    // Allows a Seller to remove himself/herself from the "listOfSellers". The Seller to be removed is the "msg.sender" Ethereum Address that calls this method. 
+    // Not only will the Seller be removed but also ALL of the Items assovciated with this "msg.sender" Seller.
+<span class="fstat-no" title="function not covered" >    function removeSeller() publi</span>c {
+<span class="cstat-no" title="statement not covered" >        uint numberOfDifferentItemsBeingSoldBySeller = numberOfDifferentItemsBeingSoldBySellerMap[msg.sender];</span>
+        
+        // We have to first get ALL of the IPFS Key Hashes of the Items for Sale, because the Indexes will change as we delete the Items.
+<span class="cstat-no" title="statement not covered" >        string[] memory itemsForSale = new string[](numberOfDifferentItemsBeingSoldBySeller);</span>
+<span class="cstat-no" title="statement not covered" >        for (uint itemIndex = 0; itemIndex &lt; numberOfDifferentItemsBeingSoldBySeller; itemIndex++) {</span>
+<span class="cstat-no" title="statement not covered" >            string memory itemForSale = getItemForSale(msg.sender, itemIndex);</span>
+<span class="cstat-no" title="statement not covered" >            itemsForSale[itemIndex] = itemForSale</span>;
+        }
+        
+        // Then we delete step-by-step.
+<span class="cstat-no" title="statement not covered" >        for (uint i = 0; i &lt; numberOfDifferentItemsBeingSoldBySeller; i++) {</span>
+<span class="cstat-no" title="statement not covered" >            removeItemForSale(itemsForSale[i])</span>;
+        }
+        
+        // The Seller "msg.sender" will be automatically removed from the "listOfSellers" when the last Item it has For Sale is removed.
+    }
+    
+    // Gets the Seller Ethereum Address at the given "_index" from the "listOfSellers" double-linked list.
+    //
+    // Input Parameter:
+    // _itemIndex : Index number into the "listOfSellers" double-linked list of Items Seller is selling.
+    //              Index starts at 0.
+    //
+    // Returns:
+    // 1) If the "_index" is less than the "numberOfSellers", then the Etheruem Address of the Seller at the given "_index" into the "listOfSellers" double-linked list
+    //    is returned.
+    // 2) If the "_index" is greater than or equal to the "numberOfSellers", then an Exception is thrown via the "require" below.
+    function getSellerAddress(uint _index) public view returns (address) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(_index &lt; numberOfSellers, "Index value given is greater than or equal to the Number of Sellers! It should be less than the Number of Sellers!");
+        
+        // The "key" below is the Ethereum Address in string format that is in the "listOfSellers" double-linked list.
+        
+        uint keyCount = 0;
+        string memory key = EMPTY_STRING;
+        while (true) {
+            key = listOfSellers[key][NEXT];
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (keyCount == _index) {
+                break;
+            }
+        
+            keyCount++;
+        }
+        
+        return GeneralUtilities._parseEthereumAddressStringToAddress(key);    
+    }
+    
+    // Returns back a boolean value to determine if the given "_sellerAddres" is in the "listOfSellers".
+    function sellerExists(address _sellerAddress) external view returns (bool) {
+        return sellerExistsMap[_sellerAddress];
+    }
+    
+    // Returns back the Number of Sellers in this Decentralized Marketplace.
+<span class="fstat-no" title="function not covered" >    function getNumberOfSellers() external view returns (uint</span>) {
+<span class="cstat-no" title="statement not covered" >        return numberOfSellers;</span>
+    }
+    
+    // Allows a Seller to set the Price of an Item the Seller is selling in Wei. The Seller would be the "msg.sender" Ethereum Address that calls this method.
+    //
+    // Input Parameters:
+    // 1) _keyItemIpfsHash : This is the IPFS Hash of the item being sold that points to a JSON-formatted string in the IPFS Storage System.
+    // 2) _priceInWei : Price of the Item to be set in Wei 
+    // 3) msg.sender : Ethereum Address of the Seller
+    //
+    // If the Seller sets the Price of the Item to Zero (i.e., 0) Wei, then that means that the Item is set to a State where it cannot be purchased.
+    //
+    // If the Item in questions does not exist as an Item for Sale under the "msg.sender" Seller of if the "msg.sender" is not a Seller, then no setting of a price 
+    // gets done.
+<span class="fstat-no" title="function not covered" >    function setPriceOfItem(string memory _keyItemIpfsHash, uint _priceInWei) publi</span>c {
+<span class="cstat-no" title="statement not covered" >        require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item to Sell!")</span>;
+        
+        // I was thinking of not allowing the Seller to set the Price of an Itemn to Zero wei, but then I changed my mind. The Seller may have a situation where its has 
+        // the Item in stock, but does not wish to sell the Ite, yet.
+        // require(_priceInWei &gt; 0, "Cannot set the Price of an Item to Zero Wei!");
+        
+<span class="cstat-no" title="statement not covered" >        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);</span>
+<span class="cstat-no" title="statement not covered" >        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale for you - the Seller!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        pricesOfItems[combinedKeyAddressPlusItemIpfsHash] = _priceInWei</span>;
+    }
+    
+    // Gets the Price (in Wei) of an Item - identified by the given "_keyItemIpfsHash" input parameter - being sold by a 
+    // Seller - identified by the given "_sellerAddress" Etherum Address.
+    //
+    // A return value of Zero (i.e., 0) Wei indicates that the Seller has not yet set a Price for this Item, and thus the Item cannot be purchased
+<span class="fstat-no" title="function not covered" >    function getPriceOfItem(address _sellerAddress, string memory _keyItemIpfsHash) public view returns (uint</span>) {
+<span class="cstat-no" title="statement not covered" >        require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);</span>
+<span class="cstat-no" title="statement not covered" >        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        return pricesOfItems[combinedKeyAddressPlusItemIpfsHash];</span>
+    }
+    
+    // Allows a Seller to set the Quantity available for Sale of an Item that a Seller is selling. The Seller would be the "msg.sender" Ethereum Address that calls this method.
+    //
+    // Input Parameters:
+    // 1) _keyItemIpfsHash : This is the IPFS Hash of the item being sold that points to a JSON-formatted string in the IPFS Storage System.
+    // 2) _quantity : The quantity available For Sale of the Item that the Seller is selling.   
+    // 3) msg.sender : Ethereum Addrees of the Seller
+<span class="fstat-no" title="function not covered" >    function setQuantityAvailableForSaleOfAnItem(string memory _keyItemIpfsHash, uint _quantity) publi</span>c {
+<span class="cstat-no" title="statement not covered" >        require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item to Sell!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);</span>
+<span class="cstat-no" title="statement not covered" >        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale by you - the Seller!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] = _quantity</span>;
+    }
+    
+    // Gets the Quantity of the given "_keyItemIpfsHash" Item available For sale by the given "_sellerAddress" Seller.
+    //
+    // Input Parameters:
+    // 1) _sellerAddress : Ethreum Address of the Seller
+    // 2) _keyItemIpfsHash : This is the IPFS Hash of the item being sold that points to a JSON-formatted string in the IPFS Storage System.
+<span class="fstat-no" title="function not covered" >    function getQuantityAvailableForSaleOfAnItemBySeller(address _sellerAddress, string memory _keyItemIpfsHash) public view returns (uint</span>) {
+<span class="cstat-no" title="statement not covered" >        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);</span>
+<span class="cstat-no" title="statement not covered" >        return quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash];</span>
+    }
+    
+    // Allows a Buyer - identified by the "msg.sender" Ethereum Address that calls this method - to purchase a "_quantity" of a specific Item - identified 
+    // by it's "_keyItemIpfsHash" - from a given Seller - identified by it's "_sellerAddress" Ethereum Address.
+    //
+    // The Buyer is assuming the risk here in that the Buyer is expecting the Seller to be honest enough to send to the Buyer the quantity of Items 
+    // in the purchase to the Buyer after the Seller receives the payment.
+    //
+    // Input Parameters:
+    // 1) _sellerAddress : Ethereum Address of the Seller
+    // 2) _keyItemIpfsHash : This is the IPFS Hash of the item being sold that points to a JSON-formatted string in the IPFS Storage System
+    // 3) _quantity : Quantity of the Item that the "msg.sender" Buyer wishes to purchase.
+    // 4) msg.sender :  Address of the Buyer
+<span class="fstat-no" title="function not covered" >    function purchaseItemWithoutMediator(address payable _sellerAddress, string memory _keyItemIpfsHash, uint _quantity) payable publi</span>c {
+<span class="cstat-no" title="statement not covered" >        require(_quantity &gt; 0, "Must purchase at least 1 quantity of the Item for Sale to happen!")</span>;
+<span class="cstat-no" title="statement not covered" >        require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item you are purchasing!")</span>;
+<span class="cstat-no" title="statement not covered" >        require(msg.sender != _sellerAddress, "The Buyer Address cannot be the same as the Seller Address!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        require(sellerExistsMap[_sellerAddress], "Given Seller Address does not exist as a Seller!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);</span>
+<span class="cstat-no" title="statement not covered" >        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        require(quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] &gt; 0, "Seller has Zero quantity available for Sale for the Item requested to purchase!")</span>;
+<span class="cstat-no" title="statement not covered" >        require(quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] &gt;= _quantity, </span>
+            "Quantity available For Sale of the Item from the Seller is less than the quantity requested to purchase! Not enough of the Itenm available For Sale");
+        
+<span class="cstat-no" title="statement not covered" >        require(pricesOfItems[combinedKeyAddressPlusItemIpfsHash] &gt; 0, "The Seller has not yet set a Price for Sale for the requested Item! Cannot purchase the Item!")</span>; 
+        
+<span class="cstat-no" title="statement not covered" >        uint totalAmountOfWeiNeededToPurchase = GeneralUtilities._safeMathMultiply(pricesOfItems[combinedKeyAddressPlusItemIpfsHash], _quantity);</span>
+<span class="cstat-no" title="statement not covered" >        require(msg.value &gt;= totalAmountOfWeiNeededToPurchase, "Not enough ETH was sent to purchase the quantity requested of the Item!")</span>;
+        
+        // Subtract the appropriate "_quantity" of that Item for Sale to keep track of the new available quauntity of that Item that may be sold.
+<span class="cstat-no" title="statement not covered" >        quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] = </span>
+            GeneralUtilities._safeMathSubtract(quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash], _quantity);
+        
+        // We want to make sure to return back any excess ETH that exceeds the amount necessary to purchase the given "_quantity" of the Item.
+<span class="cstat-no" title="statement not covered" >        msg.sender.transfer(msg.value - totalAmountOfWeiNeededToPurchase)</span>;
+        
+        // Transfer the "totalAmountOfWeiNeededToPurchase" to the Seller.
+<span class="cstat-no" title="statement not covered" >        _sellerAddress.transfer(totalAmountOfWeiNeededToPurchase)</span>;
+    }
+    
+    // Allows a Buyer - identified by the "msg.sender" Ethereum Address that calls this method - to purchase a "_quantity" of a specific Item - identified 
+    // by it's "_keyItemIpfsHash" - from a given Seller - identified by it's "_sellerAddress" Ethereum Address AND use a Mediator - identified by the given 
+    // "_mediatorAddress" - to mediate the Mediatiations Sales Transaction - identified by the the given "_mediatedSalesTransactionIpfsHash" ID. 
+    //
+    // The FranklinDecentralizedMarketplaceMediation Contract mainly handles Sales Transactions that involve a Mediator. Thus, these would be referred to as 
+    // Mediated Sales Transactions that involve a Buyer, Seller, and Mediator. Each Buyer, Seller, and Mediator will have a different Ethereum Address.
+    //
+    // The FranklinDecentralizedMarketplaceMediation Contract is used to store the Escrow ETH/WEI (i.e., "totalAmountOfWeiNeededToPurchase") used to pay for Items involved in ALL Mediated Sales Transactions. 
+    // The Mediated Sales Transaction works as follows:
+    // 1) If 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Seller Address
+    //    and 5% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Mediator Address. 
+    // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, then the "totalAmountOfWeiNeededToPurchase" will be sent back to the Buyer Address.
+    // 3) If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase" will be kept inside 
+    //    of this Contract.
+    //
+    // Input Parameters:
+    // 1) _sellerAddress : Ethereum Address of the Seller
+    // 2) _keyItemIpfsHash : This is the IPFS Hash of the Item being sold that points to a JSON-formatted string in the IPFS Storage System.
+    // 3) _mediatorAddress : Ethereum Address of the Mediator
+    // 4) _quantity : Quantity of the Item that the "msg.sender" Buyer wishes to purchase. 
+    // 5) _mediatedSalesTransactionIpfsHash : This is the IPFS Hash of the Mediated Sales Transaction that points to a JSON-formatted string in the IPFS Storage System.
+    // 6) msg.sender : Ethereum Address of the Buyer
+<span class="fstat-no" title="function not covered" >    function purchaseItemWithMediator(address _sellerAddress, address _mediatorAddress, string memory _keyItemIpfsHash, </span>
+                string memory _mediatedSalesTransactionIpfsHash, uint _quantity) payable public {
+<span class="cstat-no" title="statement not covered" >        require(_quantity &gt; 0, "Must purchase at least 1 quantity of the Item for Sale to happen!")</span>;
+<span class="cstat-no" title="statement not covered" >        require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item you are purchasing!")</span>;
+<span class="cstat-no" title="statement not covered" >        require(!GeneralUtilities._compareStringsEqual(_mediatedSalesTransactionIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of the Mediated Sales Transaction!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        require(sellerExistsMap[_sellerAddress], "Given Seller Address does not exist as a Seller!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);</span>
+<span class="cstat-no" title="statement not covered" >        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!")</span>;
+        
+<span class="cstat-no" title="statement not covered" >        require(quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] &gt; 0, "Seller has Zero quantity available for Sale for the Item requested to purchase!")</span>;
+<span class="cstat-no" title="statement not covered" >        require(quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] &gt;= _quantity, </span>
+            "Quantity available For Sale of the Item from the Seller is less than the quantity requested to purchase! Not enough of the Itenm available For Sale");
+        
+<span class="cstat-no" title="statement not covered" >        require(pricesOfItems[combinedKeyAddressPlusItemIpfsHash] &gt; 0, "The Seller has not yet set a Price for Sale for the requested Item! Cannot purchase the Item!")</span>; 
+        
+<span class="cstat-no" title="statement not covered" >        uint totalAmountOfWeiNeededToPurchase = GeneralUtilities._safeMathMultiply(pricesOfItems[combinedKeyAddressPlusItemIpfsHash], _quantity);</span>
+<span class="cstat-no" title="statement not covered" >        require(msg.value &gt;= totalAmountOfWeiNeededToPurchase, "Not enough ETH/WEI was sent to purchase the quantity requested of the Item!")</span>;
+        
+        // Need to check that the Ethereum Addresses of the Buyer, Seller, and Mediator are ALL different!
+<span class="cstat-no" title="statement not covered" >        require(msg.sender != _sellerAddress, "The Buyer Address cannot be the same as the Seller Address!")</span>;
+<span class="cstat-no" title="statement not covered" >        require(msg.sender != _mediatorAddress, "The Buyer Address cannot be the same as the Mediator Address!")</span>;
+<span class="cstat-no" title="statement not covered" >        require(_sellerAddress != _mediatorAddress, "The Seller Address cannot be the same as the Mediator Address!")</span>;
+        
+        // The "msg.value" amount (minus any excess ETH/WEI that was sent) will automatically be sent to the FranklinDecentralizedMarketplaceMediation Contract in Escrow in a 
+        // Mediated Sales Transaction. We need to store the "totalAmountOfWeiNeededToPurchase" as follows so that when:
+        // 1) 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase" can be sent to the Seller Address
+        //    and 5% of the  "msg.value" can be sent to the Mediator Address. 
+        // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, the "totalAmountOfWeiNeededToPurchase" can be sent back to the Buyer Address.
+        // 3) If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase" will be kept inside 
+        //    of the FranklinDecentralizedMarketplaceMediation Contract.
+        
+        // Below code logic was transferred over to the "purchaseItemWithMediator" method of the FranklinDecentralizedMarketplaceMediation Contract.
+        /*
+        require(!mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Mediated Sales Transaction already exists!");
+        
+        string memory mediatorAddressStringKey = GeneralUtilities._addressToString(_mediatorAddress);
+        require(mediatorExistsMap[mediatorAddressStringKey], "Given Mediator Address does not exist as a Mediator!");
+        
+        // Keep track of the existence of the Mediated Sales Transaction so that it can be Approved or Disapproved by the Buyer, Seller, and/or Mediator in the future.
+        mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash] = true;
+        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX] = msg.sender;
+        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX] = _sellerAddress;
+        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX] = _mediatorAddress;
+        
+        // The "msg.value" amount (minus any excess ETH/WEI that was sent) will automatically be sent to the FranklinDecentralizedMarketplaceMediation Contract as Escrow in a 
+        // Mediated Sales Transaction. We need to store the "totalAmountOfWeiNeededToPurchase" as follows so that when:
+        // 1) 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase" can be sent to the Seller Address
+        //    and 5% of the  "msg.value" can be sent to the Mediator Address. 
+        // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, the "totalAmountOfWeiNeededToPurchase" can be sent back to the Buyer Address.
+        mediatedSalesTransactionAmount[_mediatedSalesTransactionIpfsHash] = totalAmountOfWeiNeededToPurchase;
+        
+        numberOfMediationsMediatorInvolved[_mediatorAddress] = GeneralUtilities._safeMathAdd(numberOfMediationsMediatorInvolved[_mediatorAddress], 1);
+        */
+        
+        // Call below method to continue the processing of the Mediated Sales Transaction.
+<span class="cstat-no" title="statement not covered" >        mediationMarketplace.purchaseItemWithMediator(msg.sender, _sellerAddress, _mediatorAddress, _mediatedSalesTransactionIpfsHash, totalAmountOfWeiNeededToPurchase)</span>;
+        
+        // Subtract the appropriate "_quantity" of that Item for Sale to keep track of the new available quantity of that Item that may be sold. I know that the sale is NOT final 
+        // at this point, BUT let's be optimistic. If the "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction gets Disapproved, then the quantity will have to be updated 
+        // accordingly by the Seller Address via the "setQuantityAvailableForSaleOfAnItem" method.
+        // 
+        // If the Mediated Sales Transaction NEVER reaches a State of Approval nor Disapproval, then the Mediated Sales Transaction will be held in a State of Limbo and the 
+        // "totalAmountOfWeiNeededToPurchase" will be kept inside of the FranklinDecentralizedMarketplaceMediation Contract. Thus, the quantity For Sale of the Item will never 
+        // be automatically updated and it would have to be updated by the Seller Address via the "setQuantityAvailableForSaleOfAnItem" method.
+<span class="cstat-no" title="statement not covered" >        quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] = </span>
+            GeneralUtilities._safeMathSubtract(quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash], _quantity);
+        
+        // We want to make sure to return back to the Buyer Address any excess ETH/WEI that exceeds the amount necessary to purchase the given "_quantity" of the Item.
+<span class="cstat-no" title="statement not covered" >        msg.sender.transfer(GeneralUtilities._safeMathSubtract(msg.value, totalAmountOfWeiNeededToPurchase))</span>;  
+        
+        // Since the FranklinDecentralizedMarketplaceMediation Contract will be handling any further Mediation actions, the Escrow should be kept there. 
+        // So, send the Escrow Amount to the FranklinDecentralizedMarketplaceMediation Contract
+<span class="cstat-no" title="statement not covered" >        address payable mediationMarketplaceAddress = GeneralUtilities._convertAddressToAddressPayable(address(mediationMarketplace));</span>
+<span class="cstat-no" title="statement not covered" >        mediationMarketplaceAddress.transfer(totalAmountOfWeiNeededToPurchase)</span>;
+    }
+    
+    // Adds an Item - identified by the given "_keyItemIpfsHash" input - to be Sold by a Seller to it's "itemsBeingSoldBySpecificSeller" double-linked list. 
+    // The Seller in this function call is the "msg.sender" Ethereum Address that calls this function. Also, this causes the "msg.sender" Seller to be added in the "listOfSellers". 
+    //
+    // Source --&gt; https://ethereum.stackexchange.com/questions/15337/can-we-get-all-elements-stored-in-a-mapping-in-the-contract
+    function addItemForSale(string memory _keyItemIpfsHash) public {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item to Sell!");
+        
+        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);
+        
+        // If the specific type of Item is already in the list of Items that the Seller is selling, then no need to add the Item, because it's already there.
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (itemsKeysMap[combinedKeyAddressPlusItemIpfsHash]) {
+<span class="cstat-no" title="statement not covered" >            return;</span>
+        }
+        
+        // This below is the double-linked list of different types of Items being sold by a Seller.
+        mapping(string =&gt; mapping(bool =&gt; string)) storage itemsBeingSoldBySenderAddress = itemsBeingSoldBySpecificSeller[msg.sender];
+        
+        // Link the new node 
+        itemsBeingSoldBySenderAddress[_keyItemIpfsHash][PREV] = EMPTY_STRING;
+        itemsBeingSoldBySenderAddress[_keyItemIpfsHash][NEXT] = itemsBeingSoldBySenderAddress[EMPTY_STRING][NEXT];
+    
+        // Insert the new node
+        itemsBeingSoldBySenderAddress[itemsBeingSoldBySenderAddress[EMPTY_STRING][NEXT]][PREV] = _keyItemIpfsHash;
+        itemsBeingSoldBySenderAddress[EMPTY_STRING][NEXT] = _keyItemIpfsHash;
+        
+        numberOfDifferentItemsBeingSoldBySellerMap[msg.sender] = GeneralUtilities._safeMathAdd(numberOfDifferentItemsBeingSoldBySellerMap[msg.sender], 1);
+        itemsKeysMap[combinedKeyAddressPlusItemIpfsHash] = true;
+        
+        _addSeller(msg.sender); // No seller added if Seller already exists.
+    }
+    
+    // Removes an Item - identified by the given "_keyItemIpfsHash" input - being Sold by a Seller in it's "itemsBeingSoldBySpecificSeller" double-linked list. 
+    // The Seller in this function call is the "msg.sender" 
+    // Ethereum Address that calls this function.
+    //
+    // WARNING! If this method causes removing the last Item for Sale, the Seller (i.e., the "msg.sender") will be removed from the "listOfSellers". 
+    //
+    // Source --&gt; https://ethereum.stackexchange.com/questions/15337/can-we-get-all-elements-stored-in-a-mapping-in-the-contract
+<span class="fstat-no" title="function not covered" >    function removeItemForSale(string memory _keyItemIpfsHash) publi</span>c {
+<span class="cstat-no" title="statement not covered" >        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);</span>
+        
+<span class="cstat-no" title="statement not covered" >        if (!itemsKeysMap[combinedKeyAddressPlusItemIpfsHash]) {</span>
+<span class="cstat-no" title="statement not covered" >            return;</span>
+        }
+        
+        // This below is the double-linked list of different types of Items being sold by a Seller.
+<span class="cstat-no" title="statement not covered" >        mapping(string =&gt; mapping(bool =&gt; string)) storage itemsBeingSoldBySenderAddress = itemsBeingSoldBySpecificSeller[msg.sender];</span>
+        
+        // Stitch the neighbours together
+<span class="cstat-no" title="statement not covered" >        itemsBeingSoldBySenderAddress[ itemsBeingSoldBySenderAddress[_keyItemIpfsHash][PREV] ][NEXT] = itemsBeingSoldBySenderAddress[_keyItemIpfsHash][NEXT]</span>;
+<span class="cstat-no" title="statement not covered" >        itemsBeingSoldBySenderAddress[ itemsBeingSoldBySenderAddress[_keyItemIpfsHash][NEXT] ][PREV] = itemsBeingSoldBySenderAddress[_keyItemIpfsHash][PREV]</span>;
+    
+        // Delete state storage
+        delete itemsBeingSoldBySenderAddress[_keyItemIpfsHash][PREV];
+        delete itemsBeingSoldBySenderAddress[_keyItemIpfsHash][NEXT];
+    
+<span class="cstat-no" title="statement not covered" >        numberOfDifferentItemsBeingSoldBySellerMap[msg.sender] = GeneralUtilities._safeMathSubtract(numberOfDifferentItemsBeingSoldBySellerMap[msg.sender], 1)</span>;
+        delete itemsKeysMap[combinedKeyAddressPlusItemIpfsHash];
+        delete pricesOfItems[combinedKeyAddressPlusItemIpfsHash];
+        delete quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash];
+        
+<span class="cstat-no" title="statement not covered" >        if (numberOfDifferentItemsBeingSoldBySellerMap[msg.sender] == 0) {</span>
+<span class="cstat-no" title="statement not covered" >            _removeSeller(msg.sender)</span>;
+        }
+    }
+    
+    // Gets the number of different types of Items being sold by a Seller. Each Seller shall have a unique Ethereum Address that will be used to identify
+    // the Seller.
+<span class="fstat-no" title="function not covered" >    function getNumberOfDifferentItemsBeingSoldBySeller(address _sellerAddress) public view returns (uint</span>) {
+<span class="cstat-no" title="statement not covered" >        return numberOfDifferentItemsBeingSoldBySellerMap[_sellerAddress];</span>
+    }
+    
+    // Gets the IPFS Hash string of an Item being sold by a Seller. Index values start at 0.
+    //
+    // This IPFS Hash string refers to a JSON-formatted string that is stored in the IPFS Storage System.
+    //
+    // Input Parameters:
+    // 1) _sellerAddress : The Ethereum Address of the Seller
+    // 2) _itemIndex : Index number into the "itemsBeingSoldBySpecificSeller" double-linked list of Items Seller is selling.
+    //    Index starts at 0.
+    //
+    // Returns:
+    // 1) If the "_itemIndex" refers to an Item that the "_sellerAddress" is selling, then the IPFS Hash string of the Item being sold is returned.
+    // 2) If the "_itemIndex" does NOT refer to an Item that the "_sellerAddress" is selling, then an EMPTY_STRING is returned.
+    function getItemForSale(address _sellerAddress, uint _itemIndex) public view returns (string memory) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (_itemIndex &gt;= numberOfDifferentItemsBeingSoldBySellerMap[_sellerAddress]) {
+<span class="cstat-no" title="statement not covered" >            return EMPTY_STRING;</span>
+        }
+        
+        // This below is the double-linked list of different types of Items being sold by the "_sellerAddress".
+        mapping(string =&gt; mapping(bool =&gt; string)) storage itemsBeingSoldBySenderAddress = itemsBeingSoldBySpecificSeller[_sellerAddress];        
+        
+        uint keyCount = 0;
+        string memory ipfsHashKeyOfItem = EMPTY_STRING;
+        while (true) {
+            ipfsHashKeyOfItem = itemsBeingSoldBySenderAddress[ipfsHashKeyOfItem][NEXT];
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (keyCount == _itemIndex) {
+                break;
+            }
+            
+            keyCount++;
+        }
+        
+        return ipfsHashKeyOfItem;       
+    }
+    
+    // Returns back a boolean value indicating if a certain Item is available for sale from a given Seller.
+    //
+    // Input Parameters:
+    // 1) _sellerAddress : The Ethereum Address of the Seller
+    // 2) _keyItemIpfsHash : The IPFS Hash ID string identifying an Item For Sale
+    //
+    // Returns:
+    // 1) Boolean true : If the given "_sellerAddress" is selling the given Item identified by it's "_keyItemIpfsHash"
+    // 2) Boolean false : If the given "_sellerAddress" is NOT selling the given Item identified by it's "_keyItemIpfsHash"
+    function itemForSaleFromSellerExists(address _sellerAddress, string memory _keyItemIpfsHash) public view returns (bool) {
+        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);
+        return itemsKeysMap[combinedKeyAddressPlusItemIpfsHash];
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Nov 19 2019 17:33:24 GMT-0500 (Eastern Standard Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>
