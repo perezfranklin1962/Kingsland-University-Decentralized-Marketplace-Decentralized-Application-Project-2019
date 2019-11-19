@@ -43,9 +43,11 @@ module.exports = {
     // options below to some value.
     //
     development: {
-      host: "127.0.0.1",     // Localhost (default: none)
-      port: 7545,            // Standard Ethereum port (default: none)
-      network_id: "*",       // Any network (default: none)
+      host: "127.0.0.1",     	// Localhost (default: none)
+      port: 7545,            	// Standard Ethereum port (default: none)
+      network_id: "*",       	// Any network (default: none)
+      gas: 104878050,        	// Increase Gas Limit to have succesful migrate - Source --> https://hanezu.github.io/posts/Gas-Limit-Error-when-deploy-Truffle-project-on-Private-Network.html
+      gasPrice: 10000000000		// Based Gas Price to use via https://ethgasstation.info
     },
 
     // Another network with more advanced options...
