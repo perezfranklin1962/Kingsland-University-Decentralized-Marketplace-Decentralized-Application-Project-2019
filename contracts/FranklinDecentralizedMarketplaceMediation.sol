@@ -128,6 +128,9 @@ contract FranklinDecentralizedMarketplaceMediation {
     //    C) address[2] : Boolean flag indicating if Mediator Disapproves
     mapping (string => bool[3]) private mediatedSalesTransactionDisapprovedByParties;
     
+    event MediatedSalesTransactionHasBeenFullyApproved(string _mediatedSalesTransactionIpfsHash);
+    event MediatedSalesTransactionHasBeenFullyDisapproved(string _mediatedSalesTransactionIpfsHash);
+    
     // Below is the Contract Address of the FranklinDecentralizedMarketplace Contract that deployed this Contract - the 
     // FranklinDecentralizedMarketplaceMediation Contract - via the constructor of the FranklinDecentralizedMarketplace Contract.
     // The Contract code had to be split in two, because the Etherum Virtual Machine (EVM) would not allow deployment of a Contract
@@ -334,6 +337,8 @@ contract FranklinDecentralizedMarketplaceMediation {
             
             sellerAddress.transfer(amountOfWeiToSendSeller);
             mediatorAddress.transfer(amountOfWeiToSendMediator);
+            
+            emit MediatedSalesTransactionHasBeenFullyApproved(_mediatedSalesTransactionIpfsHash);
         }
     }
     
@@ -383,6 +388,8 @@ contract FranklinDecentralizedMarketplaceMediation {
         
             address payable buyerAddress = GeneralUtilities._convertAddressToAddressPayable(mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX]);
             buyerAddress.transfer(totalSalesAmount);
+            
+            emit MediatedSalesTransactionHasBeenFullyDisapproved(_mediatedSalesTransactionIpfsHash);
         }
     }
     
