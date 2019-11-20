@@ -10,14 +10,10 @@ contract FranklinDecentralizedMarketplace {
 
     // The Contract code had to be split in two, because the Etherum Virtual Machine (EVM) would not allow deployment of a Contract
     // that has more than 24576 bytes. So, the decision was made to SPLIT the code into the FranklinDecentralizedMarketplace 
-    // and FranklinDecentralizedMarketplaceMediation Contracts where the FranklinDecentralizedMarketplace would deploy the
-    // FranklinDecentralizedMarketplaceMediation Contract via it's Constructor. 
+    // and FranklinDecentralizedMarketplaceMediation Contracts. 
     //
     // So, this FranklinDecentralizedMarketplace Contract handles most of the functionality pertaining to the Franklin Decentralized Marketplace Smart Contract functionality, while MOST of the
-    // functionality dealing with Mediated Sales Transactions is done by the FranklinDecentralizedMarketplaceMediation Smart Contract. All the public methods - with the exception of 
-    // the "getOnlyAddressThatMayAccessThisContract" method - of the FranklinDecentralizedMarketplaceMediation may ONLY be accessed by this FranklinDecentralizedMarketplace Contract.
-    // Accessing of a public method of the FranklinDecentralizedMarketplaceMediation Contract is done via an equivalent Proxy method in this FranklinDecentralizedMarketplace Contract, thus 
-    // simplifying the interaction with the Franklin Decentralized Marketplace Smart Contract functionality with the public.
+    // functionality dealing with Mediated Sales Transactions is done by the FranklinDecentralizedMarketplaceMediation Smart Contract. 
     
     // Each Item being sold in this Decentralized Marketplace is identified by it's IPFS (InterPlanetary File System) Hash. Information about each item being sold is in a JSON-formatted
     // string stored in the IPFS (InterPlanetary File System) that may be accessed via the Infura IPFS Gateway URL. So, for example, let's say that an Item being sold by a Seller has an
@@ -142,7 +138,7 @@ contract FranklinDecentralizedMarketplace {
     // If the Seller is NOT willing to sell via a Mediator, then this value if boolean false.
     mapping(address => bool) private sellerWillingToSellItemsViaMediator;
     
-    // Refers to the instance of the FranklinDecentralizedMarketplaceMediation Contract that was instantiated and deployed in the below "constructor".
+    // Refers to the instance of the FranklinDecentralizedMarketplaceMediation Contract that was set by the Contract Owner via the "setFranklinDecentralizedMarketplaceMediationContract" method.
     //
     // The Contract code had to be split in two, because the Etherum Virtual Machine (EVM) would not allow deployment of a Contract
     // that has more than 24576 bytes. So, the decision was made to SPLIT the code into the FranklinDecentralizedMarketplace 
@@ -150,10 +146,10 @@ contract FranklinDecentralizedMarketplace {
     // FranklinDecentralizedMarketplaceMediation Contract via it's Constructor. 
     //
     // So, this FranklinDecentralizedMarketplace Contract handles most of the functionality pertaining to the Franklin Decentralized Marketplace Smart Contract functionality, while MOST of the
-    // functionality dealing with Mediated Sales Transactions is done by the FranklinDecentralizedMarketplaceMediation Smart Contract. Public method calls to the FranklinDecentralizedMarketplaceMediation
-    // Smart Contfact should be done by FIRST obating a "handle" to the "mediationMarketplace" via a call to the "getFranklinDecentralizedMarketplaceMediationContract" method and then making the appropriate 
-    // function calss on the "handle".
+    // functionality dealing with Mediated Sales Transactions is done by the FranklinDecentralizedMarketplaceMediation Smart Contract.
     FranklinDecentralizedMarketplaceMediation public mediationMarketplace;
+    bool public mediationMarketplaceHasBeenSet;
+    address public contractOwner;
     
     // event SetSellerWillingToSellItemsViaMediatorEvent(address _msgSender, bool _flag);
     // event AddOrUpdateSellerDescriptionEvent(address _msgSender, string _ipfsHashKeyDescription);
@@ -161,33 +157,22 @@ contract FranklinDecentralizedMarketplace {
     // event SetPriceOfItemEvent(address _msgSender, string _keyItemIpfsHash, uint _priceInWei);
     // event SetQuantityAvailableForSaleOfAnItem(address _msgSender, string _keyItemIpfsHash, uint _quantity);
     event PurchaseItemWithoutMediatorEvent(address _msgSender, address payable _sellerAddress, string _keyItemIpfsHash, uint _quantity);
-    event PurchaseItemWithMediatorEvent(address _msgSender, address _sellerAddress, address _mediatorAddress, string _keyItemIpfsHash, string _mediatedSalesTransactionIpfsHash, uint _quantity);
     event AddItemForSaleAndPossiblySeller(address _msgSender, string _keyItemIpfsHash);
-    // event RemoveItemForSaleAndPossibleSeller(address _msgSender, string _keyItemIpfsHash);    
+    event RemoveItemForSaleAndPossibleSeller(address _msgSender, string _keyItemIpfsHash);    
     
     constructor() public {
-        mediationMarketplace = new FranklinDecentralizedMarketplaceMediation();
+        contractOwner = msg.sender;
     }
     
-    // Gets the Contract Owner of the FranklinDecentralizedMarketplaceMediation Contract that was instantiated and deployed by this FranklinDecentralizedMarketplace Smart Contract.
-    // Thus, the returned Ethereum Address should be "address(this)".
-    function getContractOwnerOfFranklinDecentralizedMarketplaceMediation() external view returns (address) {
-        address contractOwnerOfMediationMarketplace = mediationMarketplace.getFranklinDecentralizedMarketplaceContractAddress();
-        require(contractOwnerOfMediationMarketplace == address(this), 
-            string(abi.encodePacked("Something horribly wrong! FranklinDecentralizedMarketplaceMediation Contract that this ", 
-            "FranklinDecentralizedMarketplace Contract references is NOT owned or deployed by THIS FranklinDecentralizedMarketplace Contract!")));
-        return contractOwnerOfMediationMarketplace;
-    }
-    
-    // Gets the Contract Address of the FranklinDecentralizedMarketplaceMediation Contract that THIS FranklinDecentralizedMarketplace instantiated and deployed.
-    function getFranklinDecentralizedMarketplaceMediationContractAddress() external view returns (address) {
-        return address(mediationMarketplace);
-    }
-    
-    // Gets the Contract Instance/Interface of the FranklinDecentralizedMarketplaceMediation Contract that THIS FranklinDecentralizedMarketplace instantiated and deployed.
-    // This will be needed to be able to call the various public functions of the FranklinDecentralizedMarketplaceMediation dealing with Mediation Sales Transactions.
-    function getFranklinDecentralizedMarketplaceMediationContract() external view returns (FranklinDecentralizedMarketplaceMediation) {
-        return mediationMarketplace;
+    function setFranklinDecentralizedMarketplaceMediationContract(address franklinDecentralizedMarketplaceMediationAddress) public {
+        require(msg.sender == contractOwner, "This method may only be executed by the Contract Owner!");
+        require(!mediationMarketplaceHasBeenSet, "The mediationMarkeplace contract reference has already been set!");
+        
+        FranklinDecentralizedMarketplaceMediation temp = FranklinDecentralizedMarketplaceMediation(franklinDecentralizedMarketplaceMediationAddress);
+        require(contractOwner == temp.contractOwner(), "Must be same Contract Owner in both the FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceMediation contracts!");
+        
+        mediationMarketplace = temp;
+        mediationMarketplaceHasBeenSet = true;
     }
     
     // Determines if a Seller with the given "_sellerAddress" is willing to make sales of it's Items via a Mediator. 
@@ -372,8 +357,6 @@ contract FranklinDecentralizedMarketplace {
     //
     // A return value of Zero (i.e., 0) Wei indicates that the Seller has not yet set a Price for this Item, and thus the Item cannot be purchased
     function getPriceOfItem(address _sellerAddress, string memory _keyItemIpfsHash) public view returns (uint) {
-        require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item!");
-        
         string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);
         require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!");
         
@@ -396,6 +379,19 @@ contract FranklinDecentralizedMarketplace {
         // emit SetQuantityAvailableForSaleOfAnItem(msg.sender, _keyItemIpfsHash, _quantity);
     }
     
+    // Does same functionality as above method, but may ONLY be executed by the "mediationMarketplace" Contract.
+    function setQuantityAvailableForSaleOfAnItem(address _sellerAddress, string memory _keyItemIpfsHash, uint _quantity) public {
+        require(mediationMarketplaceHasBeenSet, "The mediationMarketplace instance has not been set by the Contract Owner!");
+        require(msg.sender == address(mediationMarketplace), "This method may only be executed by the FranklinDecentralizedMarketplaceMediation contract!");
+        require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item to Sell!");
+        
+        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);
+        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale by the Seller!");
+        
+        quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] = _quantity;
+        // emit SetQuantityAvailableForSaleOfAnItem(msg.sender, _keyItemIpfsHash, _quantity);
+    }
+    
     // Gets the Quantity of the given "_keyItemIpfsHash" Item available For sale by the given "_sellerAddress" Seller.
     //
     // Input Parameters:
@@ -403,6 +399,8 @@ contract FranklinDecentralizedMarketplace {
     // 2) _keyItemIpfsHash : This is the IPFS Hash of the item being sold that points to a JSON-formatted string in the IPFS Storage System.
     function getQuantityAvailableForSaleOfAnItemBySeller(address _sellerAddress, string memory _keyItemIpfsHash) public view returns (uint) {
         string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);
+        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!");
+        
         return quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash];
     }
     
@@ -447,108 +445,6 @@ contract FranklinDecentralizedMarketplace {
         _sellerAddress.transfer(totalAmountOfWeiNeededToPurchase);
         
         emit PurchaseItemWithoutMediatorEvent(msg.sender, _sellerAddress, _keyItemIpfsHash, _quantity);
-    }
-    
-    // Allows a Buyer - identified by the "msg.sender" Ethereum Address that calls this method - to purchase a "_quantity" of a specific Item - identified 
-    // by it's "_keyItemIpfsHash" - from a given Seller - identified by it's "_sellerAddress" Ethereum Address AND use a Mediator - identified by the given 
-    // "_mediatorAddress" - to mediate the Mediatiations Sales Transaction - identified by the the given "_mediatedSalesTransactionIpfsHash" ID. 
-    //
-    // The FranklinDecentralizedMarketplaceMediation Contract mainly handles Sales Transactions that involve a Mediator. Thus, these would be referred to as 
-    // Mediated Sales Transactions that involve a Buyer, Seller, and Mediator. Each Buyer, Seller, and Mediator will have a different Ethereum Address.
-    //
-    // The FranklinDecentralizedMarketplaceMediation Contract is used to store the Escrow ETH/WEI (i.e., "totalAmountOfWeiNeededToPurchase") used to pay for Items involved in ALL Mediated Sales Transactions. 
-    // The Mediated Sales Transaction works as follows:
-    // 1) If 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Seller Address
-    //    and 5% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Mediator Address. 
-    // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, then the "totalAmountOfWeiNeededToPurchase" will be sent back to the Buyer Address.
-    // 3) If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase" will be kept inside 
-    //    of this Contract.
-    //
-    // Input Parameters:
-    // 1) _sellerAddress : Ethereum Address of the Seller
-    // 2) _keyItemIpfsHash : This is the IPFS Hash of the Item being sold that points to a JSON-formatted string in the IPFS Storage System.
-    // 3) _mediatorAddress : Ethereum Address of the Mediator
-    // 4) _quantity : Quantity of the Item that the "msg.sender" Buyer wishes to purchase. 
-    // 5) _mediatedSalesTransactionIpfsHash : This is the IPFS Hash of the Mediated Sales Transaction that points to a JSON-formatted string in the IPFS Storage System.
-    // 6) msg.sender : Ethereum Address of the Buyer
-    function purchaseItemWithMediator(address _sellerAddress, address _mediatorAddress, string memory _keyItemIpfsHash, 
-                string memory _mediatedSalesTransactionIpfsHash, uint _quantity) payable public {
-        require(_quantity > 0, "Must purchase at least 1 quantity of the Item for Sale to happen!");
-        require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item you are purchasing!");
-        require(!GeneralUtilities._compareStringsEqual(_mediatedSalesTransactionIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of the Mediated Sales Transaction!");
-        
-        require(sellerExistsMap[_sellerAddress], "Given Seller Address does not exist as a Seller!");
-        
-        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);
-        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!");
-        
-        require(quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] > 0, "Seller has Zero quantity available for Sale for the Item requested to purchase!");
-        require(quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] >= _quantity, 
-            "Quantity available For Sale of the Item from the Seller is less than the quantity requested to purchase! Not enough of the Itenm available For Sale");
-        
-        require(pricesOfItems[combinedKeyAddressPlusItemIpfsHash] > 0, "The Seller has not yet set a Price for Sale for the requested Item! Cannot purchase the Item!"); 
-        
-        uint totalAmountOfWeiNeededToPurchase = GeneralUtilities._safeMathMultiply(pricesOfItems[combinedKeyAddressPlusItemIpfsHash], _quantity);
-        require(msg.value >= totalAmountOfWeiNeededToPurchase, "Not enough ETH/WEI was sent to purchase the quantity requested of the Item!");
-        
-        // Need to check that the Ethereum Addresses of the Buyer, Seller, and Mediator are ALL different!
-        require(msg.sender != _sellerAddress, "The Buyer Address cannot be the same as the Seller Address!");
-        require(msg.sender != _mediatorAddress, "The Buyer Address cannot be the same as the Mediator Address!");
-        require(_sellerAddress != _mediatorAddress, "The Seller Address cannot be the same as the Mediator Address!");
-        
-        // The "msg.value" amount (minus any excess ETH/WEI that was sent) will automatically be sent to the FranklinDecentralizedMarketplaceMediation Contract in Escrow in a 
-        // Mediated Sales Transaction. We need to store the "totalAmountOfWeiNeededToPurchase" as follows so that when:
-        // 1) 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase" can be sent to the Seller Address
-        //    and 5% of the  "msg.value" can be sent to the Mediator Address. 
-        // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, the "totalAmountOfWeiNeededToPurchase" can be sent back to the Buyer Address.
-        // 3) If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase" will be kept inside 
-        //    of the FranklinDecentralizedMarketplaceMediation Contract.
-        
-        // Below code logic was transferred over to the "purchaseItemWithMediator" method of the FranklinDecentralizedMarketplaceMediation Contract.
-        /*
-        require(!mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Mediated Sales Transaction already exists!");
-        
-        string memory mediatorAddressStringKey = GeneralUtilities._addressToString(_mediatorAddress);
-        require(mediatorExistsMap[mediatorAddressStringKey], "Given Mediator Address does not exist as a Mediator!");
-        
-        // Keep track of the existence of the Mediated Sales Transaction so that it can be Approved or Disapproved by the Buyer, Seller, and/or Mediator in the future.
-        mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash] = true;
-        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX] = msg.sender;
-        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX] = _sellerAddress;
-        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX] = _mediatorAddress;
-        
-        // The "msg.value" amount (minus any excess ETH/WEI that was sent) will automatically be sent to the FranklinDecentralizedMarketplaceMediation Contract as Escrow in a 
-        // Mediated Sales Transaction. We need to store the "totalAmountOfWeiNeededToPurchase" as follows so that when:
-        // 1) 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase" can be sent to the Seller Address
-        //    and 5% of the  "msg.value" can be sent to the Mediator Address. 
-        // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, the "totalAmountOfWeiNeededToPurchase" can be sent back to the Buyer Address.
-        mediatedSalesTransactionAmount[_mediatedSalesTransactionIpfsHash] = totalAmountOfWeiNeededToPurchase;
-        
-        numberOfMediationsMediatorInvolved[_mediatorAddress] = GeneralUtilities._safeMathAdd(numberOfMediationsMediatorInvolved[_mediatorAddress], 1);
-        */
-        
-        // Call below method to continue the processing of the Mediated Sales Transaction.
-        mediationMarketplace.purchaseItemWithMediator(msg.sender, _sellerAddress, _mediatorAddress, _mediatedSalesTransactionIpfsHash, totalAmountOfWeiNeededToPurchase);
-        
-        // Subtract the appropriate "_quantity" of that Item for Sale to keep track of the new available quantity of that Item that may be sold. I know that the sale is NOT final 
-        // at this point, BUT let's be optimistic. If the "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction gets Disapproved, then the quantity will have to be updated 
-        // accordingly by the Seller Address via the "setQuantityAvailableForSaleOfAnItem" method.
-        // 
-        // If the Mediated Sales Transaction NEVER reaches a State of Approval nor Disapproval, then the Mediated Sales Transaction will be held in a State of Limbo and the 
-        // "totalAmountOfWeiNeededToPurchase" will be kept inside of the FranklinDecentralizedMarketplaceMediation Contract. Thus, the quantity For Sale of the Item will never 
-        // be automatically updated and it would have to be updated by the Seller Address via the "setQuantityAvailableForSaleOfAnItem" method.
-        quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] = 
-            GeneralUtilities._safeMathSubtract(quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash], _quantity);
-        
-        // We want to make sure to return back to the Buyer Address any excess ETH/WEI that exceeds the amount necessary to purchase the given "_quantity" of the Item.
-        msg.sender.transfer(GeneralUtilities._safeMathSubtract(msg.value, totalAmountOfWeiNeededToPurchase));  
-        
-        // Since the FranklinDecentralizedMarketplaceMediation Contract will be handling any further Mediation actions, the Escrow should be kept there. 
-        // So, send the Escrow Amount to the FranklinDecentralizedMarketplaceMediation Contract
-        address payable mediationMarketplaceAddress = GeneralUtilities._convertAddressToAddressPayable(address(mediationMarketplace));
-        mediationMarketplaceAddress.transfer(totalAmountOfWeiNeededToPurchase);
-        
-        emit PurchaseItemWithMediatorEvent(msg.sender, _sellerAddress, _mediatorAddress, _keyItemIpfsHash, _mediatedSalesTransactionIpfsHash, _quantity);
     }
     
     // Adds an Item - identified by the given "_keyItemIpfsHash" input - to be Sold by a Seller to it's "itemsBeingSoldBySpecificSeller" double-linked list. 
@@ -618,7 +514,7 @@ contract FranklinDecentralizedMarketplace {
             _removeSeller(msg.sender);
         }
         
-        // emit RemoveItemForSaleAndPossibleSeller(msg.sender, _keyItemIpfsHash);
+        emit RemoveItemForSaleAndPossibleSeller(msg.sender, _keyItemIpfsHash);
     }
     
     // Gets the number of different types of Items being sold by a Seller. Each Seller shall have a unique Ethereum Address that will be used to identify
@@ -626,7 +522,21 @@ contract FranklinDecentralizedMarketplace {
     function getNumberOfDifferentItemsBeingSoldBySeller(address _sellerAddress) external view returns (uint) {
         return numberOfDifferentItemsBeingSoldBySellerMap[_sellerAddress];
     }
-    
+
+    // Returns back a boolean value indicating if a certain Item is available for sale from a given Seller.
+    //
+    // Input Parameters:
+    // 1) _sellerAddress : The Ethereum Address of the Seller
+    // 2) _keyItemIpfsHash : The IPFS Hash ID string identifying an Item For Sale
+    //
+    // Returns:
+    // 1) Boolean true : If the given "_sellerAddress" is selling the given Item identified by it's "_keyItemIpfsHash"
+    // 2) Boolean false : If the given "_sellerAddress" is NOT selling the given Item identified by it's "_keyItemIpfsHash"
+    function itemForSaleFromSellerExists(address _sellerAddress, string memory _keyItemIpfsHash) public view returns (bool) {
+        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);
+        return itemsKeysMap[combinedKeyAddressPlusItemIpfsHash];
+    }
+
     // Gets the IPFS Hash string of an Item being sold by a Seller. Index values start at 0.
     //
     // This IPFS Hash string refers to a JSON-formatted string that is stored in the IPFS Storage System.
@@ -659,19 +569,5 @@ contract FranklinDecentralizedMarketplace {
         }
         
         return ipfsHashKeyOfItem;       
-    }
-    
-    // Returns back a boolean value indicating if a certain Item is available for sale from a given Seller.
-    //
-    // Input Parameters:
-    // 1) _sellerAddress : The Ethereum Address of the Seller
-    // 2) _keyItemIpfsHash : The IPFS Hash ID string identifying an Item For Sale
-    //
-    // Returns:
-    // 1) Boolean true : If the given "_sellerAddress" is selling the given Item identified by it's "_keyItemIpfsHash"
-    // 2) Boolean false : If the given "_sellerAddress" is NOT selling the given Item identified by it's "_keyItemIpfsHash"
-    function itemForSaleFromSellerExists(address _sellerAddress, string memory _keyItemIpfsHash) public view returns (bool) {
-        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);
-        return itemsKeysMap[combinedKeyAddressPlusItemIpfsHash];
     }
 }
