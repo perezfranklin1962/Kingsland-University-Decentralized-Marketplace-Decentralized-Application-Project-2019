@@ -155,6 +155,16 @@ contract FranklinDecentralizedMarketplace {
     // function calss on the "handle".
     FranklinDecentralizedMarketplaceMediation public mediationMarketplace;
     
+    // event SetSellerWillingToSellItemsViaMediatorEvent(address _msgSender, bool _flag);
+    // event AddOrUpdateSellerDescriptionEvent(address _msgSender, string _ipfsHashKeyDescription);
+    // event RemoveSellerAndItsItems(address _msgSender);
+    // event SetPriceOfItemEvent(address _msgSender, string _keyItemIpfsHash, uint _priceInWei);
+    // event SetQuantityAvailableForSaleOfAnItem(address _msgSender, string _keyItemIpfsHash, uint _quantity);
+    event PurchaseItemWithoutMediatorEvent(address _msgSender, address payable _sellerAddress, string _keyItemIpfsHash, uint _quantity);
+    event PurchaseItemWithMediatorEvent(address _msgSender, address _sellerAddress, address _mediatorAddress, string _keyItemIpfsHash, string _mediatedSalesTransactionIpfsHash, uint _quantity);
+    event AddItemForSaleAndPossiblySeller(address _msgSender, string _keyItemIpfsHash);
+    // event RemoveItemForSaleAndPossibleSeller(address _msgSender, string _keyItemIpfsHash);    
+    
     constructor() public {
         mediationMarketplace = new FranklinDecentralizedMarketplaceMediation();
     }
@@ -183,7 +193,7 @@ contract FranklinDecentralizedMarketplace {
     // Determines if a Seller with the given "_sellerAddres" is willing to make sales of it's Items via a Mediator. 
     // A return of boolean false indicates that the Seller is NOT willing to sell his/her items via a Mediator. 
     // A return of boolean true indicates that the Seller IS willing to sell his/her items via a Mediator.
-    function sellerIsWillingToSellItemsViaMediator(address _sellerAddress) public view returns (bool) {
+    function sellerIsWillingToSellItemsViaMediator(address _sellerAddress) external view returns (bool) {
         return sellerWillingToSellItemsViaMediator[_sellerAddress];
     }
     
@@ -192,12 +202,13 @@ contract FranklinDecentralizedMarketplace {
     //
     // A "_flag" value of boolean true, indicates that the Seller IS willing to make sales via a Mediator.
     // A "_flag" value of boolean false, indicates that the Seller is NOT willing to make sales via a Mediator.
-    function setSellerWillingToSellItemsViaMediator(bool _flag) public {
+    function setSellerWillingToSellItemsViaMediator(bool _flag) external {
         if (!sellerExistsMap[msg.sender]) {
             return;
         }
         
         sellerWillingToSellItemsViaMediator[msg.sender] = _flag;
+        // emit SetSellerWillingToSellItemsViaMediatorEvent(msg.sender, _flag);
     }
     
     // This method allows a Seller to add/update a Description about himself/herself feeding in the "_ipfsHashKeyDescription" that should point to a JSON-formatted string in the IPFS Storage System.
@@ -207,11 +218,12 @@ contract FranklinDecentralizedMarketplace {
         require(!GeneralUtilities._compareStringsEqual(_ipfsHashKeyDescription, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key Description of a Seller!");
         
         descriptionInfoAboutSellers[msg.sender] = _ipfsHashKeyDescription;
+        // emit AddOrUpdateSellerDescriptionEvent(msg.sender, _ipfsHashKeyDescription);
     }
     
     // Gets the Description of a Seller identified by the given "_sellerAddress". The Description will be the IPFS Hash where the JSON-formatted Description of the Seller exists.
     // If no such IPFS Hash Key Description exists, then an EMPTY_STRING will be returned.
-    function getSellerIpfsHashDescription(address _sellerAddress) public view returns (string memory) {
+    function getSellerIpfsHashDescription(address _sellerAddress) external view returns (string memory) {
         return descriptionInfoAboutSellers[_sellerAddress];
     }
     
@@ -272,7 +284,7 @@ contract FranklinDecentralizedMarketplace {
     
     // Allows a Seller to remove himself/herself from the "listOfSellers". The Seller to be removed is the "msg.sender" Ethereum Address that calls this method. 
     // Not only will the Seller be removed but also ALL of the Items assovciated with this "msg.sender" Seller.
-    function removeSeller() public {
+    function removeSeller() external {
         uint numberOfDifferentItemsBeingSoldBySeller = numberOfDifferentItemsBeingSoldBySellerMap[msg.sender];
         
         // We have to first get ALL of the IPFS Key Hashes of the Items for Sale, because the Indexes will change as we delete the Items.
@@ -288,6 +300,7 @@ contract FranklinDecentralizedMarketplace {
         }
         
         // The Seller "msg.sender" will be automatically removed from the "listOfSellers" when the last Item it has For Sale is removed.
+        // emit RemoveSellerAndItsItems(msg.sender);
     }
     
     // Gets the Seller Ethereum Address at the given "_index" from the "listOfSellers" double-linked list.
@@ -300,7 +313,7 @@ contract FranklinDecentralizedMarketplace {
     // 1) If the "_index" is less than the "numberOfSellers", then the Etheruem Address of the Seller at the given "_index" into the "listOfSellers" double-linked list
     //    is returned.
     // 2) If the "_index" is greater than or equal to the "numberOfSellers", then an Exception is thrown via the "require" below.
-    function getSellerAddress(uint _index) public view returns (address) {
+    function getSellerAddress(uint _index) external view returns (address) {
         require(_index < numberOfSellers, "Index value given is greater than or equal to the Number of Sellers! It should be less than the Number of Sellers!");
         
         // The "key" below is the Ethereum Address in string format that is in the "listOfSellers" double-linked list.
@@ -351,6 +364,7 @@ contract FranklinDecentralizedMarketplace {
         require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale for you - the Seller!");
         
         pricesOfItems[combinedKeyAddressPlusItemIpfsHash] = _priceInWei;
+        // emit SetPriceOfItemEvent(msg.sender, _keyItemIpfsHash, _priceInWei);
     }
     
     // Gets the Price (in Wei) of an Item - identified by the given "_keyItemIpfsHash" input parameter - being sold by a 
@@ -379,6 +393,7 @@ contract FranklinDecentralizedMarketplace {
         require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale by you - the Seller!");
         
         quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] = _quantity;
+        // emit SetQuantityAvailableForSaleOfAnItem(msg.sender, _keyItemIpfsHash, _quantity);
     }
     
     // Gets the Quantity of the given "_keyItemIpfsHash" Item available For sale by the given "_sellerAddress" Seller.
@@ -430,6 +445,8 @@ contract FranklinDecentralizedMarketplace {
         
         // Transfer the "totalAmountOfWeiNeededToPurchase" to the Seller.
         _sellerAddress.transfer(totalAmountOfWeiNeededToPurchase);
+        
+        emit PurchaseItemWithoutMediatorEvent(msg.sender, _sellerAddress, _keyItemIpfsHash, _quantity);
     }
     
     // Allows a Buyer - identified by the "msg.sender" Ethereum Address that calls this method - to purchase a "_quantity" of a specific Item - identified 
@@ -530,6 +547,8 @@ contract FranklinDecentralizedMarketplace {
         // So, send the Escrow Amount to the FranklinDecentralizedMarketplaceMediation Contract
         address payable mediationMarketplaceAddress = GeneralUtilities._convertAddressToAddressPayable(address(mediationMarketplace));
         mediationMarketplaceAddress.transfer(totalAmountOfWeiNeededToPurchase);
+        
+        emit PurchaseItemWithMediatorEvent(msg.sender, _sellerAddress, _mediatorAddress, _keyItemIpfsHash, _mediatedSalesTransactionIpfsHash, _quantity);
     }
     
     // Adds an Item - identified by the given "_keyItemIpfsHash" input - to be Sold by a Seller to it's "itemsBeingSoldBySpecificSeller" double-linked list. 
@@ -561,6 +580,8 @@ contract FranklinDecentralizedMarketplace {
         itemsKeysMap[combinedKeyAddressPlusItemIpfsHash] = true;
         
         _addSeller(msg.sender); // No seller added if Seller already exists.
+        
+        emit AddItemForSaleAndPossiblySeller(msg.sender, _keyItemIpfsHash);
     }
     
     // Removes an Item - identified by the given "_keyItemIpfsHash" input - being Sold by a Seller in it's "itemsBeingSoldBySpecificSeller" double-linked list. 
@@ -596,11 +617,13 @@ contract FranklinDecentralizedMarketplace {
         if (numberOfDifferentItemsBeingSoldBySellerMap[msg.sender] == 0) {
             _removeSeller(msg.sender);
         }
+        
+        // emit RemoveItemForSaleAndPossibleSeller(msg.sender, _keyItemIpfsHash);
     }
     
     // Gets the number of different types of Items being sold by a Seller. Each Seller shall have a unique Ethereum Address that will be used to identify
     // the Seller.
-    function getNumberOfDifferentItemsBeingSoldBySeller(address _sellerAddress) public view returns (uint) {
+    function getNumberOfDifferentItemsBeingSoldBySeller(address _sellerAddress) external view returns (uint) {
         return numberOfDifferentItemsBeingSoldBySellerMap[_sellerAddress];
     }
     
