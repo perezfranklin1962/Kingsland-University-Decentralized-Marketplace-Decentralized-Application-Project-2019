@@ -185,12 +185,12 @@ contract FranklinDecentralizedMarketplace {
     }
     
     // Gets the Contract Instance/Interface of the FranklinDecentralizedMarketplaceMediation Contract that THIS FranklinDecentralizedMarketplace instantiated and deployed.
-    // This will be needed to be able to call the various public functions of the FranklinDecentralizedMarketplaceMediation dealinh with Mediation Sales Transactions.
+    // This will be needed to be able to call the various public functions of the FranklinDecentralizedMarketplaceMediation dealing with Mediation Sales Transactions.
     function getFranklinDecentralizedMarketplaceMediationContract() external view returns (FranklinDecentralizedMarketplaceMediation) {
         return mediationMarketplace;
     }
     
-    // Determines if a Seller with the given "_sellerAddres" is willing to make sales of it's Items via a Mediator. 
+    // Determines if a Seller with the given "_sellerAddress" is willing to make sales of it's Items via a Mediator. 
     // A return of boolean false indicates that the Seller is NOT willing to sell his/her items via a Mediator. 
     // A return of boolean true indicates that the Seller IS willing to sell his/her items via a Mediator.
     function sellerIsWillingToSellItemsViaMediator(address _sellerAddress) external view returns (bool) {
@@ -356,12 +356,12 @@ contract FranklinDecentralizedMarketplace {
     function setPriceOfItem(string memory _keyItemIpfsHash, uint _priceInWei) public {
         require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item to Sell!");
         
-        // I was thinking of not allowing the Seller to set the Price of an Itemn to Zero wei, but then I changed my mind. The Seller may have a situation where its has 
-        // the Item in stock, but does not wish to sell the Ite, yet.
+        // I was thinking of not allowing the Seller to set the Price of an Itemn to Zero wei, but then I changed my mind. The Seller may have a situation where he/she has 
+        // the Item in stock, but does not wish to sell the Item yet.
         // require(_priceInWei > 0, "Cannot set the Price of an Item to Zero Wei!");
         
         string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);
-        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale for you - the Seller!");
+        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale by the Seller!");
         
         pricesOfItems[combinedKeyAddressPlusItemIpfsHash] = _priceInWei;
         // emit SetPriceOfItemEvent(msg.sender, _keyItemIpfsHash, _priceInWei);
@@ -385,12 +385,12 @@ contract FranklinDecentralizedMarketplace {
     // Input Parameters:
     // 1) _keyItemIpfsHash : This is the IPFS Hash of the item being sold that points to a JSON-formatted string in the IPFS Storage System.
     // 2) _quantity : The quantity available For Sale of the Item that the Seller is selling.   
-    // 3) msg.sender : Ethereum Addrees of the Seller
+    // 3) msg.sender : Ethereum Address of the Seller
     function setQuantityAvailableForSaleOfAnItem(string memory _keyItemIpfsHash, uint _quantity) public {
         require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item to Sell!");
         
         string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);
-        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale by you - the Seller!");
+        require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale by the Seller!");
         
         quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] = _quantity;
         // emit SetQuantityAvailableForSaleOfAnItem(msg.sender, _keyItemIpfsHash, _quantity);
