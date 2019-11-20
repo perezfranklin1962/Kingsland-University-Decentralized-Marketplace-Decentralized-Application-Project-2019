@@ -383,7 +383,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 			assert.fail("Should not be able to get the Price of an Item when input _keyItemIpfsHash is an empty string!");
 		} catch (error) {
 			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
-			assert.ok(/Cannot have an empty String for the IPFS Hash Key of an Item!/.test(error.message),
+			assert.ok(/Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!/.test(error.message),
 				"Appropriate error message not returned!");
 		}
 	});
@@ -396,7 +396,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 			assert.fail("Should not be able to get the Price of an Item when input _keyItemIpfsHash is an empty string!");
 		} catch (error) {
 			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
-			assert.ok(/Cannot have an empty String for the IPFS Hash Key of an Item!/.test(error.message),
+			assert.ok(/Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!/.test(error.message),
 				"Appropriate error message not returned!");
 		}
 	});
@@ -504,6 +504,78 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 			"Quantity available for Sale of the Item that was set is NOT equal to what is stored in the Contract!");
 	});
 
+// DUMMY
+	/*
+	it("FranklinDecentralizedMarketplace : test getQuantityAvailableForSaleOfAnItemBySeller method : seller does NOT exist and input _keyItemIpfsHash is an empty string", async () => {
+		try {
+			await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(accounts[randomAddressIndex], EMPTY_STRING);
+			assert.fail("Should not be able to get the Quantity available for sale of an Item when input _keyItemIpfsHash is an empty string!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Cannot have an empty String for the IPFS Hash Key of an Item!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+	*/
+
+	/*
+	it("FranklinDecentralizedMarketplace : test getPriceOfItem method : seller does exist and input _keyItemIpfsHash is an empty string", async () => {
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: accounts[randomAddressIndex] });
+
+		try {
+			await franklinDecentralizedMarketplaceContract.getPriceOfItem(accounts[randomAddressIndex], EMPTY_STRING);
+			assert.fail("Should not be able to get the Price of an Item when input _keyItemIpfsHash is an empty string!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Cannot have an empty String for the IPFS Hash Key of an Item!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplace : test getPriceOfItem method : seller does exist but input _keyItemIpfsHash is NOT an item the seller sells", async () => {
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: accounts[randomAddressIndex] });
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_2", { from: accounts[randomAddressIndex] });
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_3", { from: accounts[randomAddressIndex] });
+
+		try {
+			await franklinDecentralizedMarketplaceContract.getPriceOfItem(accounts[randomAddressIndex], "Item_Not_Sold");
+			assert.fail("Should not be able to get the Price of an Item when input _keyItemIpfsHash is an item the seller does not sell!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplace : test getPriceOfItem method : seller does exist, input _keyItemIpfsHash is an item the seller sells, but seller never set the price of the item", async () => {
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: accounts[randomAddressIndex] });
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_2", { from: accounts[randomAddressIndex] });
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_3", { from: accounts[randomAddressIndex] });
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.getPriceOfItem(accounts[randomAddressIndex], "DummyItem_2"), 0,
+			"Price of the Item should be equal to zero!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test getPriceOfItem method : seller does exist, input _keyItemIpfsHash is an item the seller sells, but seller set the price of the item to zero WEI", async () => {
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: accounts[randomAddressIndex] });
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_2", { from: accounts[randomAddressIndex] });
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_3", { from: accounts[randomAddressIndex] });
+
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem("DummyItem_2", 0, { from: accounts[randomAddressIndex] });
+		assert.equal(await franklinDecentralizedMarketplaceContract.getPriceOfItem(accounts[randomAddressIndex], "DummyItem_2"), 0,
+			"Price of the Item should be equal to zero!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test getPriceOfItem method : seller does exist, input _keyItemIpfsHash is an item the seller sells, and seller set the price of the item to a non-zero WEI", async () => {
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: accounts[randomAddressIndex] });
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_2", { from: accounts[randomAddressIndex] });
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_3", { from: accounts[randomAddressIndex] });
+
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem("DummyItem_2", 3, { from: accounts[randomAddressIndex] });
+		assert.equal(await franklinDecentralizedMarketplaceContract.getPriceOfItem(accounts[randomAddressIndex], "DummyItem_2"), 3,
+			"Price of the Item obtained is not the same price it was set!");
+	});
+	*/
 
 	// Below is what's returned in function calls that change the contract.
     /*
