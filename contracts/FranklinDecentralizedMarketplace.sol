@@ -445,6 +445,7 @@ contract FranklinDecentralizedMarketplace {
         // Transfer the "totalAmountOfWeiNeededToPurchase" to the Seller.
         _sellerAddress.transfer(totalAmountOfWeiNeededToPurchase);
         
+        emit PurchaseItemWithoutMediatorEvent(msg.sender, _sellerAddress, _keyItemIpfsHash, _quantity);
     }
     
     // Adds an Item - identified by the given "_keyItemIpfsHash" input - to be Sold by a Seller to it's "itemsBeingSoldBySpecificSeller" double-linked list. 
