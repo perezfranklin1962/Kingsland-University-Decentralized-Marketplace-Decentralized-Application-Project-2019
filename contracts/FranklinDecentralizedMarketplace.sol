@@ -380,13 +380,14 @@ contract FranklinDecentralizedMarketplace {
     }
     
     // Does same functionality as above method, but may ONLY be executed by the "mediationMarketplace" Contract.
-    function setQuantityAvailableForSaleOfAnItem(address _sellerAddress, string memory _keyItemIpfsHash, uint _quantity) public {
+    function setQuantityAvailableForSaleOfAnItem_v2(address _sellerAddress, string memory _keyItemIpfsHash, uint _quantity) public {
         require(mediationMarketplaceHasBeenSet, "The mediationMarketplace instance has not been set by the Contract Owner!");
-        require(msg.sender == address(mediationMarketplace), "This method may only be executed by the FranklinDecentralizedMarketplaceMediation contract!");
         require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item to Sell!");
         
         string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);
         require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale by the Seller!");
+        
+        require(msg.sender == address(mediationMarketplace), "This method may only be executed by the FranklinDecentralizedMarketplaceMediation contract!");
         
         quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] = _quantity;
         // emit SetQuantityAvailableForSaleOfAnItem(msg.sender, _keyItemIpfsHash, _quantity);
@@ -422,7 +423,7 @@ contract FranklinDecentralizedMarketplace {
         
         require(sellerExistsMap[_sellerAddress], "Given Seller Address does not exist as a Seller!");
         
-        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);
+        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);
         require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!");
         
         require(quantityAvailableForSaleOfEachItem[combinedKeyAddressPlusItemIpfsHash] > 0, "Seller has Zero quantity available for Sale for the Item requested to purchase!");
@@ -444,7 +445,6 @@ contract FranklinDecentralizedMarketplace {
         // Transfer the "totalAmountOfWeiNeededToPurchase" to the Seller.
         _sellerAddress.transfer(totalAmountOfWeiNeededToPurchase);
         
-        emit PurchaseItemWithoutMediatorEvent(msg.sender, _sellerAddress, _keyItemIpfsHash, _quantity);
     }
     
     // Adds an Item - identified by the given "_keyItemIpfsHash" input - to be Sold by a Seller to it's "itemsBeingSoldBySpecificSeller" double-linked list. 

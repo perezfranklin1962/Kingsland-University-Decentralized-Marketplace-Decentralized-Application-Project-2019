@@ -5,7 +5,7 @@
 // 2) https://github.com/sc-forks/solidity-coverage
 
 module.exports = {
-    // skipFiles: ['GeneralUtilities.sol'],
+    skipFiles: ['GeneralUtilities.sol', 'FranklinDecentralizedMarketplaceMediation.sol'],
     accounts: 100
 };
 

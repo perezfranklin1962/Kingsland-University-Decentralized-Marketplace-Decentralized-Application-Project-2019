@@ -496,7 +496,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         // If the Mediated Sales Transaction NEVER reaches a State of Approval nor Disapproval, then the Mediated Sales Transaction will be held in a State of Limbo and the 
         // "totalAmountOfWeiNeededToPurchase" will be kept inside of the FranklinDecentralizedMarketplaceMediation Contract. Thus, the quantity For Sale of the Item will never 
         // be automatically updated and it would have to be updated by the Seller Address via the "setQuantityAvailableForSaleOfAnItem" method.
-        franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(_sellerAddress, _keyItemIpfsHash, 
+        franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem_v2(_sellerAddress, _keyItemIpfsHash, 
             GeneralUtilities._safeMathSubtract(quantityAvailableForSaleOfItem, _quantity));
         
         // We want to make sure to return back to the Buyer Address any excess ETH/WEI that exceeds the amount necessary to purchase the given "_quantity" of the Item.
