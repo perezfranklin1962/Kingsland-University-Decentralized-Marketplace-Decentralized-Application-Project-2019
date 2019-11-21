@@ -56,8 +56,8 @@ module.exports = {
     coverage: {
       host: "localhost",
       network_id: "*",
-      port: 8555,         // <-- If you change this, also set the port option in .solcover.js.
-      // port: 7545,  // Did not work! Apparently it wants to instatiate a NEW Ethereum Node of it's own!
+      // port: 8555,         // <-- If you change this, also set the port option in .solcover.js.
+      port: 7545,  // Did not work! Apparently it wants to instatiate a NEW Ethereum Node of it's own!
       gas: 0xfffffffffff, // <-- Use this high gas value
       gasPrice: 0x01      // <-- Use this low gas price
     },

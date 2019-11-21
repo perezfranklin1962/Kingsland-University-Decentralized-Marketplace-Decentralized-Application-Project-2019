@@ -5,7 +5,9 @@
 // 2) https://github.com/sc-forks/solidity-coverage
 
 module.exports = {
-    skipFiles: ['GeneralUtilities.sol', 'FranklinDecentralizedMarketplaceMediation.sol'],
-    accounts: 100
+    accounts: 100,
+    port: 7545,
+    norpc: true,
+    skipFiles: ['GeneralUtilities.sol']
 };
 

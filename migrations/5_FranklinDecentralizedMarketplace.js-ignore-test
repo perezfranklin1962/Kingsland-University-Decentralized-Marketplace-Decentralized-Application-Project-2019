@@ -1,0 +1,24 @@
+const FranklinDecentralizedMarketplace = artifacts.require("FranklinDecentralizedMarketplace");
+const FranklinDecentralizedMarketplaceMediation = artifacts.require("FranklinDecentralizedMarketplaceMediation");
+
+var franklinDecentralizedMarketplace;
+var franklinDecentralizedMarketplaceMediation;
+
+// Reference --> https://ethereum.stackexchange.com/questions/30572/truffle-post-deployment-actions
+
+module.exports = function(deployer) {
+	deployer.deploy(FranklinDecentralizedMarketplace).then(function(instanceA) {
+		franklinDecentralizedMarketplace = instanceA;
+		// console.log('franklinDecentralizedMarketplace =', franklinDecentralizedMarketplace);
+
+		deployer.deploy(FranklinDecentralizedMarketplaceMediation).then(function(instanceB) {
+			franklinDecentralizedMarketplaceMediation = instanceB;
+
+			console.log('franklinDecentralizedMarketplaceMediation =', franklinDecentralizedMarketplaceMediation);
+
+			return franklinDecentralizedMarketplace.setFranklinDecentralizedMarketplaceMediationContract(franklinDecentralizedMarketplaceMediation.address);
+		});
+
+		return franklinDecentralizedMarketplaceMediation.setFranklinDecentralizedMarketplaceContract(franklinDecentralizedMarketplace.address);
+	});
+};

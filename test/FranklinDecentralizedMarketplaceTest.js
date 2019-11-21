@@ -52,6 +52,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		randomAddressIndex = (randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS;
 	});
 
+	/*
 	it("FranklinDecentralizedMarketplace : test constructor - sets appropriate contract owner", async () => {
 		assert.equal(await franklinDecentralizedMarketplaceContract.contractOwner.call(), accounts[0],
 			"Contract Owner not properly set!");
@@ -823,6 +824,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 				"Appropriate error message not returned!");
 		}
 	});
+	*/
 
 	it("FranklinDecentralizedMarketplace : test purchaseItemWithoutMediator : buyer purchases item from seller and sends value equal to amount needed to make purchase", async () => {
 		let sellerAddress = accounts[(randomAddressIndex + 4) % NUMBER_OF_ACCOUNTS];
