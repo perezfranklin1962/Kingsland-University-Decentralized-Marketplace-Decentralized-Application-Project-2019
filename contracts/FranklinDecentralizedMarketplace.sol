@@ -157,8 +157,8 @@ contract FranklinDecentralizedMarketplace {
     // event SetPriceOfItemEvent(address _msgSender, string _keyItemIpfsHash, uint _priceInWei);
     // event SetQuantityAvailableForSaleOfAnItem(address _msgSender, string _keyItemIpfsHash, uint _quantity);
     event PurchaseItemWithoutMediatorEvent(address _msgSender, address payable _sellerAddress, string _keyItemIpfsHash, uint _quantity);
-    event AddItemForSaleAndPossiblySeller(address _msgSender, string _keyItemIpfsHash);
-    event RemoveItemForSaleAndPossibleSeller(address _msgSender, string _keyItemIpfsHash);    
+    event AddItemForSaleAndPossiblySellerEvent(address _msgSender, string _keyItemIpfsHash);
+    event RemoveItemForSaleAndPossibleSellerEvent(address _msgSender, string _keyItemIpfsHash);    
     
     constructor() public {
         contractOwner = msg.sender;
@@ -455,13 +455,11 @@ contract FranklinDecentralizedMarketplace {
     function addItemForSale(string memory _keyItemIpfsHash) public {
         require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item to Sell!");
         
-        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);
-        
         // If the specific type of Item is already in the list of Items that the Seller is selling, then no need to add the Item, because it's already there.
+        string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(msg.sender, _keyItemIpfsHash);
         if (itemsKeysMap[combinedKeyAddressPlusItemIpfsHash]) {
             return;
         }
-        
         // This below is the double-linked list of different types of Items being sold by a Seller.
         mapping(string => mapping(bool => string)) storage itemsBeingSoldBySenderAddress = itemsBeingSoldBySpecificSeller[msg.sender];
         
@@ -478,7 +476,7 @@ contract FranklinDecentralizedMarketplace {
         
         _addSeller(msg.sender); // No seller added if Seller already exists.
         
-        emit AddItemForSaleAndPossiblySeller(msg.sender, _keyItemIpfsHash);
+        emit AddItemForSaleAndPossiblySellerEvent(msg.sender, _keyItemIpfsHash);
     }
     
     // Removes an Item - identified by the given "_keyItemIpfsHash" input - being Sold by a Seller in it's "itemsBeingSoldBySpecificSeller" double-linked list. 
@@ -515,7 +513,7 @@ contract FranklinDecentralizedMarketplace {
             _removeSeller(msg.sender);
         }
         
-        emit RemoveItemForSaleAndPossibleSeller(msg.sender, _keyItemIpfsHash);
+        emit RemoveItemForSaleAndPossibleSellerEvent(msg.sender, _keyItemIpfsHash);
     }
     
     // Gets the number of different types of Items being sold by a Seller. Each Seller shall have a unique Ethereum Address that will be used to identify

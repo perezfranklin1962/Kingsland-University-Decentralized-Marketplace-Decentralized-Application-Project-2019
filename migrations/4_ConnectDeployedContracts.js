@@ -71,8 +71,8 @@ module.exports = async function(deployer) {
 	}
 
 	console.log();
-	console.log('franklinDecentralizedMarketplace.mediationMarketplace.call() = ', franklinDecentralizedMarketplace.mediationMarketplace.call());
-	console.log();
+	// console.log('franklinDecentralizedMarketplace.mediationMarketplace.call() = ', franklinDecentralizedMarketplace.mediationMarketplace.call());
+	// console.log();
 
 	let franklinDecentralizedMarketplace_mediationMarketplace_instance_after_setting = undefined;
 	await franklinDecentralizedMarketplace.mediationMarketplace.call().then(function(instance) {

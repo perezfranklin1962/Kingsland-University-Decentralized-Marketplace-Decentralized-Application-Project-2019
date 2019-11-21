@@ -824,7 +824,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 				"Appropriate error message not returned!");
 		}
 	});
-	*/
+
 
 	it("FranklinDecentralizedMarketplace : test purchaseItemWithoutMediator : buyer purchases item from seller and sends value equal to amount needed to make purchase", async () => {
 		let sellerAddress = accounts[(randomAddressIndex + 4) % NUMBER_OF_ACCOUNTS];
@@ -993,11 +993,189 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		assert.equal(results.logs[0].args._quantity.toString(), quantityOfTheItemInPurchase.toString(), "The __quantity argument should be quantity of the Items bought!");
 	});
 
+	it("FranklinDecentralizedMarketplace : test addItemForSale : IPFS Hash key referring to an Item is an empty string", async () => {
+		try {
+			await franklinDecentralizedMarketplaceContract.addItemForSale(EMPTY_STRING, { from: accounts[randomAddressIndex] });
+			assert.fail("Cannot add an Item for Sale that is identified by an empty string!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Cannot have an empty String for the IPFS Hash Key of an Item to Sell!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplace : test addItemForSale : IPFS Hash Key refers to an already existing Item in the seller's list of items for sale", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
+			"Initial count of Items for Seller should have been 1!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), true,
+			"Initially, given Item IPFS Key Hash should have already existed for the Seller!");
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
+			"Count of Items for Seller should not change!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), true,
+			"Should still reflect that given Item exists!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test addItemForSale : seller does not exist - multiple sellers added for same Item", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should initially not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), false,
+			"Initially, given Item IPFS Key Hash should NOT exist for the Seller!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
+			"Initial count of Items for Seller should have been 0!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfSellers(), 0,
+			"Initally, Number of Sellers should be equal to zero!");
+
+		// Item for a Seller that does not exist is added.
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), true,
+			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
+			"Count of Items for Seller increase by 1 when an Item that did not exist for the Seller is added!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfSellers(), 1,
+			"Number of Sellers should increase by 1 after seller that did not exist is added!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getSellerAddress(0), sellerAddress,
+			"Seller Address should exist in 'listOfSellers' and should be able to be accessed via the appropropriate index");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, 0), "DummyItem_1",
+			"Item that Seller just added should be accesible in it's 'listOfItems' at the appropriate index");
+
+		// Adding a second seller
+
+		sellerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should initially not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), false,
+			"Initially, given Item IPFS Key Hash should NOT exist for the Seller!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
+			"Initial count of Items for Seller should have been 0!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfSellers(), 1,
+			"Number of Sellers should be equal to the number of sellers that have beed added so far!");
+
+		// Item for a second Seller that does not exist is added.
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), true,
+			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
+			"Count of Items for Seller increase by 1 when an Item that did not exist for the Seller is added!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfSellers(), 2,
+			"Number of Sellers should increase by 1 after seller that did not exist is added!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getSellerAddress(0), sellerAddress,
+			"Seller Address should exist in 'listOfSellers' and should be able to be accessed via the appropropriate index!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, 0), "DummyItem_1",
+			"Item that Seller just added should be accesible in it's 'listOfItems' at the appropriate index");
+
+		// Adding a third seller
+
+		sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should initially not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), false,
+			"Initially, given Item IPFS Key Hash should NOT exist for the Seller!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
+			"Initial count of Items for Seller should have been 0!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfSellers(), 2,
+			"Number of Sellers should be equal to the number of sellers that have beed added so far!");
+
+		// Item for a third Seller that does not exist is added.
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), true,
+			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
+			"Count of Items for Seller increase by 1 when an Item that did not exist for the Seller is added!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfSellers(), 3,
+			"Number of Sellers should increase by 1 after seller that did not exist is added!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getSellerAddress(0), sellerAddress,
+			"Seller Address should exist in 'listOfSellers' and should be able to be accessed via the appropropriate index!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, 0), "DummyItem_1",
+			"Item that Seller just added should be accesible in it's 'listOfItems' at the appropriate index");
+
+		// Testing to see that ALL the sellers exist in the "listOfSellers" at the appropriate index
+		let decrementingIndex = 2;
+		for (let i = 0; i < 3; i++) {
+			sellerAddress = accounts[(randomAddressIndex + i) % NUMBER_OF_ACCOUNTS];
+			assert.equal(await franklinDecentralizedMarketplaceContract.getSellerAddress(decrementingIndex), sellerAddress,
+				"Seller Address exists in the wrong index position of the 'listOfSellers' double-linked list!");
+			decrementingIndex--;
+		}
+	});
+
+	it("FranklinDecentralizedMarketplace : test addItemForSale : seller does exist - multiple Items that do no exist for a seller are added", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_0", { from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress),true, "Seller initially exists!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem"), false,
+			"Initially, given Item IPFS Key Hash should exist for the Seller!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
+			"Initial count of Items for Seller should have been 1!");
+
+		// First New Item for an existing seller is added.
+		let itemToAdd = "DummyItem_1"
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemToAdd, { from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should STILL exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemToAdd), true,
+			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 2,
+			"Count of Items for Seller should increase by 1 when an Item that did not exist for the Seller is added!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, 0), itemToAdd,
+			"Item that Seller just added should be accesible in it's 'listOfItems' at the appropriate index");
+
+		// Second New Item for an existing seller is added.
+		itemToAdd = "DummyItem_2"
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemToAdd, { from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should STILL exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemToAdd), true,
+			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 3,
+			"Count of Items for Seller should ncrease by 1 when an Item that did not exist for the Seller is added!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, 0), itemToAdd,
+			"Item that Seller just added should be accesible in it's 'listOfItems' at the appropriate index");
+
+		// Third New Item for an existing seller is added.
+		itemToAdd = "DummyItem_3"
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemToAdd, { from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should STILL exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemToAdd), true,
+			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 4,
+			"Count of Items for Seller should ncrease by 1 when an Item that did not exist for the Seller is added!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, 0), itemToAdd,
+			"Item that Seller just added should be accesible in it's 'listOfItems' at the appropriate index");
+
+		// Testing to see that all the Items for Sale from a Seller may be accessed at the appropriate index.
+		let decrementingIndex = 3;
+		for (let i = 0; i < 4; i++) {
+			let itemToAccess = `DummyItem_${i}`;
+			assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, decrementingIndex), itemToAccess,
+				"Item exists in the wrong index position of the 'listOfItems' double-linked list of the Seller!");
+			decrementingIndex--;
+		}
+	});
+
+	it("FranklinDecentralizedMarketplace : test addItemForSale : verify AddItemForSaleAndPossiblySellerEvent is generated whenever an Item that does not exist for a seller is added", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let results = await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem", { from: sellerAddress});
+
+		// Making sure that AddItemForSaleAndPossiblySellerEvent(_msgSender, _keyItemIpfsHash) fired off
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'AddItemForSaleAndPossiblySellerEvent', "There should have been a AddItemForSaleAndPossiblySellerEvent Event Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 2, "There should have been 2 arguments in the AddItemForSaleAndPossiblySellerEvent that Fired Off!");
+		assert.equal(results.logs[0].args._msgSender, sellerAddress, "The _msgSender argument should be the Seller Address!");;
+		assert.equal(results.logs[0].args._keyItemIpfsHash, "DummyItem", "The _keyItemIpfsHash argument should be IPFS Hash of Item bought!");
+	});
+	*/
+
+
+
 	// Below is what's returned in function calls that change the contract.
     /*
 	it("test addItemForSale", async () => {
-		let tx = await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem", { from: accounts[2], data: "The cat is in the hat!" });
-		console.log('tx =', tx);
+		let results = await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem", { from: accounts[2], data: "The cat is in the hat!" });
+		console.log('results =', results);
 	});
 	*/
 
