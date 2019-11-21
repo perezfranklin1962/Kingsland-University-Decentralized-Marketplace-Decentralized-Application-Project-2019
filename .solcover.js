@@ -6,7 +6,7 @@
 
 module.exports = {
     accounts: 100,
-    port: 7545,
+    port: 8545,
     norpc: true,
     skipFiles: ['GeneralUtilities.sol']
 };

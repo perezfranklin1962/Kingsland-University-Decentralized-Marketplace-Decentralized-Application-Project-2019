@@ -57,9 +57,12 @@ module.exports = {
       host: "localhost",
       network_id: "*",
       // port: 8555,         // <-- If you change this, also set the port option in .solcover.js.
-      port: 7545,  // Did not work! Apparently it wants to instatiate a NEW Ethereum Node of it's own!
-      gas: 0xfffffffffff, // <-- Use this high gas value
+      port: 8545,  // Did not work! Apparently it wants to instatiate a NEW Ethereum Node of it's own!
+      // gas: 0xfffffffffff, // <-- Use this high gas value
+      gas: 104878050,
       gasPrice: 0x01      // <-- Use this low gas price
+      // gas: 104878050,        	// Increase Gas Limit to have succesful migrate - Source --> https://hanezu.github.io/posts/Gas-Limit-Error-when-deploy-Truffle-project-on-Private-Network.html
+      // gasPrice: 10000000000		// Based Gas Price to use via https://ethgasstation.info
     },
 
     // Another network with more advanced options...

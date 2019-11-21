@@ -15,6 +15,28 @@ module.exports = async function(deployer) {
 		franklinDecentralizedMarketplaceMediation = instance;
 	})
 
+	let franklinDecentralizedMarketplace_mediationMarketplaceHasBeenSet_instance_before_setting = undefined;
+	await franklinDecentralizedMarketplace.mediationMarketplaceHasBeenSet.call().then(function(instance) {
+		franklinDecentralizedMarketplace_mediationMarketplaceHasBeenSet_instance_before_setting = instance;
+	});
+
+	console.log('franklinDecentralizedMarketplace_mediationMarketplaceHasBeenSet_instance_before_setting =',
+		franklinDecentralizedMarketplace_mediationMarketplaceHasBeenSet_instance_before_setting);
+
+	let franklinDecentralizedMarketplaceMediation_franklinDecentralizedMarketplaceContractHasBeenSet_instance_before_setting = undefined;
+	await franklinDecentralizedMarketplaceMediation.franklinDecentralizedMarketplaceContractHasBeenSet.call().then(function(instance) {
+		franklinDecentralizedMarketplaceMediation_franklinDecentralizedMarketplaceContractHasBeenSet_instance_before_setting = instance;
+	});
+	console.log('franklinDecentralizedMarketplaceMediation_franklinDecentralizedMarketplaceContractHasBeenSet_instance_before_setting =',
+		franklinDecentralizedMarketplaceMediation_franklinDecentralizedMarketplaceContractHasBeenSet_instance_before_setting);
+
+	if (franklinDecentralizedMarketplace_mediationMarketplaceHasBeenSet_instance_before_setting &&
+		franklinDecentralizedMarketplaceMediation_franklinDecentralizedMarketplaceContractHasBeenSet_instance_before_setting) {
+		return;
+	}
+
+	console.log();
+
 	// console.log('franklinDecentralizedMarketplace =', franklinDecentralizedMarketplace);
 	// console.log('franklinDecentralizedMarketplaceMediation =', franklinDecentralizedMarketplaceMediation);
 	console.log('franklinDecentralizedMarketplace.address =', franklinDecentralizedMarketplace.address);
@@ -40,9 +62,13 @@ module.exports = async function(deployer) {
 	// console.log('franklinDecentralizedMarketplace.mediationMarketplace.call() = ', franklinDecentralizedMarketplace.mediationMarketplace.call());
 	console.log();
 
+	if (!franklinDecentralizedMarketplace_mediationMarketplaceHasBeenSet_instance_before_setting) {
+		franklinDecentralizedMarketplace.setFranklinDecentralizedMarketplaceMediationContract(franklinDecentralizedMarketplaceMediation.address);
+	}
 
-	franklinDecentralizedMarketplace.setFranklinDecentralizedMarketplaceMediationContract(franklinDecentralizedMarketplaceMediation.address);
-	franklinDecentralizedMarketplaceMediation.setFranklinDecentralizedMarketplaceContract(franklinDecentralizedMarketplace.address);
+	if (!franklinDecentralizedMarketplaceMediation_franklinDecentralizedMarketplaceContractHasBeenSet_instance_before_setting) {
+		franklinDecentralizedMarketplaceMediation.setFranklinDecentralizedMarketplaceContract(franklinDecentralizedMarketplace.address);
+	}
 
 	console.log();
 	console.log('franklinDecentralizedMarketplace.mediationMarketplace.call() = ', franklinDecentralizedMarketplace.mediationMarketplace.call());
