@@ -53,10 +53,10 @@ contract FranklinDecentralizedMarketplaceMediation {
     mapping(string => mapping(bool => string)) private listOfMediators;
     
     // Map that keeps track of whether a Mediator exists. The "address" key is the Ethereum Address of the Mediator.
-    mapping(address => bool) private mediatorExistsMap;
+    mapping(address => bool) private mediatorExists;
     
     // Keeps a count on the Number of Mediators that mediate sales on this platform.
-    uint private numberOfMediators;
+    uint public numberOfMediators;
     
     // This Mapping contains the Description Information about the Mediators. The Mediator is responsible for adding this information.
     //
@@ -64,14 +64,14 @@ contract FranklinDecentralizedMarketplaceMediation {
     // 1) Key: Ethereum Address of the Mediator
     // 2) Value: IPFS Hash string of the information pertaining to the Mediator. This information is stored in the IPFS Storage Network.
     //           This information should be a JSON-formatted string.
-    mapping(address => string) private descriptionInfoAboutMediators;
+    mapping(address => string) public descriptionInfoAboutMediators;
     
     // This Mapping contains the Number of Mediations that a Mediator has been involved.
     //
     // Mapping is as follows:
     // 1) Key: Ethereum Address of the Mediator
     // 2) Value: Number of Mediations that a Mediators has been involved
-    mapping(address => uint) private numberOfMediationsMediatorInvolved;
+    mapping(address => uint) public numberOfMediationsMediatorInvolved;
 
     // Constants used for the Mediated Sales Transactions mappings that have a "bool[3]" as a value in it's "mapping".
     uint constant private BUYER_INDEX = 0;
@@ -87,7 +87,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     //    A) address[0] : Ethereum Address of the Buyer
     //    B) address[1] : Ethereum Address of the Seller
     //    C) address[2] : Ethereum Address of the Mediator
-    mapping(string => address[3]) public mediatedSalesTransactionAddresses;
+    mapping(string => address[3]) private mediatedSalesTransactionAddresses;
     
     // Map that shows whether a Mediated Sales Transaction exists. The "string" key is the Mediated Sales Transaction IPFS Hash.
     //
@@ -96,14 +96,14 @@ contract FranklinDecentralizedMarketplaceMediation {
     // 2) Value:
     //    A) Boolean value of "true" indicates that the Mediated Sales Transaction exists
     //    B) Boolean value of "false" indicates that the Mediated Sales Transaction exists
-    mapping (string => bool) private mediatedSalesTransactionExists;
+    mapping (string => bool) public mediatedSalesTransactionExists;
     
     // Map that maps the Mediated Sales Transaction to the Sales Amount in Wei. The "string" key is the Mediated Sales Transaction IPFS Hash.
     //
     // Mapping is as follows:
     // 1) Key: IPFS Hash string of the Mediated Sales Transaction
     // 2) Value: Amount in Wei that the Buyer chose to pay for the Item(s)
-    mapping (string => uint) private mediatedSalesTransactionAmount;
+    mapping (string => uint) public mediatedSalesTransactionAmount;
     
     // Map that keeps track of whether a Mediated Sales Transaction has been Approved by the Buyer, Seller, and/or Mediator. 
     // The "string" key is the Mediated Sales Transaction IPFS Hash.
@@ -114,7 +114,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     //    A) address[0] : Boolean flag indicating if Buyer Approves
     //    B) address[1] : Boolean flag indicating if Seller Approves
     //    C) address[2] : Boolean flag indicating if Mediator Approves
-    mapping (string => bool[3]) private mediatedSalesTransactionApprovedByParties;
+    mapping (string => bool[3]) public mediatedSalesTransactionApprovedByParties;
     
     // Map that keeps track of whether a Mediated Sales Transaction has been Disapproved by the Buyer, Seller, and/or Mediator. 
     // The "string" key is the Mediated Sales Transaction IPFS Hash.
@@ -125,7 +125,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     //    A) address[0] : Boolean flag indicating if Buyer Disapproves
     //    B) address[1] : Boolean flag indicating if Seller Disapproves
     //    C) address[2] : Boolean flag indicating if Mediator Disapproves
-    mapping (string => bool[3]) private mediatedSalesTransactionDisapprovedByParties;
+    mapping (string => bool[3]) public mediatedSalesTransactionDisapprovedByParties;
     
     event PurchaseItemWithMediatorEvent(address _msgSender, address _sellerAddress, address _mediatorAddress, string _keyItemIpfsHash, string _mediatedSalesTransactionIpfsHash, uint _quantity);
     event MediatedSalesTransactionHasBeenFullyApproved(string _mediatedSalesTransactionIpfsHash);
@@ -154,12 +154,20 @@ contract FranklinDecentralizedMarketplaceMediation {
         franklinDecentralizedMarketplaceContractHasBeenSet = true;
     }
     
+    // Gets the parties - Buyer, Seller, and Mediatoe Addresses - involved in the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction.
+    function getMediatedSalesTransactionAddresses(string memory _mediatedSalesTransactionIpfsHash) public view returns (address _buyerAddress, address _sellerAddress, address _mediatorAddress) {
+        require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Given Mediated Sales Transaction IPFS Hash does not exist!");
+        return (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX],
+                mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX],
+                mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX]);
+    }
+    
     // Private Utility function used to add a given Ethereum Address as a Mediator in the "listOfMediators". The given Ethereum Address - "_mediatorAddressString" - used 
     // as input to this method is the string format version of the Ethereum Address obtained from the "_addressToString" method.
     //
     // Assumption: Since this is an internal private method, will assume that input "_mediatorAddressString" argument is valid.
     function _addMediator(address _mediatorAddress) private {
-        if (mediatorExistsMap[_mediatorAddress]) {
+        if (mediatorExists[_mediatorAddress]) {
             return;
         }
         
@@ -174,7 +182,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         listOfMediators[EMPTY_STRING][NEXT] = _mediatorAddressString;
         
         numberOfMediators = GeneralUtilities._safeMathAdd(numberOfMediators, 1);
-        mediatorExistsMap[_mediatorAddress] = true;
+        mediatorExists[_mediatorAddress] = true;
     }
 
     // Adds or Updates a Mediator with the given "_mediatorIpfsHashDescription", which refers to a JSON-formatted string stored in the IPFS Storage System.
@@ -192,7 +200,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     //
     // Assumption: Since this is an internal private method, will assume that input "_mediatorAddressString" argument is valid.    
     function _removeMediator(address _mediatorAddress) private {
-        if (!mediatorExistsMap[_mediatorAddress]) {
+        if (!mediatorExists[_mediatorAddress]) {
             return;
         }
         
@@ -207,7 +215,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         delete listOfMediators[_mediatorAddressString][NEXT];
         
         numberOfMediators = GeneralUtilities._safeMathSubtract(numberOfMediators, 1);
-        delete mediatorExistsMap[_mediatorAddress];
+        delete mediatorExists[_mediatorAddress];
         
         // We do not wish to remove the Mediator Description nor any other Mediator information, because the mediator may be involved Mediating some sales, and we wish 
         // to keep such information around.
@@ -216,7 +224,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     // Removes a Mediator from this Smart Contract. The "msg.sender" will be the Ethereum Address of the entity wishing to remove himself/herself as a Mediator in this Smart Contract. 
     // If there are any pending Sales that the Mediator is involved, the Sales and other information will still be kept.
     // This method allows anyone with an Ethereum  Address to remove himself/herself as a Mediator in this Smart Contract. 
-    function removeMediator()  external {
+    function removeMediator() external {
         _removeMediator(msg.sender);
     }
     
@@ -247,16 +255,6 @@ contract FranklinDecentralizedMarketplaceMediation {
         }
         
         return GeneralUtilities._parseEthereumAddressStringToAddress(key);    
-    }
-    
-    // Gets the Number of Mediators in the "listOfMediators".
-    function getNumberOfMediators() external view returns (uint) {
-        return numberOfMediators;
-    }
-    
-    // Returns back a boolean value to determine if the given "_mediatorAddres" is in the "listOfMediators".
-    function mediatorExists(address _mediatorAddress) external view returns (bool) {
-        return mediatorExistsMap[_mediatorAddress];
     }
     
     // Determines if the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction is in the Approved State. It is in the Approved State 
@@ -417,7 +415,7 @@ contract FranklinDecentralizedMarketplaceMediation {
                 uint totalAmountOfWeiNeededToPurchase) private {
         require(!mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Mediated Sales Transaction already exists!");
 
-        require(mediatorExistsMap[_mediatorAddress], "Given Mediator Address does not exist as a Mediator!");
+        require(mediatorExists[_mediatorAddress], "Given Mediator Address does not exist as a Mediator!");
         
         // Keep track of the existence of the Mediated Sales Transaction so that it can be Approved or Disapproved by the Buyer, Seller, and/or Mediator in the future.
         mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash] = true;
@@ -512,15 +510,4 @@ contract FranklinDecentralizedMarketplaceMediation {
         emit PurchaseItemWithMediatorEvent(msg.sender, _sellerAddress, _mediatorAddress, _keyItemIpfsHash, _mediatedSalesTransactionIpfsHash, _quantity);
     }
     
-    // Gets the Description of a Mediator identified by the given "_mediatorAddress". The Description will be the IPFS Hash where the JSON-formatted Description of the Mediator exists.
-    // If no such IPFS Hash Key Description exists, then an EMPTY_STRING will be returned. 
-    function getMediatorIpfsHashDescription(address _mediatorAddress) external view returns (string memory) {
-        return descriptionInfoAboutMediators[_mediatorAddress];
-    }   
-    
-    // Gets the Number of Mediations that the given "_mediatorAddress" Mediator has been involved.
-    function getNumberOfMediationsMediatorInvolved(address _mediatorAddress) external view returns (uint) {
-        require(mediatorExistsMap[_mediatorAddress], "Given Mediator Address does not exist as a Mediator!");
-        return numberOfMediationsMediatorInvolved[_mediatorAddress];
-    }
 }
