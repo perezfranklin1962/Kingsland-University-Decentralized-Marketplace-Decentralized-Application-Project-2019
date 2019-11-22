@@ -127,6 +127,14 @@ contract FranklinDecentralizedMarketplaceMediation {
     //    C) address[2] : Boolean flag indicating if Mediator Disapproves
     mapping (string => bool[3]) public mediatedSalesTransactionDisapprovedByParties;
     
+    // Map that keeps track of all the Mediates Sales Trasnations that an Address has been involved either as a Buyer, Seller, or Mediator.
+    //
+    // Mapping is as follows:
+    // 1) Key: Ethereum Address of the Buyer, Seller, or Mediator 
+    // 2) Value: Dynamic Array of string elements where each element is the Mediated Sales Transaction IPFS Hash that uniquely identifies the 
+    //           Mediated Sales Transaction
+    mapping (address => string[]) private mediatedSalesTransactionsAddressInvolved;
+    
     event PurchaseItemWithMediatorEvent(address _msgSender, address _sellerAddress, address _mediatorAddress, string _keyItemIpfsHash, string _mediatedSalesTransactionIpfsHash, uint _quantity);
     event MediatedSalesTransactionHasBeenFullyApproved(string _mediatedSalesTransactionIpfsHash);
     event MediatedSalesTransactionHasBeenFullyDisapproved(string _mediatedSalesTransactionIpfsHash);
@@ -152,14 +160,6 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         franklinDecentralizedMarketplaceContract = temp;
         franklinDecentralizedMarketplaceContractHasBeenSet = true;
-    }
-    
-    // Gets the parties - Buyer, Seller, and Mediator Addresses - involved in the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction.
-    function getMediatedSalesTransactionAddresses(string memory _mediatedSalesTransactionIpfsHash) public view returns (address _buyerAddress, address _sellerAddress, address _mediatorAddress) {
-        require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Given Mediated Sales Transaction IPFS Hash does not exist!");
-        return (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX],
-                mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX],
-                mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX]);
     }
     
     // Private Utility function used to add a given Ethereum Address as a Mediator in the "listOfMediators". The given Ethereum Address - "_mediatorAddressString" - used 
@@ -257,6 +257,132 @@ contract FranklinDecentralizedMarketplaceMediation {
         return GeneralUtilities._parseEthereumAddressStringToAddress(key);    
     }
     
+    // Allows a Buyer - identified by the "_buyerAddress" Ethereum Address that indirectly calls this methiod via the "FranklinDecentralizedMarketplace.purchaseItemWithMediator" 
+    // method to purchase a "_quantity" of a specific Item - identified  by it's "_keyItemIpfsHash" - from a given Seller - identified by it's "_sellerAddress" Ethereum Address AND use a 
+    // Mediator - identified by the given "_mediatorAddress" - to mediate the Mediatiations Sales Transaction - identified by the the given "_mediatedSalesTransactionIpfsHash" ID. 
+    //
+    // The FranklinDecentralizedMarketplaceMediation Contract mainly handles Sales Transactions that involve a Mediator. Thus, these would be referred to as 
+    // Mediated Sales Transactions that involve a Buyer, Seller, and Mediator. Each Buyer, Seller, and Mediator will have a different Ethereum Address.
+    //
+    // The FranklinDecentralizedMarketplaceMediation Contract is used to store the Escrow ETH/WEI (i.e., "totalAmountOfWeiNeededToPurchase") used to pay for Items involved in ALL Mediated Sales Transactions. 
+    // The Mediated Sales Transaction works as follows:
+    // 1) If 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Seller Address
+    //    and 5% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Mediator Address. 
+    // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, then the "totalAmountOfWeiNeededToPurchase" will be sent back to the Buyer Address.
+    // 3) If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase" will be kept inside 
+    //    of this Contract.
+    //
+    // Input Parameters:
+    // 1) _sellerAddress : Ethereum Address of the Seller
+    // 2) _keyItemIpfsHash : This is the IPFS Hash of the Item being sold that points to a JSON-formatted string in the IPFS Storage System.
+    // 3) _mediatorAddress : Ethereum Address of the Mediator
+    // 4) _quantity : Quantity of the Item that the "msg.sender" Buyer wishes to purchase. 
+    // 5) _mediatedSalesTransactionIpfsHash : This is the IPFS Hash of the Mediated Sales Transaction that points to a JSON-formatted string in the IPFS Storage System.
+    // 6) _buyerAddress : Ethereum Address of the Buyer    
+    function _purchaseItemWithMediator(address _buyerAddress, address _sellerAddress, address _mediatorAddress, string memory _mediatedSalesTransactionIpfsHash, 
+                uint totalAmountOfWeiNeededToPurchase) private {
+        require(!mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Mediated Sales Transaction already exists!");
+
+        require(mediatorExists[_mediatorAddress], "Given Mediator Address does not exist as a Mediator!");
+        
+        // Keep track of the existence of the Mediated Sales Transaction so that it can be Approved or Disapproved by the Buyer, Seller, and/or Mediator in the future.
+        mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash] = true;
+        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX] = _buyerAddress;
+        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX] = _sellerAddress;
+        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX] = _mediatorAddress;
+        
+        // Keep track of what Mediated Sales Transactions each party has been involved.
+        mediatedSalesTransactionsAddressInvolved[_buyerAddress].push(_mediatedSalesTransactionIpfsHash);
+        mediatedSalesTransactionsAddressInvolved[_sellerAddress].push(_mediatedSalesTransactionIpfsHash);
+        mediatedSalesTransactionsAddressInvolved[_mediatorAddress].push(_mediatedSalesTransactionIpfsHash);
+        
+        // The "totalAmountOfWeiNeededToPurchase" amount will automatically be sent to this Contract in Escrow in a Mediated Sales Transaction. We need to store the 
+        // "totalAmountOfWeiNeededToPurchase" as follows so that when:
+        // 1) 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, the 95% of the "totalAmountOfWeiNeededToPurchase" can be sent to the Seller Address and 5% 
+        //    of the "msg.value" can be sent to the Mediator Address. 
+        // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, the "totalAmountOfWeiNeededToPurchase" can be sent back to the Buyer Address.
+        // 3) If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase" will be kept inside 
+        //    of this Contract.
+        mediatedSalesTransactionAmount[_mediatedSalesTransactionIpfsHash] = totalAmountOfWeiNeededToPurchase;
+        
+        numberOfMediationsMediatorInvolved[_mediatorAddress] = GeneralUtilities._safeMathAdd(numberOfMediationsMediatorInvolved[_mediatorAddress], 1);
+    }
+    
+    // Allows a Buyer - identified by the "msg.sender" Ethereum Address that calls this method - to purchase a "_quantity" of a specific Item - identified 
+    // by it's "_keyItemIpfsHash" - from a given Seller - identified by it's "_sellerAddress" Ethereum Address AND use a Mediator - identified by the given 
+    // "_mediatorAddress" - to mediate the Mediatiations Sales Transaction - identified by the the given "_mediatedSalesTransactionIpfsHash" ID. 
+    //
+    // The FranklinDecentralizedMarketplaceMediation Contract mainly handles Sales Transactions that involve a Mediator. Thus, these would be referred to as 
+    // Mediated Sales Transactions that involve a Buyer, Seller, and Mediator. Each Buyer, Seller, and Mediator will have a different Ethereum Address.
+    //
+    // The FranklinDecentralizedMarketplaceMediation Contract is used to store the Escrow ETH/WEI (i.e., "totalAmountOfWeiNeededToPurchase") used to pay for Items involved in ALL Mediated Sales Transactions. 
+    // The Mediated Sales Transaction works as follows:
+    // 1) If 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Seller Address
+    //    and 5% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Mediator Address. 
+    // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, then the "totalAmountOfWeiNeededToPurchase" will be sent back to the Buyer Address.
+    // 3) If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase" will be kept inside 
+    //    of this Contract.
+    //
+    // Input Parameters:
+    // 1) _sellerAddress : Ethereum Address of the Seller
+    // 2) _keyItemIpfsHash : This is the IPFS Hash of the Item being sold that points to a JSON-formatted string in the IPFS Storage System.
+    // 3) _mediatorAddress : Ethereum Address of the Mediator
+    // 4) _quantity : Quantity of the Item that the "msg.sender" Buyer wishes to purchase. 
+    // 5) _mediatedSalesTransactionIpfsHash : This is the IPFS Hash of the Mediated Sales Transaction that points to a JSON-formatted string in the IPFS Storage System.
+    // 6) msg.sender : Ethereum Address of the Buyer
+    function purchaseItemWithMediator(address _sellerAddress, address _mediatorAddress, string memory _keyItemIpfsHash, 
+                string memory _mediatedSalesTransactionIpfsHash, uint _quantity) payable public {
+        require(franklinDecentralizedMarketplaceContractHasBeenSet, "The FranklinDecentralizedMarketplaceContract has not been set by the Contract Owner!");
+        require(_quantity > 0, "Must purchase at least 1 quantity of the Item for Sale to happen!");
+        require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item you are purchasing!");
+        require(!GeneralUtilities._compareStringsEqual(_mediatedSalesTransactionIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of the Mediated Sales Transaction!");
+        
+        require(franklinDecentralizedMarketplaceContract.sellerExists(_sellerAddress), "Given Seller Address does not exist as a Seller!");
+        
+        require(franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(_sellerAddress, _keyItemIpfsHash), "Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!");
+        
+        uint quantityAvailableForSaleOfItem = franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(_sellerAddress, _keyItemIpfsHash);
+        require(quantityAvailableForSaleOfItem > 0, "Seller has Zero quantity available for Sale for the Item requested to purchase!");
+        require(quantityAvailableForSaleOfItem >= _quantity, 
+            "Quantity available For Sale of the Item from the Seller is less than the quantity requested to purchase! Not enough of the Itenm available For Sale");
+        
+        uint priceOfItem = franklinDecentralizedMarketplaceContract.getPriceOfItem(_sellerAddress, _keyItemIpfsHash);
+        require(priceOfItem > 0, "The Seller has not yet set a Price for Sale for the requested Item! Cannot purchase the Item!"); 
+        
+        uint totalAmountOfWeiNeededToPurchase = GeneralUtilities._safeMathMultiply(priceOfItem, _quantity);
+        require(msg.value >= totalAmountOfWeiNeededToPurchase, "Not enough ETH/WEI was sent to purchase the quantity requested of the Item!");
+        
+        // Need to check that the Ethereum Addresses of the Buyer, Seller, and Mediator are ALL different!
+        require(msg.sender != _sellerAddress, "The Buyer Address cannot be the same as the Seller Address!");
+        require(msg.sender != _mediatorAddress, "The Buyer Address cannot be the same as the Mediator Address!");
+        require(_sellerAddress != _mediatorAddress, "The Seller Address cannot be the same as the Mediator Address!");
+        
+        // Call below method to continue the processing of the Mediated Sales Transaction.
+        _purchaseItemWithMediator(msg.sender, _sellerAddress, _mediatorAddress, _mediatedSalesTransactionIpfsHash, totalAmountOfWeiNeededToPurchase);
+        
+        // Subtract the appropriate "_quantity" of that Item for Sale to keep track of the new available quantity of that Item that may be sold. I know that the sale is NOT final 
+        // at this point, BUT let's be optimistic. If the "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction gets Disapproved, then the quantity will have to be updated 
+        // accordingly by the Seller Address via the "setQuantityAvailableForSaleOfAnItem" method.
+        // 
+        // If the Mediated Sales Transaction NEVER reaches a State of Approval nor Disapproval, then the Mediated Sales Transaction will be held in a State of Limbo and the 
+        // "totalAmountOfWeiNeededToPurchase" will be kept inside of the FranklinDecentralizedMarketplaceMediation Contract. Thus, the quantity For Sale of the Item will never 
+        // be automatically updated and it would have to be updated by the Seller Address via the "setQuantityAvailableForSaleOfAnItem" method.
+        franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem_v2(_sellerAddress, _keyItemIpfsHash, 
+            GeneralUtilities._safeMathSubtract(quantityAvailableForSaleOfItem, _quantity));
+        
+        // We want to make sure to return back to the Buyer Address any excess ETH/WEI that exceeds the amount necessary to purchase the given "_quantity" of the Item.
+        msg.sender.transfer(GeneralUtilities._safeMathSubtract(msg.value, totalAmountOfWeiNeededToPurchase));  
+        
+        // Since the FranklinDecentralizedMarketplaceMediation Contract will be handling any further Mediation actions, the Escrow should be kept there. 
+        // So, send the Escrow Amount to the FranklinDecentralizedMarketplaceMediation Contract
+        /*
+        address payable mediationMarketplaceAddress = GeneralUtilities._convertAddressToAddressPayable(address(mediationMarketplace));
+        mediationMarketplaceAddress.transfer(totalAmountOfWeiNeededToPurchase);
+        */
+        
+        emit PurchaseItemWithMediatorEvent(msg.sender, _sellerAddress, _mediatorAddress, _keyItemIpfsHash, _mediatedSalesTransactionIpfsHash, _quantity);
+    }
+    
     // Determines if the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction is in the Approved State. It is in the Approved State 
     // if 2-out-of-3 Buyer, Seller, and/or Mediator Approve it.
     function _mediatedSalesTransactionHasBeenApproved(string memory _mediatedSalesTransactionIpfsHash) private view returns (bool) {
@@ -270,6 +396,11 @@ contract FranklinDecentralizedMarketplaceMediation {
         return (numberOfApprovals >= 2);
     }
     
+    function mediatedSalesTransactionHasBeenApproved(string memory _mediatedSalesTransactionIpfsHash) public view returns (bool) {
+        require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Mediated Sales Transaction does not exist!");
+        return _mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash);
+    }
+    
     // Determines if the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction is in the Disapprived State. It is in the Disapproved State 
     // if 2-out-of-3 Buyer, Seller, and/or Mediator Disapprove it.    
     function _mediatedSalesTransactionHasBeenDisapproved(string memory _mediatedSalesTransactionIpfsHash) private view returns (bool) {
@@ -281,7 +412,12 @@ contract FranklinDecentralizedMarketplaceMediation {
         }
         
         return (numberOfDisapprovals >= 2);
-    }    
+    }   
+    
+    function mediatedSalesTransactionHasBeenDisapproved(string memory _mediatedSalesTransactionIpfsHash) public view returns (bool) {
+        require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Mediated Sales Transaction does not exist!");
+        return _mediatedSalesTransactionHasBeenDisapproved(_mediatedSalesTransactionIpfsHash);
+    }
     
     // This method allows one of the parties involved in a Mediated Sales Transaction to Approve the given "_mediatedSalesTransactionIpfsHash" Mediated 
     // Sales Transaction. 
@@ -389,125 +525,22 @@ contract FranklinDecentralizedMarketplaceMediation {
         }
     }
     
-    // Allows a Buyer - identified by the "_buyerAddress" Ethereum Address that indirectly calls this methiod via the "FranklinDecentralizedMarketplace.purchaseItemWithMediator" 
-    // method to purchase a "_quantity" of a specific Item - identified  by it's "_keyItemIpfsHash" - from a given Seller - identified by it's "_sellerAddress" Ethereum Address AND use a 
-    // Mediator - identified by the given "_mediatorAddress" - to mediate the Mediatiations Sales Transaction - identified by the the given "_mediatedSalesTransactionIpfsHash" ID. 
-    //
-    // The FranklinDecentralizedMarketplaceMediation Contract mainly handles Sales Transactions that involve a Mediator. Thus, these would be referred to as 
-    // Mediated Sales Transactions that involve a Buyer, Seller, and Mediator. Each Buyer, Seller, and Mediator will have a different Ethereum Address.
-    //
-    // The FranklinDecentralizedMarketplaceMediation Contract is used to store the Escrow ETH/WEI (i.e., "totalAmountOfWeiNeededToPurchase") used to pay for Items involved in ALL Mediated Sales Transactions. 
-    // The Mediated Sales Transaction works as follows:
-    // 1) If 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Seller Address
-    //    and 5% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Mediator Address. 
-    // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, then the "totalAmountOfWeiNeededToPurchase" will be sent back to the Buyer Address.
-    // 3) If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase" will be kept inside 
-    //    of this Contract.
-    //
-    // Input Parameters:
-    // 1) _sellerAddress : Ethereum Address of the Seller
-    // 2) _keyItemIpfsHash : This is the IPFS Hash of the Item being sold that points to a JSON-formatted string in the IPFS Storage System.
-    // 3) _mediatorAddress : Ethereum Address of the Mediator
-    // 4) _quantity : Quantity of the Item that the "msg.sender" Buyer wishes to purchase. 
-    // 5) _mediatedSalesTransactionIpfsHash : This is the IPFS Hash of the Mediated Sales Transaction that points to a JSON-formatted string in the IPFS Storage System.
-    // 6) _buyerAddress : Ethereum Address of the Buyer    
-    function _purchaseItemWithMediator(address _buyerAddress, address _sellerAddress, address _mediatorAddress, string memory _mediatedSalesTransactionIpfsHash, 
-                uint totalAmountOfWeiNeededToPurchase) private {
-        require(!mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Mediated Sales Transaction already exists!");
-
-        require(mediatorExists[_mediatorAddress], "Given Mediator Address does not exist as a Mediator!");
-        
-        // Keep track of the existence of the Mediated Sales Transaction so that it can be Approved or Disapproved by the Buyer, Seller, and/or Mediator in the future.
-        mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash] = true;
-        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX] = _buyerAddress;
-        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX] = _sellerAddress;
-        mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX] = _mediatorAddress;
-        
-        // The "totalAmountOfWeiNeededToPurchase" amount will automatically be sent to this Contract in Escrow in a Mediated Sales Transaction. We need to store the 
-        // "totalAmountOfWeiNeededToPurchase" as follows so that when:
-        // 1) 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, the 95% of the "totalAmountOfWeiNeededToPurchase" can be sent to the Seller Address and 5% 
-        //    of the "msg.value" can be sent to the Mediator Address. 
-        // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, the "totalAmountOfWeiNeededToPurchase" can be sent back to the Buyer Address.
-        // 3) If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase" will be kept inside 
-        //    of this Contract.
-        mediatedSalesTransactionAmount[_mediatedSalesTransactionIpfsHash] = totalAmountOfWeiNeededToPurchase;
-        
-        numberOfMediationsMediatorInvolved[_mediatorAddress] = GeneralUtilities._safeMathAdd(numberOfMediationsMediatorInvolved[_mediatorAddress], 1);
+    // Gets the parties - Buyer, Seller, and Mediator Addresses - involved in the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction.
+    function getMediatedSalesTransactionAddresses(string memory _mediatedSalesTransactionIpfsHash) public view returns (address _buyerAddress, address _sellerAddress, address _mediatorAddress) {
+        require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Given Mediated Sales Transaction IPFS Hash does not exist!");
+        return (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX],
+                mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX],
+                mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX]);
     }
     
-    // Allows a Buyer - identified by the "msg.sender" Ethereum Address that calls this method - to purchase a "_quantity" of a specific Item - identified 
-    // by it's "_keyItemIpfsHash" - from a given Seller - identified by it's "_sellerAddress" Ethereum Address AND use a Mediator - identified by the given 
-    // "_mediatorAddress" - to mediate the Mediatiations Sales Transaction - identified by the the given "_mediatedSalesTransactionIpfsHash" ID. 
-    //
-    // The FranklinDecentralizedMarketplaceMediation Contract mainly handles Sales Transactions that involve a Mediator. Thus, these would be referred to as 
-    // Mediated Sales Transactions that involve a Buyer, Seller, and Mediator. Each Buyer, Seller, and Mediator will have a different Ethereum Address.
-    //
-    // The FranklinDecentralizedMarketplaceMediation Contract is used to store the Escrow ETH/WEI (i.e., "totalAmountOfWeiNeededToPurchase") used to pay for Items involved in ALL Mediated Sales Transactions. 
-    // The Mediated Sales Transaction works as follows:
-    // 1) If 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Seller Address
-    //    and 5% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Mediator Address. 
-    // 2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, then the "totalAmountOfWeiNeededToPurchase" will be sent back to the Buyer Address.
-    // 3) If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase" will be kept inside 
-    //    of this Contract.
-    //
-    // Input Parameters:
-    // 1) _sellerAddress : Ethereum Address of the Seller
-    // 2) _keyItemIpfsHash : This is the IPFS Hash of the Item being sold that points to a JSON-formatted string in the IPFS Storage System.
-    // 3) _mediatorAddress : Ethereum Address of the Mediator
-    // 4) _quantity : Quantity of the Item that the "msg.sender" Buyer wishes to purchase. 
-    // 5) _mediatedSalesTransactionIpfsHash : This is the IPFS Hash of the Mediated Sales Transaction that points to a JSON-formatted string in the IPFS Storage System.
-    // 6) msg.sender : Ethereum Address of the Buyer
-    function purchaseItemWithMediator(address _sellerAddress, address _mediatorAddress, string memory _keyItemIpfsHash, 
-                string memory _mediatedSalesTransactionIpfsHash, uint _quantity) payable public {
-        require(franklinDecentralizedMarketplaceContractHasBeenSet, "The FranklinDecentralizedMarketplaceContract has not been set by the Contract Owner!");
-        require(_quantity > 0, "Must purchase at least 1 quantity of the Item for Sale to happen!");
-        require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item you are purchasing!");
-        require(!GeneralUtilities._compareStringsEqual(_mediatedSalesTransactionIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of the Mediated Sales Transaction!");
-        
-        require(franklinDecentralizedMarketplaceContract.sellerExists(_sellerAddress), "Given Seller Address does not exist as a Seller!");
-        
-        require(franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(_sellerAddress, _keyItemIpfsHash), "Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!");
-        
-        uint quantityAvailableForSaleOfItem = franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(_sellerAddress, _keyItemIpfsHash);
-        require(quantityAvailableForSaleOfItem > 0, "Seller has Zero quantity available for Sale for the Item requested to purchase!");
-        require(quantityAvailableForSaleOfItem >= _quantity, 
-            "Quantity available For Sale of the Item from the Seller is less than the quantity requested to purchase! Not enough of the Itenm available For Sale");
-        
-        uint priceOfItem = franklinDecentralizedMarketplaceContract.getPriceOfItem(_sellerAddress, _keyItemIpfsHash);
-        require(priceOfItem > 0, "The Seller has not yet set a Price for Sale for the requested Item! Cannot purchase the Item!"); 
-        
-        uint totalAmountOfWeiNeededToPurchase = GeneralUtilities._safeMathMultiply(priceOfItem, _quantity);
-        require(msg.value >= totalAmountOfWeiNeededToPurchase, "Not enough ETH/WEI was sent to purchase the quantity requested of the Item!");
-        
-        // Need to check that the Ethereum Addresses of the Buyer, Seller, and Mediator are ALL different!
-        require(msg.sender != _sellerAddress, "The Buyer Address cannot be the same as the Seller Address!");
-        require(msg.sender != _mediatorAddress, "The Buyer Address cannot be the same as the Mediator Address!");
-        require(_sellerAddress != _mediatorAddress, "The Seller Address cannot be the same as the Mediator Address!");
-        
-        // Call below method to continue the processing of the Mediated Sales Transaction.
-        _purchaseItemWithMediator(msg.sender, _sellerAddress, _mediatorAddress, _mediatedSalesTransactionIpfsHash, totalAmountOfWeiNeededToPurchase);
-        
-        // Subtract the appropriate "_quantity" of that Item for Sale to keep track of the new available quantity of that Item that may be sold. I know that the sale is NOT final 
-        // at this point, BUT let's be optimistic. If the "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction gets Disapproved, then the quantity will have to be updated 
-        // accordingly by the Seller Address via the "setQuantityAvailableForSaleOfAnItem" method.
-        // 
-        // If the Mediated Sales Transaction NEVER reaches a State of Approval nor Disapproval, then the Mediated Sales Transaction will be held in a State of Limbo and the 
-        // "totalAmountOfWeiNeededToPurchase" will be kept inside of the FranklinDecentralizedMarketplaceMediation Contract. Thus, the quantity For Sale of the Item will never 
-        // be automatically updated and it would have to be updated by the Seller Address via the "setQuantityAvailableForSaleOfAnItem" method.
-        franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem_v2(_sellerAddress, _keyItemIpfsHash, 
-            GeneralUtilities._safeMathSubtract(quantityAvailableForSaleOfItem, _quantity));
-        
-        // We want to make sure to return back to the Buyer Address any excess ETH/WEI that exceeds the amount necessary to purchase the given "_quantity" of the Item.
-        msg.sender.transfer(GeneralUtilities._safeMathSubtract(msg.value, totalAmountOfWeiNeededToPurchase));  
-        
-        // Since the FranklinDecentralizedMarketplaceMediation Contract will be handling any further Mediation actions, the Escrow should be kept there. 
-        // So, send the Escrow Amount to the FranklinDecentralizedMarketplaceMediation Contract
-        /*
-        address payable mediationMarketplaceAddress = GeneralUtilities._convertAddressToAddressPayable(address(mediationMarketplace));
-        mediationMarketplaceAddress.transfer(totalAmountOfWeiNeededToPurchase);
-        */
-        
-        emit PurchaseItemWithMediatorEvent(msg.sender, _sellerAddress, _mediatorAddress, _keyItemIpfsHash, _mediatedSalesTransactionIpfsHash, _quantity);
+    // Gets the number of Mediated sales Trasnactions that the given "_partyAddress" has been involved.
+    function numberOfMediatedSalesTransactionsAddressInvolved(address _partyAddress) external view returns (uint) {
+        return mediatedSalesTransactionsAddressInvolved[_partyAddress].length;
     }
     
+    // Gets a specific Mediated Sales Trasnaction IPFS Hash for a given "_partyAddress" at the specified "_index".
+    function getMediatedSalesTransactionAddressInvolved(address _partyAddress, uint _index) external view returns (string memory) {
+        require(_index < mediatedSalesTransactionsAddressInvolved[_partyAddress].length, "Given _index must be less than the number of Mediated Sales Trasnaction address has been involved!!");
+        return mediatedSalesTransactionsAddressInvolved[_partyAddress][_index];
+    }
 }
