@@ -127,7 +127,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     //    C) address[2] : Boolean flag indicating if Mediator Disapproves
     mapping (string => bool[3]) public mediatedSalesTransactionDisapprovedByParties;
     
-    // Map that keeps track of all the Mediates Sales Trasnations that an Address has been involved either as a Buyer, Seller, or Mediator.
+    // Map that keeps track of all the Mediated Sales Transactions that an Address has been involved either as a Buyer, Seller, or Mediator.
     //
     // Mapping is as follows:
     // 1) Key: Ethereum Address of the Buyer, Seller, or Mediator 
