@@ -154,7 +154,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         franklinDecentralizedMarketplaceContractHasBeenSet = true;
     }
     
-    // Gets the parties - Buyer, Seller, and Mediatoe Addresses - involved in the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction.
+    // Gets the parties - Buyer, Seller, and Mediator Addresses - involved in the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction.
     function getMediatedSalesTransactionAddresses(string memory _mediatedSalesTransactionIpfsHash) public view returns (address _buyerAddress, address _sellerAddress, address _mediatorAddress) {
         require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Given Mediated Sales Transaction IPFS Hash does not exist!");
         return (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX],
