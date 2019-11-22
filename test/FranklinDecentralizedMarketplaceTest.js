@@ -52,7 +52,6 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		randomAddressIndex = (randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS;
 	});
 
-	/*
 	it("FranklinDecentralizedMarketplace : test constructor - sets appropriate contract owner", async () => {
 		assert.equal(await franklinDecentralizedMarketplaceContract.contractOwner.call(), accounts[0],
 			"Contract Owner not properly set!");
@@ -1527,7 +1526,6 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), true,
 			`Seller does have the ${itemIpfsHash} Item Type in question!`);
 	});
-	*/
 
 	it("FranklinDecentralizedMarketplace : test getItemForSale : seller does not exist", async () => {
 		let sellerAddress = accounts[randomAddressIndex];
