@@ -514,14 +514,14 @@ contract FranklinDecentralizedMarketplaceMediation {
         }
     }
     
-    // Gets the number of Mediated sales Trasnactions that the given "_partyAddress" has been involved.
+    // Gets the number of Mediated sales Transactions that the given "_partyAddress" has been involved.
     function numberOfMediatedSalesTransactionsAddressInvolved(address _partyAddress) external view returns (uint) {
         return mediatedSalesTransactionsAddressInvolved[_partyAddress].length;
     }
     
     // Gets a specific Mediated Sales Trasnaction IPFS Hash for a given "_partyAddress" at the specified "_index".
     function getMediatedSalesTransactionAddressInvolved(address _partyAddress, uint _index) external view returns (string memory) {
-        require(_index < mediatedSalesTransactionsAddressInvolved[_partyAddress].length, "Given _index must be less than the number of Mediated Sales Trasnaction address has been involved!!");
+        require(_index < mediatedSalesTransactionsAddressInvolved[_partyAddress].length, "Given _index must be less than the number of Mediated Sales Transactions address has been involved!!");
         return mediatedSalesTransactionsAddressInvolved[_partyAddress][_index];
     }
 }
