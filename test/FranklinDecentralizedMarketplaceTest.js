@@ -52,7 +52,6 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		randomAddressIndex = (randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS;
 	});
 
-	/*
 	it("FranklinDecentralizedMarketplace : test constructor - sets appropriate contract owner", async () => {
 		assert.equal(await franklinDecentralizedMarketplaceContract.contractOwner.call(), accounts[0],
 			"Contract Owner not properly set!");
@@ -1012,7 +1011,8 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), true,
 			"Initially, given Item IPFS Key Hash should have already existed for the Seller!");
 
-		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: sellerAddress });
+		let results = await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: sellerAddress });
+		assert.equal(results.logs.length, 0, "There should be no events that fire off!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
 			"Count of Items for Seller should not change!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), true,
@@ -1167,8 +1167,229 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		assert.equal(results.logs[0].args._msgSender, sellerAddress, "The _msgSender argument should be the Seller Address!");;
 		assert.equal(results.logs[0].args._keyItemIpfsHash, "DummyItem", "The _keyItemIpfsHash argument should be IPFS Hash of Item bought!");
 	});
-	*/
 
+	it("FranklinDecentralizedMarketplace : test removeItemForSale : neither the item nor the seller exist", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHash = "DummyItem";
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			"Item for Seller should not initially exist!");
+
+		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should continue to not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			"Item for Seller should continue to not exist!");
+		assert.equal(results.logs.length, 0, "There should be no events that fire off!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test removeItemForSale : the seller exists but the item for the seller does not exist", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHash = "DummyItem";
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_2", { from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			"Item for Seller should not initially exist!");
+
+		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should continue to exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			"Item for Seller should continue to not exist!");
+		assert.equal(results.logs.length, 0, "There should be no events that fire off!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test removeItemForSale : the seller does not exist but the item for the seller exists with another seller", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let anotherSellerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let itemIpfsHash = "DummyItem";
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: anotherSellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should intially not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			"Item for Seller should not initially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(anotherSellerAddress), true, "The other seller intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(anotherSellerAddress, itemIpfsHash), true,
+			"Item for other Seller should initially exist!");
+
+		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should continue to not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			"Item for Seller should continue to not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(anotherSellerAddress), true, "The other seller should continue to exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(anotherSellerAddress, itemIpfsHash), true,
+			"Item for other Seller should continue to exist!");
+		assert.equal(results.logs.length, 0, "There should be no events that fire off!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test removeItemForSale : both the seller and the item for the seller exists - seller has only one item for sale", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHash = "DummyItem";
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), true,
+			"Item for Seller should initially exist!");
+
+		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not exist after having it's last item removed!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			"Item for Seller should afterwards not exist!");
+
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'RemoveItemForSaleAndPossibleSellerEvent',
+			"There should have been a RemoveItemForSaleAndPossibleSellerEvent Event Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 2, "There should have been 2 arguments in the RemoveItemForSaleAndPossibleSellerEvent that Fired Off!");
+		assert.equal(results.logs[0].args._msgSender, sellerAddress, "The _msgSender argument should be the Seller Address!");;
+		assert.equal(results.logs[0].args._keyItemIpfsHash, itemIpfsHash, "The _keyItemIpfsHash argument should be IPFS Hash of Item removed!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test removeItemForSale : both the seller and the item for the seller exists - seller has more than one item type for sale", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHashToRemove = "DummyItem";
+		let itemIpfsHashToRemain = "DummyItemToRemain"
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHashToRemove, { from: sellerAddress });
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHashToRemain, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHashToRemove), true,
+			"Item for Seller to be removed should initially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHashToRemain), true,
+			"Item for Seller to remain should initially exist!");
+
+		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHashToRemove, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+			"Seller should continue to exist due to still having items to sell!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHashToRemove), false,
+			"Item for Seller that was to be removed should afterwards not exist for seller!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHashToRemain), true,
+			"Item for Seller that was to remain should afterwards continue to exist for the seller!");
+
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'RemoveItemForSaleAndPossibleSellerEvent',
+			"There should have been a RemoveItemForSaleAndPossibleSellerEvent Event Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 2, "There should have been 2 arguments in the RemoveItemForSaleAndPossibleSellerEvent that Fired Off!");
+		assert.equal(results.logs[0].args._msgSender, sellerAddress, "The _msgSender argument should be the Seller Address!");;
+		assert.equal(results.logs[0].args._keyItemIpfsHash, itemIpfsHashToRemove, "The _keyItemIpfsHash argument should be IPFS Hash of Item removed!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test removeItemForSale : both seller and item for seller exists - seller has three items for sale - make sure that other items still exist after removal of one of them and can be properly accessed", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsBaseHash = "DummyItem";
+
+		for (let i = 0; i < 3; i++) {
+			let itemIpfsHash = `${itemIpfsBaseHash}_${i}`;
+			await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
+		}
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 3,
+			"Seller should intially have three different item types to sell!");
+
+		// Items for Seller should initially exist and be accessed via the correct index.
+		let decrementingIndex = 2;
+		for (let i = 0; i < 3; i++) {
+			let itemIpfsHash = `${itemIpfsBaseHash}_${i}`;
+			assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), true,
+				`Item ${itemIpfsHash} for Seller should initially exist!`);
+			assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, decrementingIndex), itemIpfsHash,
+				`Item ${itemIpfsHash} should have been able to be accessed via index number ${decrementingIndex}!`);
+			decrementingIndex--;
+		}
+
+		let itemIpfsHashToBeRemoved = `${itemIpfsBaseHash}_1`;
+		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHashToBeRemoved, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+			"Seller should continue to exist due to still having items for sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHashToBeRemoved), false,
+			`Item ${itemIpfsHashToBeRemoved} for Seller should not continue to exist in seller's list!`);
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 2,
+			"Seller should now have two different item types to sell!");
+
+		// The other items in the list should continue to exist as part of the seller's list of items to sell.
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, `${itemIpfsBaseHash}_0`), true,
+				`Item ${itemIpfsBaseHash}_0 for Seller should continue to exist!`);
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, `${itemIpfsBaseHash}_2`), true,
+				`Item ${itemIpfsBaseHash}_2 for Seller should continue to exist!`);
+		assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, 0), `${itemIpfsBaseHash}_2`,
+				`Item ${itemIpfsBaseHash}_2 should have been able to be accessed via index number 0!`);
+		assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, 1), `${itemIpfsBaseHash}_0`,
+				`Item ${itemIpfsBaseHash}_0 should have been able to be accessed via index number 1!`);
+
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'RemoveItemForSaleAndPossibleSellerEvent',
+			"There should have been a RemoveItemForSaleAndPossibleSellerEvent Event Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 2, "There should have been 2 arguments in the RemoveItemForSaleAndPossibleSellerEvent that Fired Off!");
+		assert.equal(results.logs[0].args._msgSender, sellerAddress, "The _msgSender argument should be the Seller Address!");;
+		assert.equal(results.logs[0].args._keyItemIpfsHash, itemIpfsHashToBeRemoved, "The _keyItemIpfsHash argument should be IPFS Hash of Item removed!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test removeItemForSale : both seller and item for seller exists with a non-zero quantity available for sale of item to be removed", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHash = "DummyItem";
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(itemIpfsHash, 10, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), true,
+			"Item for Seller should initially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, itemIpfsHash), 10,
+			"Item for Seller should have the correct intially set amount of quantity for sale of the item!");
+
+		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			"Item for Seller should afterwards not exist!");
+
+		try {
+			await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, itemIpfsHash);
+			assert.fail("Should not be able to get the Quantity available for sale of an Item when input _keyItemIpfsHash for seller does not exist!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'RemoveItemForSaleAndPossibleSellerEvent',
+			"There should have been a RemoveItemForSaleAndPossibleSellerEvent Event Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 2, "There should have been 2 arguments in the RemoveItemForSaleAndPossibleSellerEvent that Fired Off!");
+		assert.equal(results.logs[0].args._msgSender, sellerAddress, "The _msgSender argument should be the Seller Address!");;
+		assert.equal(results.logs[0].args._keyItemIpfsHash, itemIpfsHash, "The _keyItemIpfsHash argument should be IPFS Hash of Item removed!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test removeItemForSale : both seller and item for seller exists with a non-zero price available for sale of item to be removed", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHash = "DummyItem";
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(itemIpfsHash, 100, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), true,
+			"Item for Seller should initially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, itemIpfsHash), 100,
+			"Item for Seller should have the correct initial price for sale of the item!");
+
+		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			"Item for Seller should afterwards not exist!");
+
+		try {
+			await franklinDecentralizedMarketplaceContract.getPriceOfItem(accounts[randomAddressIndex], itemIpfsHash);
+			assert.fail("Should not be able to get the Price of an Item when input _keyItemIpfsHash for seller does not exist!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'RemoveItemForSaleAndPossibleSellerEvent',
+			"There should have been a RemoveItemForSaleAndPossibleSellerEvent Event Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 2, "There should have been 2 arguments in the RemoveItemForSaleAndPossibleSellerEvent that Fired Off!");
+		assert.equal(results.logs[0].args._msgSender, sellerAddress, "The _msgSender argument should be the Seller Address!");;
+		assert.equal(results.logs[0].args._keyItemIpfsHash, itemIpfsHash, "The _keyItemIpfsHash argument should be IPFS Hash of Item removed!");
+	});
 
 
 	// Below is what's returned in function calls that change the contract.
