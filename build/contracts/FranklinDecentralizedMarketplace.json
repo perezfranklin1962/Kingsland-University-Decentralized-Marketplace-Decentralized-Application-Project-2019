@@ -31383,12 +31383,12 @@
         }
       },
       "links": {},
-      "address": "0xb67ea370d970Ef5cdDe9Ec2f2c93882Eb7B06F12",
-      "transactionHash": "0x46722a452d61362a7a74dc9bf85a03a87ddd00fa3cab0ce46a70fe4e8ce93f15"
+      "address": "0x595f931212A6C1B21c7996C44Dd3d77B48BB9fF2",
+      "transactionHash": "0x6b140e68ede36c94ff87729d797fddc322ade2e72c17242432fb050cf6165496"
     }
   },
   "schemaVersion": "3.0.16",
-  "updatedAt": "2019-11-22T18:45:59.593Z",
+  "updatedAt": "2019-11-22T21:00:41.399Z",
   "devdoc": {
     "methods": {}
   },

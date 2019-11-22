@@ -30930,12 +30930,12 @@
         }
       },
       "links": {},
-      "address": "0x568BaCbd315FdD7D5add0A669625F4069c473319",
-      "transactionHash": "0x8e7f949cb34b7ca11b0ba2307e535dcae41e179957a2619af1ae664d088cf53a"
+      "address": "0xa516E25C19b150fccEd75AFDBF9cF6Ed9aBe5dbe",
+      "transactionHash": "0x479ad823dbb93b8f1cbcda8bec428e87064fc6968a7c8adc64bafd1c25d8489e"
     }
   },
   "schemaVersion": "3.0.16",
-  "updatedAt": "2019-11-22T18:45:59.617Z",
+  "updatedAt": "2019-11-22T21:00:41.422Z",
   "devdoc": {
     "methods": {}
   },
