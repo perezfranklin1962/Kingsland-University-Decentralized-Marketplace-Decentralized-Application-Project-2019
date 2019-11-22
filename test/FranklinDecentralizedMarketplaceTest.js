@@ -1391,6 +1391,101 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		assert.equal(results.logs[0].args._keyItemIpfsHash, itemIpfsHash, "The _keyItemIpfsHash argument should be IPFS Hash of Item removed!");
 	});
 
+	it("FranklinDecentralizedMarketplace : test getNumberOfDifferentItemsBeingSoldBySeller : seller exists - just added", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHash = "DummyItem";
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
+			"Seller that just existed should have 1 item type to sell!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test getNumberOfDifferentItemsBeingSoldBySeller : seller exists with just one item to sell", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
+			"Seller that does not exist should have zero different items for sale!");
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem", { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
+			"Seller should have just one item type to sell!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test getNumberOfDifferentItemsBeingSoldBySeller : seller initially does not exist - different scenarios of adding and removing items for a seller", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHashBase = "DummyItem";
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
+			"Seller that does not exist should have zero different items for sale!");
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHashBase, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
+			"Seller should have 1 item type to sell after just being added!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+			"Seller should exist as long as seller has at least one item type to sell!");
+
+		await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHashBase, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
+			"Seller should have zero different types of items to sell if the lasr remaining one was removed!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false,
+			"Seller should not exist when seller has 0 different items to sell!");
+
+		await franklinDecentralizedMarketplaceContract.removeSeller({ from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
+			"Seller that's been removed should have zero different types of items to sell!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false,
+			"Seller should not exist when seller has 0 different items to sell!");
+
+		// Add items to seller
+		for (let i = 0; i < 4; i++) {
+			let itemIpfsHash = `${itemIpfsHashBase}_${i}`;
+			await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
+			assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), (i + 1),
+				`Seller should now have ${i + 1} different types of items to sell after adding this item for sale!`);
+			assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+				"Seller should exist as long as seller has at least one item type to sell!");
+		}
+
+		await franklinDecentralizedMarketplaceContract.removeSeller({ from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
+			"Seller that's been removed should have zero different types of items to sell!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false,
+			"Seller should not exist when seller has 0 different items to sell!");
+
+
+		// Add items to seller
+		for (let i = 0; i < 4; i++) {
+			let itemIpfsHash = `${itemIpfsHashBase}_${i}`;
+			await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
+			assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), (i + 1),
+				"Seller should now have ${i + 1} different types of items to sell after adding this item for sale!!");
+			assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+				"Seller should exist as long as seller has at least one item type to sell!");
+		}
+
+		// Delete items from seller one at a time
+		let decrementingCounter = 4;
+		for (let i = 0; i < 4; i++) {
+			let itemIpfsHash = `${itemIpfsHashBase}_${i}`;
+			await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress });
+			decrementingCounter--;
+
+			assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), decrementingCounter,
+				`Seller should now have ${decrementingCounter} different types of items to sell after removing the ${itemIpfsHash} item for sale!`);
+			if (decrementingCounter > 0) {
+				assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+					"Seller should exist as long as seller has 1 or more diferent items to sell!");
+			}
+			else {
+				assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false,
+					"Seller should not exist when seller has 0 different items to sell!");
+			}
+		}
+	});
 
 	// Below is what's returned in function calls that change the contract.
     /*
