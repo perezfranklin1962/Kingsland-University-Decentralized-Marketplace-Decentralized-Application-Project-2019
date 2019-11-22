@@ -87,7 +87,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     //    A) address[0] : Ethereum Address of the Buyer
     //    B) address[1] : Ethereum Address of the Seller
     //    C) address[2] : Ethereum Address of the Mediator
-    mapping(string => address[3]) private mediatedSalesTransactionAddresses;
+    mapping(string => address[3]) public mediatedSalesTransactionAddresses;
     
     // Map that shows whether a Mediated Sales Transaction exists. The "string" key is the Mediated Sales Transaction IPFS Hash.
     //
@@ -242,7 +242,6 @@ contract FranklinDecentralizedMarketplaceMediation {
         require(_index < numberOfMediators, "Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!");
         
         // The "key" below is the Ethereum Address in string format that is in the "listOfMediators" double-linked list.
-        
         uint keyCount = 0;
         string memory key = EMPTY_STRING;
         while (true) {
@@ -396,11 +395,6 @@ contract FranklinDecentralizedMarketplaceMediation {
         return (numberOfApprovals >= 2);
     }
     
-    function mediatedSalesTransactionHasBeenApproved(string memory _mediatedSalesTransactionIpfsHash) public view returns (bool) {
-        require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Mediated Sales Transaction does not exist!");
-        return _mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash);
-    }
-    
     // Determines if the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction is in the Disapprived State. It is in the Disapproved State 
     // if 2-out-of-3 Buyer, Seller, and/or Mediator Disapprove it.    
     function _mediatedSalesTransactionHasBeenDisapproved(string memory _mediatedSalesTransactionIpfsHash) private view returns (bool) {
@@ -413,11 +407,6 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         return (numberOfDisapprovals >= 2);
     }   
-    
-    function mediatedSalesTransactionHasBeenDisapproved(string memory _mediatedSalesTransactionIpfsHash) public view returns (bool) {
-        require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Mediated Sales Transaction does not exist!");
-        return _mediatedSalesTransactionHasBeenDisapproved(_mediatedSalesTransactionIpfsHash);
-    }
     
     // This method allows one of the parties involved in a Mediated Sales Transaction to Approve the given "_mediatedSalesTransactionIpfsHash" Mediated 
     // Sales Transaction. 
@@ -523,14 +512,6 @@ contract FranklinDecentralizedMarketplaceMediation {
             
             emit MediatedSalesTransactionHasBeenFullyDisapproved(_mediatedSalesTransactionIpfsHash);
         }
-    }
-    
-    // Gets the parties - Buyer, Seller, and Mediator Addresses - involved in the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction.
-    function getMediatedSalesTransactionAddresses(string memory _mediatedSalesTransactionIpfsHash) public view returns (address _buyerAddress, address _sellerAddress, address _mediatorAddress) {
-        require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Given Mediated Sales Transaction IPFS Hash does not exist!");
-        return (mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX],
-                mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][SELLER_INDEX],
-                mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][MEDIATOR_INDEX]);
     }
     
     // Gets the number of Mediated sales Trasnactions that the given "_partyAddress" has been involved.
