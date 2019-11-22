@@ -1494,7 +1494,38 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 			}
 		}
 	});
-	*/
+
+	it("FranklinDecentralizedMarketplace : test itemForSaleFromSellerExists : seller does not exist", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHash = "DummyItem";
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			"Seller that does not exist should also have no items ro sell that exist!");
+	});
+
+	it("FranklinDecentralizedMarketplace : test itemForSaleFromSellerExists : seller exists but item type in question does not exist for the seller", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHash = "DummyItem";
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_Exists", { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+			"Seller that has at leat one item type to sell should always exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
+			`Seller does not have the ${itemIpfsHash} Item Type in question!`);
+	});
+
+	it("FranklinDecentralizedMarketplace : test itemForSaleFromSellerExists : seller exists and item type in question does exist for the seller", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHash = "DummyItem";
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_Exists", { from: sellerAddress });
+		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+			"Seller that has at leat one item type to sell should always exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), true,
+			`Seller does have the ${itemIpfsHash} Item Type in question!`);
+	});
 
 	// Below is what's returned in function calls that change the contract.
     /*
@@ -1577,38 +1608,6 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(accounts[randomAddressIndex], "DummyItem_2", 4, { from: fromAddress });
 		assert.equal(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(accounts[randomAddressIndex], "DummyItem_2"), 4,
 			"Quantity available for Sale of the Item that was set is NOT equal to what is stored in the Contract!");
-	});
-
-	it("FranklinDecentralizedMarketplace : test itemForSaleFromSellerExists : seller does not exist", async () => {
-		let sellerAddress = accounts[randomAddressIndex];
-		let itemIpfsHash = "DummyItem";
-
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not exist!");
-		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
-			"Seller that does not exist should also have no items ro sell that exist!");
-	});
-
-	it("FranklinDecentralizedMarketplace : test itemForSaleFromSellerExists : seller exists but item type in question does not exist for the seller", async () => {
-		let sellerAddress = accounts[randomAddressIndex];
-		let itemIpfsHash = "DummyItem";
-
-		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_Exists", { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
-			"Seller that has at leat one item type to sell should always exist!");
-		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
-			`Seller does not have the ${itemIpfsHash} Item Type in question!`);
-	});
-
-	it("FranklinDecentralizedMarketplace : test itemForSaleFromSellerExists : seller exists and item type in question does exist for the seller", async () => {
-		let sellerAddress = accounts[randomAddressIndex];
-		let itemIpfsHash = "DummyItem";
-
-		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_Exists", { from: sellerAddress });
-		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
-			"Seller that has at leat one item type to sell should always exist!");
-		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), true,
-			`Seller does have the ${itemIpfsHash} Item Type in question!`);
 	});
 
 	// Below Unit Test done due to being suggested by Patrick Galloway. It took about 896392 milli-seconds to complete.
