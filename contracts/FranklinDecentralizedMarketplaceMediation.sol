@@ -87,7 +87,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     //    A) address[0] : Ethereum Address of the Buyer
     //    B) address[1] : Ethereum Address of the Seller
     //    C) address[2] : Ethereum Address of the Mediator
-    mapping(string => address[3]) private mediatedSalesTransactionAddresses;
+    mapping(string => address[3]) public mediatedSalesTransactionAddresses;
     
     // Map that shows whether a Mediated Sales Transaction exists. The "string" key is the Mediated Sales Transaction IPFS Hash.
     //
