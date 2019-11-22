@@ -52,6 +52,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		randomAddressIndex = (randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS;
 	});
 
+	/*
 	it("FranklinDecentralizedMarketplace : test constructor - sets appropriate contract owner", async () => {
 		assert.equal(await franklinDecentralizedMarketplaceContract.contractOwner.call(), accounts[0],
 			"Contract Owner not properly set!");
@@ -1525,6 +1526,62 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 			"Seller that has at leat one item type to sell should always exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), true,
 			`Seller does have the ${itemIpfsHash} Item Type in question!`);
+	});
+	*/
+
+	it("FranklinDecentralizedMarketplace : test getItemForSale : seller does not exist", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller does not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
+			"Seller that does not exist should have zero different items to sell!");
+
+		// No matter what index one tries for a seller that does not exist, it will always return back an empty string
+		for (let i = 0; i < 10; i++) {
+			assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, i), EMPTY_STRING,
+				"Seller that does not exist should always return back an EMPTY_STRING in this case!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplace : test getItemForSale : seller exists but index given is greater than or equal to the number of diferent types of items the seller is selling", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHashBase = "DummyItem";
+
+		for (let i = 0; i < 5; i++) {
+			let itemIpfsHash = `${itemIpfsHashBase}_${i}`;
+
+			assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, i), EMPTY_STRING,
+				"Should return back empty string due to index ${i} being greater then or equal to the number of different items the seller has to sell!");
+			await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
+			assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, (i + 1)), EMPTY_STRING,
+				"Should return back empty string due to index ${i + 1} being greater then or equal to the number of different items the seller has to sell!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplace : test getItemForSale : seller exists and index given is less the number of diferent types of items the seller is selling", async () => {
+		let sellerAddress = accounts[randomAddressIndex];
+		let itemIpfsHashBase = "DummyItem";
+
+		for (let i = 0; i < 5; i++) {
+			let itemIpfsHash = `${itemIpfsHashBase}_${i}`;
+
+			await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
+			assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, 0), itemIpfsHash,
+				"Item Type just added is always added in the 0'th index position!");
+		}
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 5,
+			"Five items were added so 5 should be the number of different item types the seller is selling!");
+
+		// Make sure that all the items added are in the correct index postion.
+		let decrementingIndex = 4;
+		for (let i = 0; i < 5; i++) {
+			let itemIpfsHash = `${itemIpfsHashBase}_${i}`;
+
+			assert.equal(await franklinDecentralizedMarketplaceContract.getItemForSale(sellerAddress, decrementingIndex), itemIpfsHash,
+				`The ${itemIpfsHash} Item Type should be accessible via index number ${decrementingIndex}!`);
+			decrementingIndex--;
+		}
 	});
 
 	// Below is what's returned in function calls that change the contract.
