@@ -53,12 +53,14 @@ contract FranklinDecentralizedMarketplaceMediation {
     mapping(string => mapping(bool => string)) private listOfMediators;
     
     // Map that keeps track of whether a Mediator exists. The "address" key is the Ethereum Address of the Mediator.
-    mapping(address => bool) private mediatorExists;
+    mapping(address => bool) public mediatorExists;
     
     // Keeps a count on the Number of Mediators that mediate sales on this platform.
     uint public numberOfMediators;
     
     // This Mapping contains the Description Information about the Mediators. The Mediator is responsible for adding this information.
+    // A Mediator cannot exist without having Description Information, but you can have a Mediator that current does not exist have a 
+    // Description Information.
     //
     // Mapping is as follows:
     // 1) Key: Ethereum Address of the Mediator
@@ -133,7 +135,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     // 1) Key: Ethereum Address of the Buyer, Seller, or Mediator 
     // 2) Value: Dynamic Array of string elements where each element is the Mediated Sales Transaction IPFS Hash that uniquely identifies the 
     //           Mediated Sales Transaction
-    mapping (address => string[]) private mediatedSalesTransactionsAddressInvolved;
+    mapping (address => string[]) public mediatedSalesTransactionsAddressInvolved;
     
     event PurchaseItemWithMediatorEvent(address _msgSender, address _sellerAddress, address _mediatorAddress, string _keyItemIpfsHash, string _mediatedSalesTransactionIpfsHash, uint _quantity);
     event MediatedSalesTransactionHasBeenFullyApproved(string _mediatedSalesTransactionIpfsHash);
@@ -522,10 +524,14 @@ contract FranklinDecentralizedMarketplaceMediation {
         return mediatedSalesTransactionsAddressInvolved[_partyAddress].length;
     }
     
-    // Gets a specific Mediated Sales Trasnaction IPFS Hash for a given "_partyAddress" at the specified "_index".
+    // Gets a specific Mediated Sales Transaction IPFS Hash for a given "_partyAddress" at the specified "_index".
     //
     // The "require" below commented out to take up less number of bytes and to use "require" needed more elsewhere. 
     // Wound up exceeding number of bytes limit by EVM (Ethereum Virtual Machine) when attempt was made to deploy.
+    //
+    // Had to comment out the below convenience function when I made "mediatorExists" public due to exceeding number of bytes limit by EVM (Ethereum Virtual Machine) 
+    // when attempt was made to deploy.
+    /*
     function getMediatedSalesTransactionAddressInvolved(address _partyAddress, uint _index) external view returns (string memory) {
         // require(_index < mediatedSalesTransactionsAddressInvolved[_partyAddress].length, "Given _index must be less than the number of Mediated Sales Transactions address has been involved!!");
         if (_index >= mediatedSalesTransactionsAddressInvolved[_partyAddress].length) {
@@ -534,4 +540,5 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         return mediatedSalesTransactionsAddressInvolved[_partyAddress][_index];
     }
+    */
 }
