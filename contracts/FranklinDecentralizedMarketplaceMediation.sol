@@ -281,7 +281,6 @@ contract FranklinDecentralizedMarketplaceMediation {
     function _purchaseItemWithMediator(address _buyerAddress, address _sellerAddress, address _mediatorAddress, string memory _mediatedSalesTransactionIpfsHash, 
                 uint totalAmountOfWeiNeededToPurchase) private {
         require(!mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Mediated Sales Transaction already exists!");
-
         require(mediatorExists[_mediatorAddress], "Given Mediator Address does not exist as a Mediator!");
         
         // Keep track of the existence of the Mediated Sales Transaction so that it can be Approved or Disapproved by the Buyer, Seller, and/or Mediator in the future.
@@ -384,7 +383,9 @@ contract FranklinDecentralizedMarketplaceMediation {
     
     // Determines if the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction is in the Approved State. It is in the Approved State 
     // if 2-out-of-3 Buyer, Seller, and/or Mediator Approve it.
-    function _mediatedSalesTransactionHasBeenApproved(string memory _mediatedSalesTransactionIpfsHash) private view returns (bool) {
+    function mediatedSalesTransactionHasBeenApproved(string memory _mediatedSalesTransactionIpfsHash) public view returns (bool) {
+        require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Given Mediated Sales Transaction IPFS Hash does not exist!");
+        
         uint numberOfApprovals = 0;
         for (uint i = 0; i < 3; i++) {
             if (mediatedSalesTransactionApprovedByParties[_mediatedSalesTransactionIpfsHash][i]) {
@@ -397,7 +398,9 @@ contract FranklinDecentralizedMarketplaceMediation {
     
     // Determines if the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction is in the Disapprived State. It is in the Disapproved State 
     // if 2-out-of-3 Buyer, Seller, and/or Mediator Disapprove it.    
-    function _mediatedSalesTransactionHasBeenDisapproved(string memory _mediatedSalesTransactionIpfsHash) private view returns (bool) {
+    function mediatedSalesTransactionHasBeenDisapproved(string memory _mediatedSalesTransactionIpfsHash) public view returns (bool) {
+        require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Given Mediated Sales Transaction IPFS Hash does not exist!");
+        
         uint numberOfDisapprovals = 0;
         for (uint i = 0; i < 3; i++) {
             if (mediatedSalesTransactionDisapprovedByParties[_mediatedSalesTransactionIpfsHash][i]) {
@@ -425,7 +428,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         // If 2-out-of-3 of the Buyer, Seller, and/or Mediator have Disapproved the Mediated Sales Transaction, then it's status cannot be changed, because the Buyer has already been refunded 
         // the amount he/she paid.
-        require(!_mediatedSalesTransactionHasBeenDisapproved(_mediatedSalesTransactionIpfsHash), 
+        require(!mediatedSalesTransactionHasBeenDisapproved(_mediatedSalesTransactionIpfsHash), 
             "Mediated Sales Transaction has already been Disapproved by at least 2-out-of-3 of the Buyer, Seller, and/or Mediator! Cannot Approve at this point!");
         
         uint indexBuyerSellerOrMediator = 0;
@@ -437,7 +440,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         // If the Mediated Sales Transaction has already been Approved by 2-out-of-3 Buyer, Seller, and/or Mediator, then just note the approval from the "msg.sender" and that's it, because at 
         // this point the Seller Address has already been sent 95% of the Sales Amount, and the Mediator has already been sent 5% of the Sales Amount.
-        if (_mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash)) {
+        if (mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash)) {
             mediatedSalesTransactionApprovedByParties[_mediatedSalesTransactionIpfsHash][indexBuyerSellerOrMediator] = true;
             return;
         }
@@ -448,7 +451,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         // If after the "msg.sender" Approves the Mediated Sales Transaction, this reaches a State where 2-out-of-3 Buyer, Seller, and/or Mediator have Approved, then send 95% of the Sales Amount 
         // to the Seller Address and 5% of the Sales Amount to the Mediator Address.
-        if (_mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash)) {
+        if (mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash)) {
             uint totalSalesAmount = mediatedSalesTransactionAmount[_mediatedSalesTransactionIpfsHash];
             uint amountOfWeiToSendMediator = GeneralUtilities._getPercentageOfTotalAmount(uint256(5), uint256(100), uint256(totalSalesAmount));
             uint amountOfWeiToSendSeller = GeneralUtilities._safeMathSubtract(totalSalesAmount, amountOfWeiToSendMediator);
@@ -481,7 +484,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         // If 2-out-of-3 of the Buyer, Seller, and/or Mediator have Disapproved the Mediated Sales Transaction, then it's status cannot be changed, because the Seller has already been 
         // paid 95% of the Sales Amount, and the Mediator has already been paid 5% of the Sales Amount.
-        require(!_mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash), 
+        require(!mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash), 
             "Mediated Sales Transaction has already been Approved by at least 2-out-of-3 of the Buyer, Seller, and/or Mediator! Cannot Disapprove at this point!");
         
         uint indexBuyerSellerOrMediator = 0;
@@ -493,7 +496,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         // If the Mediated Sales Transaction has already been Disapproved by 2-out-of-3 Buyer, Seller, and/or Mediator, then just note the disapproval from the "msg.sender" 
         // and that's it, because at this point the Buyer has alreaady been refunded the Sales Amount.
-        if (_mediatedSalesTransactionHasBeenDisapproved(_mediatedSalesTransactionIpfsHash)) {
+        if (mediatedSalesTransactionHasBeenDisapproved(_mediatedSalesTransactionIpfsHash)) {
             mediatedSalesTransactionDisapprovedByParties[_mediatedSalesTransactionIpfsHash][indexBuyerSellerOrMediator] = true;
             return;
         }
@@ -504,7 +507,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         // If after the "msg.sender" Disapproves the Mediated Sales Transaction, this reaches a State where 2-out-of-3 Buyer, Seller, and/or Mediator have Disapproved, then send 100% of the Sales Amount 
         // back to the Buyer Address.
-        if (_mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash)) {
+        if (mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash)) {
             uint totalSalesAmount = mediatedSalesTransactionAmount[_mediatedSalesTransactionIpfsHash];
         
             address payable buyerAddress = GeneralUtilities._convertAddressToAddressPayable(mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX]);
@@ -520,8 +523,15 @@ contract FranklinDecentralizedMarketplaceMediation {
     }
     
     // Gets a specific Mediated Sales Trasnaction IPFS Hash for a given "_partyAddress" at the specified "_index".
+    //
+    // The "require" below commented out to take up less number of bytes and to use "require" needed more elsewhere. 
+    // Wound up exceeding number of bytes limit by EVM (Ethereum Virtual Machine) when attempt was made too deploy.
     function getMediatedSalesTransactionAddressInvolved(address _partyAddress, uint _index) external view returns (string memory) {
-        require(_index < mediatedSalesTransactionsAddressInvolved[_partyAddress].length, "Given _index must be less than the number of Mediated Sales Transactions address has been involved!!");
+        // require(_index < mediatedSalesTransactionsAddressInvolved[_partyAddress].length, "Given _index must be less than the number of Mediated Sales Transactions address has been involved!!");
+        if (_index >= mediatedSalesTransactionsAddressInvolved[_partyAddress].length) {
+            return EMPTY_STRING;
+        }
+        
         return mediatedSalesTransactionsAddressInvolved[_partyAddress][_index];
     }
 }
