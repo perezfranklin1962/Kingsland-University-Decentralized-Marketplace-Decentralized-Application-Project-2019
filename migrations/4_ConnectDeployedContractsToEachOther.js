@@ -1,7 +1,9 @@
 const FranklinDecentralizedMarketplace = artifacts.require("FranklinDecentralizedMarketplace");
 const FranklinDecentralizedMarketplaceMediation = artifacts.require("FranklinDecentralizedMarketplaceMediation");
 
-// Reference --> https://www.trufflesuite.com/docs/truffle/getting-started/running-migrations#deployer-then-function-
+// References:
+// 1) https://www.trufflesuite.com/docs/truffle/getting-started/running-migrations#deployer-then-function-
+// 2) https://www.trufflesuite.com/docs/truffle/getting-started/interacting-with-your-contracts
 
 module.exports = async function(deployer) {
 	var franklinDecentralizedMarketplace = undefined;
