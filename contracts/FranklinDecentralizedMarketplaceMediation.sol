@@ -525,7 +525,7 @@ contract FranklinDecentralizedMarketplaceMediation {
     // Gets a specific Mediated Sales Trasnaction IPFS Hash for a given "_partyAddress" at the specified "_index".
     //
     // The "require" below commented out to take up less number of bytes and to use "require" needed more elsewhere. 
-    // Wound up exceeding number of bytes limit by EVM (Ethereum Virtual Machine) when attempt was made too deploy.
+    // Wound up exceeding number of bytes limit by EVM (Ethereum Virtual Machine) when attempt was made to deploy.
     function getMediatedSalesTransactionAddressInvolved(address _partyAddress, uint _index) external view returns (string memory) {
         // require(_index < mediatedSalesTransactionsAddressInvolved[_partyAddress].length, "Given _index must be less than the number of Mediated Sales Transactions address has been involved!!");
         if (_index >= mediatedSalesTransactionsAddressInvolved[_partyAddress].length) {
