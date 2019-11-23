@@ -68,6 +68,9 @@ contract FranklinDecentralizedMarketplaceMediation {
     //           This information should be a JSON-formatted string.
     mapping(address => string) public descriptionInfoAboutMediators;
     
+    // Unable to add the below mapping because when attempt was made to deploy, I was not able to do so due to exceeding number of bytes limit by EVM (Ethereum Virtual Machine).
+    // mapping (string => address) public addressAssociatedWithMediatorDescription;
+    
     // This Mapping contains the Number of Mediations that a Mediator has been involved.
     //
     // Mapping is as follows:
