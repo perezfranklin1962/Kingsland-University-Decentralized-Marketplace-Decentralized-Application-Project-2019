@@ -52,6 +52,8 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		randomAddressIndex = (randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS;
 	});
 
+	// Begin Unit Testing of FranklinDecentralizedMarketplace Smart Contract
+
 	it("FranklinDecentralizedMarketplace : test constructor - sets appropriate contract owner", async () => {
 		assert.equal(await franklinDecentralizedMarketplaceContract.contractOwner.call(), accounts[0],
 			"Contract Owner not properly set!");
@@ -1581,6 +1583,378 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 			decrementingIndex--;
 		}
 	});
+
+	// Begin Unit Testing of FranklinDecentralizedMarketplaceMediation Smart Contract
+
+	it("FranklinDecentralizedMarketplaceMediation : test constructor - sets appropriate contract owner", async () => {
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.contractOwner.call(), accounts[0],
+			"Contract Owner not properly set!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test constructor - franklinDecentralizedMarketplaceContract data member should initially be set to EMPTY_ADDRESS", async () => {
+		let franklinDecentralizedMarketplaceMediationContractTemp = await FranklinDecentralizedMarketplaceMediation.new({from: accounts[randomAddressIndex]});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContractTemp.franklinDecentralizedMarketplaceContract.call(), EMPTY_ADDRESS,
+			`The franklinDecentralizedMarketplaceContract data member not initially set to ${EMPTY_ADDRESS}!`);
+	});
+
+
+	it("FranklinDecentralizedMarketplaceMediation : test constructor - franklinDecentralizedMarketplaceContractHasBeenSet data member should initially be set to false", async () => {
+		let franklinDecentralizedMarketplaceMediationContractTemp = await FranklinDecentralizedMarketplaceMediation.new({from: accounts[randomAddressIndex]});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContractTemp.franklinDecentralizedMarketplaceContractHasBeenSet.call(), false,
+			`The franklinDecentralizedMarketplaceContractHasBeenSet data member not initially set to boolean false!`);
+	});
+
+
+	it("FranklinDecentralizedMarketplaceMediation : test setFranklinDecentralizedMarketplaceContract method - only Contract Owner may execute", async () => {
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.setFranklinDecentralizedMarketplaceContract(
+				franklinDecentralizedMarketplaceContract.address, {from: accounts[1]});
+			assert.fail("Only Contract Owner may execute this method!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/This method may only be executed by the Contract Owner/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+
+	it("FranklinDecentralizedMarketplaceMediation : test setFranklinDecentralizedMarketplaceContract method - franklinDecentralizedMarketplaceContract contract reference may only be set once", async () => {
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.setFranklinDecentralizedMarketplaceContract(
+				franklinDecentralizedMarketplaceContract.address, {from: accounts[0]});
+			assert.fail("The franklinDecentralizedMarketplaceContract contract reference may only be set once!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/The franklinDecentralizedMarketplaceContract reference has already been set!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test setFranklinDecentralizedMarketplaceContract method - must be same Contract Owner in both FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceMediation contracts", async () => {
+		let franklinDecentralizedMarketplaceMediationContractTemp = await FranklinDecentralizedMarketplaceMediation.new({from: accounts[1]});
+		try {
+			await franklinDecentralizedMarketplaceMediationContractTemp.setFranklinDecentralizedMarketplaceContract(
+				franklinDecentralizedMarketplaceContract.address, {from: accounts[1]});
+			assert.fail("Must be same Contract Owner in both the FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceMediation contracts!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Must be same Contract Owner in both the FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceMediation contracts!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test setFranklinDecentralizedMarketplaceContract method - if require statements pass, check that appropriate variables properly set", async () => {
+		let franklinDecentralizedMarketplaceMediationContract_franklinDecentralizedMarketplaceContract_contractAddress = await franklinDecentralizedMarketplaceMediationContract.franklinDecentralizedMarketplaceContract.call();
+		assert.equal(franklinDecentralizedMarketplaceMediationContract_franklinDecentralizedMarketplaceContract_contractAddress, franklinDecentralizedMarketplaceContract.address,
+			"The franklinDecentralizedMarketplaceContract data member not properly set!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.franklinDecentralizedMarketplaceContractHasBeenSet.call(), true,
+			"The franklinDecentralizedMarketplaceContractHasBeenSet data member not properly set to boolean true!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test addOrUpdateMediator method - input _mediatorIpfsHashDescription is an EMPTY_STRING", async () => {
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(EMPTY_STRING, {from: accounts[randomAddressIndex]});
+			assert.fail("Cannot have an empty String for the IPFS Hash Key Description of a Mediator!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Cannot have an empty String for the IPFS Hash Key Description of a Mediator!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test addOrUpdateMediator method - msg.sender is NOT an existing Mediator and input _mediatorIpfsHashDescription is not an existing description for msg.sender", async () => {
+		let mediatorAddress = accounts[randomAddressIndex];
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), false,
+			`Ethereum Address ${mediatorAddress} should not initially exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), EMPTY_STRING,
+			`Ethereum Address ${mediatorAddress} should initially have a Mediator Description Info of EMPTY_STRING!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 0,
+			"Number of Mediators should initially be zero!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0);
+			assert.fail(`Mediator Address ${mediatorAddress} should initially NOT be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+
+		let mediatorIpfsHashDescription = "Dummy_Mediator_Description";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			`Ethereum Address ${mediatorAddress} should now exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should now have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 1,
+			"Number of Mediators should now be one!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+			`Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test addOrUpdateMediator method - msg.sender is NOT an existing Mediator and input _mediatorIpfsHashDescription IS an existing description for msg.sender", async () => {
+		let mediatorAddress = accounts[randomAddressIndex];
+		let mediatorIpfsHashDescription = "Dummy_Mediator_Description";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.removeMediator({from: mediatorAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), false,
+			`Ethereum Address ${mediatorAddress} should not initially exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should initially have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 0,
+			"Number of Mediators should initially be zero!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0);
+			assert.fail(`Mediator Address ${mediatorAddress} should initially NOT be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			`Ethereum Address ${mediatorAddress} should now exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should now have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 1,
+			"Number of Mediators should now be one!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+			`Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test addOrUpdateMediator method - msg.sender is NOT an existing Mediator and msg.sender already has an existing Mediator Description that is NOT the input _mediatorIpfsHashDescription description", async () => {
+		let mediatorAddress = accounts[randomAddressIndex];
+		let mediatorIpfsHashDescription = "Dummy_Mediator_Description_Before";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.removeMediator({from: mediatorAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), false,
+			`Ethereum Address ${mediatorAddress} should not initially exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should initially have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 0,
+			"Number of Mediators should initially be zero!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0);
+			assert.fail(`Mediator Address ${mediatorAddress} should initially NOT be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+
+		mediatorIpfsHashDescription = "Dummy_Mediator_Description_Now";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			`Ethereum Address ${mediatorAddress} should now exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should now have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 1,
+			"Number of Mediators should now be one!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+			`Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test addOrUpdateMediator method - msg.sender IS an existing Mediator and input _mediatorIpfsHashDescription IS an existing description for msg.sender", async () => {
+		let mediatorAddress = accounts[randomAddressIndex];
+		let mediatorIpfsHashDescription = "Dummy_Mediator_Description";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			`Ethereum Address ${mediatorAddress} should initially exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should initially have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 1,
+			"Number of Mediators should initially be one!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+			`Mediator Address ${mediatorAddress} should initially be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			`Ethereum Address ${mediatorAddress} should continue to exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should now have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 1,
+			"Number of Mediators should now be one!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+			`Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test addOrUpdateMediator method - msg.sender IS an existing Mediator and msg.sender already has an existing Mediator Description that is NOT the input _mediatorIpfsHashDescription description", async () => {
+		let mediatorAddress = accounts[randomAddressIndex];
+		let mediatorIpfsHashDescription = "Dummy_Mediator_Description_Before";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			`Ethereum Address ${mediatorAddress} should initially exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should initially have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 1,
+			"Number of Mediators should initially be one!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+			`Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+
+		mediatorIpfsHashDescription = "Dummy_Mediator_Description_Now";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			`Ethereum Address ${mediatorAddress} should continue to exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should now have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 1,
+			"Number of Mediators should continue to be one!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+			`Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test removeMediator method - msg.sender is NOT an existing Mediator and has no IPFS Mediator Description Info", async () => {
+		let mediatorAddress = accounts[randomAddressIndex];
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), false,
+			`Ethereum Address ${mediatorAddress} should not initially exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), EMPTY_STRING,
+			`Ethereum Address ${mediatorAddress} should initially have a Mediator Description Info of EMPTY_STRING!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 0,
+			"Number of Mediators should initially be zero!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0);
+			assert.fail(`Mediator Address ${mediatorAddress} should initially NOT be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+
+		await franklinDecentralizedMarketplaceMediationContract.removeMediator({from: mediatorAddress});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), false,
+			`Ethereum Address ${mediatorAddress} should continue to not exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), EMPTY_STRING,
+			`Ethereum Address ${mediatorAddress} should continue to have a Mediator Description Info of EMPTY_STRING!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 0,
+			"Number of Mediators should continue to be zero!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test removeMediator method - msg.sender is NOT an existing Mediator and has already an IPFS Mediator Description Info", async () => {
+		let mediatorAddress = accounts[randomAddressIndex];
+		let mediatorIpfsHashDescription = "Dummy_Mediator_Description";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.removeMediator({from: mediatorAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), false,
+			`Ethereum Address ${mediatorAddress} should not initially exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should initially have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 0,
+			"Number of Mediators should initially be zero!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0);
+			assert.fail(`Mediator Address ${mediatorAddress} should initially NOT be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+
+		await franklinDecentralizedMarketplaceMediationContract.removeMediator({from: mediatorAddress});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), false,
+			`Ethereum Address ${mediatorAddress} should continue to not exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should continue to have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 0,
+			"Number of Mediators should continue to be zero!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0);
+			assert.fail(`Mediator Address ${mediatorAddress} should continue to NOT be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test removeMediator method - msg.sender IS an existing Mediator", async () => {
+		let mediatorAddress = accounts[randomAddressIndex];
+		let mediatorIpfsHashDescription = "Dummy_Mediator_Description";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			`Ethereum Address ${mediatorAddress} should initially exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should initially have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 1,
+			"Number of Mediators should initially be one!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+			`Mediator Address ${mediatorAddress} should initially be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+
+		await franklinDecentralizedMarketplaceMediationContract.removeMediator({from: mediatorAddress});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), false,
+			`Ethereum Address ${mediatorAddress} should continue to not exist as a Mediator!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators.call(mediatorAddress), mediatorIpfsHashDescription,
+			`Ethereum Address ${mediatorAddress} should continue to have a Mediator Description Info of ${mediatorIpfsHashDescription}!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 0,
+			"Number of Mediators should continue to be zero!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0);
+			assert.fail(`Mediator Address ${mediatorAddress} should now NOT be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+	*/
+
+	it("FranklinDecentralizedMarketplaceMediation : test getMediatorAddress method - no Mediators exist", async () => {
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 0,
+			"Number of Mediators should be 0!");
+
+		// Test index values greater than or equal to zero.
+		for (let i = 0; i < 5; i++) {
+			try {
+				await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(i);
+				assert.fail(`No Mediators should be able to be accessed when the number of mediators is 0!`);
+			} catch (error) {
+				assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+				assert.ok(/Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!/.test(error.message),
+					"Appropriate error message not returned!");
+			}
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test getMediatorAddress method - one Mediator exists", async () => {
+		let mediatorAddress = accounts[randomAddressIndex];
+		let mediatorIpfsHashDescription = "Dummy_Mediator_Description";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 1,
+			"Number of Mediators should be one!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+			`Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under index 0!`);
+
+		// Test index values greater than or equal to one.
+		for (let i = 1; i < 6; i++) {
+			try {
+				await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(i);
+				assert.fail(`No Mediators should be able to be accessed when the index value is greater than or equal to the number of Mediators!`);
+			} catch (error) {
+				assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+				assert.ok(/Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!/.test(error.message),
+					"Appropriate error message not returned!");
+			}
+		}
+	});
+
+	/*
+	it("FranklinDecentralizedMarketplaceMediation : test getMediatorAddress method - add Mediators and made sure that thay are accessible at the correct index number and numberIfMediators is properly set", async () => {
+
+	});
+	*/
 
 	// Below is what's returned in function calls that change the contract.
     /*
