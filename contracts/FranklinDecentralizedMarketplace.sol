@@ -53,7 +53,7 @@ contract FranklinDecentralizedMarketplace {
     string constant private EMPTY_STRING = "";
     string constant private UNDER_SCORE_STRING = "_";
     
-    // This is the price of all specific Items being sold y Sellers identified by their Ethereum Address in Wei.
+    // This is the price of all specific Items being sold by Sellers identified by their Ethereum Address in Wei.
     // The price is on a per-Item basis for one Item.
     //
     // Mapping is as follows:
@@ -114,7 +114,7 @@ contract FranklinDecentralizedMarketplace {
     mapping(string => mapping(bool => string)) private listOfSellers; 
     
     // Map that keeps track of whether a Seller exists. The "address" key is the Ethereum Address of the Seller.
-    mapping(address => bool) private sellerExistsMap;
+    mapping(address => bool) public sellerExists;
     
     // Keeps a count on the Number of Sellers selling on this platform.
     uint private numberOfSellers; 
@@ -188,7 +188,7 @@ contract FranklinDecentralizedMarketplace {
     // A "_flag" value of boolean true, indicates that the Seller IS willing to make sales via a Mediator.
     // A "_flag" value of boolean false, indicates that the Seller is NOT willing to make sales via a Mediator.
     function setSellerWillingToSellItemsViaMediator(bool _flag) external {
-        if (!sellerExistsMap[msg.sender]) {
+        if (!sellerExists[msg.sender]) {
             return;
         }
         
@@ -221,7 +221,7 @@ contract FranklinDecentralizedMarketplace {
         // Will not bother to check for valid "address", because Ethereum Virtual Machine does that for us automatically and will just throw an Error that caller of this 
         // method will have to catch.
         
-        if (sellerExistsMap[_sellerAddress]) {
+        if (sellerExists[_sellerAddress]) {
             return;
         }
         
@@ -234,7 +234,7 @@ contract FranklinDecentralizedMarketplace {
         listOfSellers[EMPTY_STRING][NEXT] = sellerAddressStringKey;
     
         numberOfSellers = GeneralUtilities._safeMathAdd(numberOfSellers, 1);
-        sellerExistsMap[_sellerAddress] = true;
+        sellerExists[_sellerAddress] = true;
     }
     
     // Removes a Seller - identified by it's Ethereum Address - from the "listOfSellers" double-linked list.
@@ -246,7 +246,7 @@ contract FranklinDecentralizedMarketplace {
     function _removeSeller(address _sellerAddress) private {
         string memory sellerAddressStringKey = GeneralUtilities._addressToString(_sellerAddress);
         
-        if (!sellerExistsMap[_sellerAddress]) {
+        if (!sellerExists[_sellerAddress]) {
             return;
         }
         
@@ -259,7 +259,7 @@ contract FranklinDecentralizedMarketplace {
         delete listOfSellers[sellerAddressStringKey][NEXT];
         
         numberOfSellers = GeneralUtilities._safeMathSubtract(numberOfSellers, 1);
-        delete sellerExistsMap[_sellerAddress];
+        delete sellerExists[_sellerAddress];
         delete sellerWillingToSellItemsViaMediator[_sellerAddress];
         
         // Decided to NOT delete this information, because a Seller may be involved in a Mediator type of Sale, and we still wish to keep information 
@@ -315,11 +315,6 @@ contract FranklinDecentralizedMarketplace {
         }
         
         return GeneralUtilities._parseEthereumAddressStringToAddress(key);    
-    }
-    
-    // Returns back a boolean value to determine if the given "_sellerAddres" is in the "listOfSellers".
-    function sellerExists(address _sellerAddress) external view returns (bool) {
-        return sellerExistsMap[_sellerAddress];
     }
     
     // Returns back the Number of Sellers in this Decentralized Marketplace.
@@ -421,7 +416,7 @@ contract FranklinDecentralizedMarketplace {
         require(!GeneralUtilities._compareStringsEqual(_keyItemIpfsHash, EMPTY_STRING), "Cannot have an empty String for the IPFS Hash Key of an Item you are purchasing!");
         require(msg.sender != _sellerAddress, "The Buyer Address cannot be the same as the Seller Address!");
         
-        require(sellerExistsMap[_sellerAddress], "Given Seller Address does not exist as a Seller!");
+        require(sellerExists[_sellerAddress], "Given Seller Address does not exist as a Seller!");
         
         string memory combinedKeyAddressPlusItemIpfsHash = GeneralUtilities._getConcatenationOfEthereumAddressAndIpfsHash(_sellerAddress, _keyItemIpfsHash);
         require(itemsKeysMap[combinedKeyAddressPlusItemIpfsHash], "Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!");

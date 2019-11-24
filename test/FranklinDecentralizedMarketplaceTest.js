@@ -6,9 +6,13 @@ const utils = require("./utils.js");
 // Reference --> https://www.trufflesuite.com/docs/truffle/getting-started/interacting-with-your-contracts
 
 contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceMediation", async accounts => {
-	let EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
-	let EMPTY_STRING = "";
-	let NUMBER_OF_ACCOUNTS = 100;
+	const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
+	const EMPTY_STRING = "";
+	const NUMBER_OF_ACCOUNTS = 100;
+
+	const BUYER_INDEX = 0;
+	const SELLER_INDEX = 1;
+	const MEDIATOR_INDEX = 2;
 
 	const DAY = 3600 * 24;
 
@@ -33,9 +37,9 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		franklinDecentralizedMarketplaceMediationContract = await FranklinDecentralizedMarketplaceMediation.new({from: accounts[0]});
 		// console.log('franklinDecentralizedMarketplaceContract =', franklinDecentralizedMarketplaceContract);
 
-		franklinDecentralizedMarketplaceContract.setFranklinDecentralizedMarketplaceMediationContract(
+		await franklinDecentralizedMarketplaceContract.setFranklinDecentralizedMarketplaceMediationContract(
 			franklinDecentralizedMarketplaceMediationContract.address, {from: accounts[0]});
-		franklinDecentralizedMarketplaceMediationContract.setFranklinDecentralizedMarketplaceContract(
+		await franklinDecentralizedMarketplaceMediationContract.setFranklinDecentralizedMarketplaceContract(
 			franklinDecentralizedMarketplaceContract.address, {from: accounts[0]});
 
 		// Reference --> https://www.trufflesuite.com/docs/truffle/getting-started/interacting-with-your-contracts
@@ -222,7 +226,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 	it("FranklinDecentralizedMarketplace : test removeSeller method : seller does NOT exist", async () => {
 		await franklinDecentralizedMarketplaceContract.removeSeller({ from: accounts[randomAddressIndex] });
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(accounts[randomAddressIndex]), false, "Seller should not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(accounts[randomAddressIndex]), false, "Seller should not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(accounts[randomAddressIndex]), false,
 			"Seller that does not exist should have it's willingness to sell items via mediator flag to false!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfSellers(), 0,  "Number of Sellers should be 0 due to no Sellers existing!");
@@ -241,7 +245,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 
 		await franklinDecentralizedMarketplaceContract.removeSeller({ from: accounts[randomAddressIndex] });
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(accounts[randomAddressIndex]), false, "Seller should not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(accounts[randomAddressIndex]), false, "Seller should not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(accounts[randomAddressIndex]), false,
 			"Seller that does not exist should have it's willingness to sell items via mediator flag to false!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfSellers(), 0,  "Number of Sellers should be 0 due to know Sellers existing!");
@@ -298,12 +302,12 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		assert.equal(await franklinDecentralizedMarketplaceContract.getSellerAddress(2), firstSellerAddress, "Incorrect Seller Address returned for index = 0!");
 	});
 
-	it("FranklinDecentralizedMarketplace : test sellerExists method : no sellers exist", async () => {
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(accounts[randomAddressIndex]), false,
+	it("FranklinDecentralizedMarketplace : test sellerExists built-in method : no sellers exist", async () => {
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(accounts[randomAddressIndex]), false,
 			"No sellers have been added, yet function returns boolean true!");
 	});
 
-	it("FranklinDecentralizedMarketplace : test sellerExists method : sellers exist but input seller does not exist", async () => {
+	it("FranklinDecentralizedMarketplace : test sellerExists built-in method : sellers exist but input seller does not exist", async () => {
 		let firstSellerAddress = accounts[randomAddressIndex];
 		let secondSellerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
 		let thirdSellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
@@ -313,11 +317,11 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: secondSellerAddress });
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: thirdSellerAddress });
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddressThatDoesNotExist), false,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddressThatDoesNotExist), false,
 			"Input Seller Address was never added as a seller, yet function returns back boolean true!");
 	});
 
-	it("FranklinDecentralizedMarketplace : test sellerExists method : sellers exist and input seller does exist", async () => {
+	it("FranklinDecentralizedMarketplace : test sellerExists built-in method : sellers exist and input seller does exist", async () => {
 		let firstSellerAddress = accounts[randomAddressIndex];
 		let secondSellerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
 		let thirdSellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
@@ -326,11 +330,11 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: secondSellerAddress });
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: thirdSellerAddress });
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(firstSellerAddress), true,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(firstSellerAddress), true,
 			`Input Seller Address ${firstSellerAddress} was added as a seller, yet function returns back boolean false!`);
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(secondSellerAddress), true,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(secondSellerAddress), true,
 			`Input Seller Address ${secondSellerAddress} was added as a seller, yet function returns back boolean false!`);
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(thirdSellerAddress), true,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(thirdSellerAddress), true,
 			`Input Seller Address ${thirdSellerAddress} was added as a seller, yet function returns back boolean false!`);
 	});
 
@@ -907,10 +911,10 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		assert.equal(results.logs[0].args._sellerAddress, sellerAddress, "The _sellerAddress argument should be the Seller Address!");
 		assert.equal(results.logs[0].args._keyItemIpfsHash, "DummyItem_3", "The _keyItemIpfsHash argument should be IPFS Hash of Item bought!");
 		// console.log('quantityOfTheItemInPurchase =', quantityOfTheItemInPurchase);
-		assert.equal(results.logs[0].args._quantity.toString(), quantityOfTheItemInPurchase.toString(), "The __quantity argument should be quantity of the Items bought!");
+		assert.equal(results.logs[0].args._quantity.toString(), quantityOfTheItemInPurchase.toString(), "The _quantity argument should be quantity of the Items bought!");
 	});
 
-	it("FranklinDecentralizedMarketplace : test purchaseItemWithoutMediator : buyer purchases item from seller and sends value greater amount needed to make purchase", async () => {
+	it("FranklinDecentralizedMarketplace : test purchaseItemWithoutMediator : buyer purchases item from seller and sends value greater then amount needed to make purchase", async () => {
 		let sellerAddress = accounts[(randomAddressIndex + 4) % NUMBER_OF_ACCOUNTS];
 		// console.log('sellerAddress =', sellerAddress);
 
@@ -991,7 +995,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		assert.equal(results.logs[0].args._sellerAddress, sellerAddress, "The _sellerAddress argument should be the Seller Address!");
 		assert.equal(results.logs[0].args._keyItemIpfsHash, "DummyItem_3", "The _keyItemIpfsHash argument should be IPFS Hash of Item bought!");
 		// console.log('quantityOfTheItemInPurchase =', quantityOfTheItemInPurchase);
-		assert.equal(results.logs[0].args._quantity.toString(), quantityOfTheItemInPurchase.toString(), "The __quantity argument should be quantity of the Items bought!");
+		assert.equal(results.logs[0].args._quantity.toString(), quantityOfTheItemInPurchase.toString(), "The _quantity argument should be quantity of the Items bought!");
 	});
 
 	it("FranklinDecentralizedMarketplace : test addItemForSale : IPFS Hash key referring to an Item is an empty string", async () => {
@@ -1023,7 +1027,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 
 	it("FranklinDecentralizedMarketplace : test addItemForSale : seller does not exist - multiple sellers added for same Item", async () => {
 		let sellerAddress = accounts[randomAddressIndex];
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should initially not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should initially not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), false,
 			"Initially, given Item IPFS Key Hash should NOT exist for the Seller!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
@@ -1033,7 +1037,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 
 		// Item for a Seller that does not exist is added.
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: sellerAddress});
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should exist after adding an Item For Sale!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), true,
 			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
@@ -1048,7 +1052,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		// Adding a second seller
 
 		sellerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should initially not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should initially not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), false,
 			"Initially, given Item IPFS Key Hash should NOT exist for the Seller!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
@@ -1058,7 +1062,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 
 		// Item for a second Seller that does not exist is added.
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: sellerAddress});
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should exist after adding an Item For Sale!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), true,
 			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
@@ -1073,7 +1077,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		// Adding a third seller
 
 		sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should initially not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should initially not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), false,
 			"Initially, given Item IPFS Key Hash should NOT exist for the Seller!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
@@ -1083,7 +1087,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 
 		// Item for a third Seller that does not exist is added.
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_1", { from: sellerAddress});
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should exist after adding an Item For Sale!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem_1"), true,
 			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
@@ -1108,7 +1112,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 	it("FranklinDecentralizedMarketplace : test addItemForSale : seller does exist - multiple Items that do no exist for a seller are added", async () => {
 		let sellerAddress = accounts[randomAddressIndex];
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_0", { from: sellerAddress});
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress),true, "Seller initially exists!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress),true, "Seller initially exists!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, "DummyItem"), false,
 			"Initially, given Item IPFS Key Hash should exist for the Seller!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
@@ -1117,7 +1121,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		// First New Item for an existing seller is added.
 		let itemToAdd = "DummyItem_1"
 		await franklinDecentralizedMarketplaceContract.addItemForSale(itemToAdd, { from: sellerAddress});
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should STILL exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should STILL exist after adding an Item For Sale!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemToAdd), true,
 			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 2,
@@ -1128,7 +1132,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		// Second New Item for an existing seller is added.
 		itemToAdd = "DummyItem_2"
 		await franklinDecentralizedMarketplaceContract.addItemForSale(itemToAdd, { from: sellerAddress});
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should STILL exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should STILL exist after adding an Item For Sale!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemToAdd), true,
 			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 3,
@@ -1139,7 +1143,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		// Third New Item for an existing seller is added.
 		itemToAdd = "DummyItem_3"
 		await franklinDecentralizedMarketplaceContract.addItemForSale(itemToAdd, { from: sellerAddress});
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should STILL exist after adding an Item For Sale!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should STILL exist after adding an Item For Sale!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemToAdd), true,
 			"Given Item IPFS Key Hash should now exist for the Seller after adding of the Item!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 4,
@@ -1173,12 +1177,12 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 	it("FranklinDecentralizedMarketplace : test removeItemForSale : neither the item nor the seller exist", async () => {
 		let sellerAddress = accounts[randomAddressIndex];
 		let itemIpfsHash = "DummyItem";
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should not intially exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
 			"Item for Seller should not initially exist!");
 
 		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress});
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should continue to not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should continue to not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
 			"Item for Seller should continue to not exist!");
 		assert.equal(results.logs.length, 0, "There should be no events that fire off!");
@@ -1188,12 +1192,12 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		let sellerAddress = accounts[randomAddressIndex];
 		let itemIpfsHash = "DummyItem";
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_2", { from: sellerAddress});
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should intially exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
 			"Item for Seller should not initially exist!");
 
 		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should continue to exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should continue to exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
 			"Item for Seller should continue to not exist!");
 		assert.equal(results.logs.length, 0, "There should be no events that fire off!");
@@ -1205,18 +1209,18 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		let itemIpfsHash = "DummyItem";
 
 		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: anotherSellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should intially not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should intially not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
 			"Item for Seller should not initially exist!");
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(anotherSellerAddress), true, "The other seller intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(anotherSellerAddress), true, "The other seller intially exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(anotherSellerAddress, itemIpfsHash), true,
 			"Item for other Seller should initially exist!");
 
 		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should continue to not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should continue to not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
 			"Item for Seller should continue to not exist!");
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(anotherSellerAddress), true, "The other seller should continue to exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(anotherSellerAddress), true, "The other seller should continue to exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(anotherSellerAddress, itemIpfsHash), true,
 			"Item for other Seller should continue to exist!");
 		assert.equal(results.logs.length, 0, "There should be no events that fire off!");
@@ -1227,12 +1231,12 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		let itemIpfsHash = "DummyItem";
 
 		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should intially exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), true,
 			"Item for Seller should initially exist!");
 
 		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHash, { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not exist after having it's last item removed!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should not exist after having it's last item removed!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
 			"Item for Seller should afterwards not exist!");
 
@@ -1252,14 +1256,14 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 
 		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHashToRemove, { from: sellerAddress });
 		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHashToRemain, { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should intially exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHashToRemove), true,
 			"Item for Seller to be removed should initially exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHashToRemain), true,
 			"Item for Seller to remain should initially exist!");
 
 		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHashToRemove, { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true,
 			"Seller should continue to exist due to still having items to sell!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHashToRemove), false,
 			"Item for Seller that was to be removed should afterwards not exist for seller!");
@@ -1284,7 +1288,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 			await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
 		}
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should intially exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 3,
 			"Seller should intially have three different item types to sell!");
 
@@ -1301,7 +1305,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 
 		let itemIpfsHashToBeRemoved = `${itemIpfsBaseHash}_1`;
 		let results = await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHashToBeRemoved, { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true,
 			"Seller should continue to exist due to still having items for sale!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHashToBeRemoved), false,
 			`Item ${itemIpfsHashToBeRemoved} for Seller should not continue to exist in seller's list!`);
@@ -1396,7 +1400,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 	it("FranklinDecentralizedMarketplace : test getNumberOfDifferentItemsBeingSoldBySeller : seller exists - just added", async () => {
 		let sellerAddress = accounts[randomAddressIndex];
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller does not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller does not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
 			"Seller that does not exist should have zero different items to sell!");
 	});
@@ -1407,7 +1411,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 
 		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true, "Seller should intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true, "Seller should intially exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
 			"Seller that just existed should have 1 item type to sell!");
 	});
@@ -1415,7 +1419,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 	it("FranklinDecentralizedMarketplace : test getNumberOfDifferentItemsBeingSoldBySeller : seller exists with just one item to sell", async () => {
 		let sellerAddress = accounts[randomAddressIndex];
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should not intially exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
 			"Seller that does not exist should have zero different items for sale!");
 
@@ -1428,26 +1432,26 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		let sellerAddress = accounts[randomAddressIndex];
 		let itemIpfsHashBase = "DummyItem";
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not intially exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should not intially exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
 			"Seller that does not exist should have zero different items for sale!");
 
 		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHashBase, { from: sellerAddress });
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 1,
 			"Seller should have 1 item type to sell after just being added!");
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true,
 			"Seller should exist as long as seller has at least one item type to sell!");
 
 		await franklinDecentralizedMarketplaceContract.removeItemForSale(itemIpfsHashBase, { from: sellerAddress });
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
 			"Seller should have zero different types of items to sell if the lasr remaining one was removed!");
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false,
 			"Seller should not exist when seller has 0 different items to sell!");
 
 		await franklinDecentralizedMarketplaceContract.removeSeller({ from: sellerAddress });
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
 			"Seller that's been removed should have zero different types of items to sell!");
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false,
 			"Seller should not exist when seller has 0 different items to sell!");
 
 		// Add items to seller
@@ -1456,14 +1460,14 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 			await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
 			assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), (i + 1),
 				`Seller should now have ${i + 1} different types of items to sell after adding this item for sale!`);
-			assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+			assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true,
 				"Seller should exist as long as seller has at least one item type to sell!");
 		}
 
 		await franklinDecentralizedMarketplaceContract.removeSeller({ from: sellerAddress });
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
 			"Seller that's been removed should have zero different types of items to sell!");
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false,
 			"Seller should not exist when seller has 0 different items to sell!");
 
 
@@ -1473,7 +1477,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 			await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
 			assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), (i + 1),
 				"Seller should now have ${i + 1} different types of items to sell after adding this item for sale!!");
-			assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+			assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true,
 				"Seller should exist as long as seller has at least one item type to sell!");
 		}
 
@@ -1487,11 +1491,11 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 			assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), decrementingCounter,
 				`Seller should now have ${decrementingCounter} different types of items to sell after removing the ${itemIpfsHash} item for sale!`);
 			if (decrementingCounter > 0) {
-				assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+				assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true,
 					"Seller should exist as long as seller has 1 or more diferent items to sell!");
 			}
 			else {
-				assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false,
+				assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false,
 					"Seller should not exist when seller has 0 different items to sell!");
 			}
 		}
@@ -1501,7 +1505,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		let sellerAddress = accounts[randomAddressIndex];
 		let itemIpfsHash = "DummyItem";
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller should not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller should not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
 			"Seller that does not exist should also have no items ro sell that exist!");
 	});
@@ -1511,7 +1515,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		let itemIpfsHash = "DummyItem";
 
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_Exists", { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true,
 			"Seller that has at leat one item type to sell should always exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), false,
 			`Seller does not have the ${itemIpfsHash} Item Type in question!`);
@@ -1523,7 +1527,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 
 		await franklinDecentralizedMarketplaceContract.addItemForSale("DummyItem_Exists", { from: sellerAddress });
 		await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, { from: sellerAddress });
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), true,
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), true,
 			"Seller that has at leat one item type to sell should always exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, itemIpfsHash), true,
 			`Seller does have the ${itemIpfsHash} Item Type in question!`);
@@ -1532,7 +1536,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 	it("FranklinDecentralizedMarketplace : test getItemForSale : seller does not exist", async () => {
 		let sellerAddress = accounts[randomAddressIndex];
 
-		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists(sellerAddress), false, "Seller does not exist!");
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false, "Seller does not exist!");
 		assert.equal(await franklinDecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress), 0,
 			"Seller that does not exist should have zero different items to sell!");
 
@@ -1908,7 +1912,6 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 				"Appropriate error message not returned!");
 		}
 	});
-	*/
 
 	it("FranklinDecentralizedMarketplaceMediation : test getMediatorAddress method - no Mediators exist", async () => {
 		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 0,
@@ -1950,11 +1953,3201 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		}
 	});
 
-	/*
-	it("FranklinDecentralizedMarketplaceMediation : test getMediatorAddress method - add Mediators and made sure that thay are accessible at the correct index number and numberIfMediators is properly set", async () => {
+	it("FranklinDecentralizedMarketplaceMediation : test getMediatorAddress method - add three Mediators and test for proper index access and numberOfMediators", async () => {
+		let mediatorIpfsHashDescriptionBase = "Dummy_Mediator_Description";
+		for (let i = 0; i < 3; i++) {
+			let mediatorAddress = accounts[(randomAddressIndex + i) % NUMBER_OF_ACCOUNTS];
+			let mediatorIpfsHashDescription = `${mediatorIpfsHashDescriptionBase}_${i}`;
+			await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
 
+			assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), i + 1,
+				"First for loop: Number of Mediators should have reflected the number of Mediators added so far!");
+			assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+				`First fir loop: Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under ` +
+				`index ${i} immediately after being added as a Mediator!`);
+		}
+
+		// Test index values greater than or equal to 3.
+		for (let i = 3; i < 6; i++) {
+			try {
+				await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(i);
+				assert.fail(`No Mediators should be able to be accessed when the index value is greater than or equal to the number of Mediators!`);
+			} catch (error) {
+				assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+				assert.ok(/Index value given is greater than or equal to the Number of Mediators! It should be less than the Number of Mediators!/.test(error.message),
+					"Appropriate error message not returned!");
+			}
+		}
+
+		let decrementingIndex = 2;
+		for (let i = 0; i < 3; i++) {
+			let mediatorAddress = accounts[(randomAddressIndex + i) % NUMBER_OF_ACCOUNTS];
+			let mediatorIpfsHashDescription = `${mediatorIpfsHashDescriptionBase}_${i}`;
+
+			assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 3,
+				"Second for loop: Number of Mediators should have reflected the number of Mediators added so far!");
+			assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(decrementingIndex), mediatorAddress,
+				`Second for loop: Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under ` +
+				`index ${decrementingIndex} immediately after being added as a Mediator!`);
+
+			decrementingIndex--;
+		}
 	});
-	*/
+
+	it("FranklinDecentralizedMarketplaceMediation : test getMediatorAddress method - add three Mediators and then delete the middle one and test for proper index access and numberOfMediators", async () => {
+		let mediatorIpfsHashDescriptionBase = "Dummy_Mediator_Description";
+		for (let i = 0; i < 3; i++) {
+			let mediatorAddress = accounts[(randomAddressIndex + i) % NUMBER_OF_ACCOUNTS];
+			let mediatorIpfsHashDescription = `${mediatorIpfsHashDescriptionBase}_${i}`;
+			await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress});
+		}
+
+		let mediatorAddressToBeRemoved = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		await franklinDecentralizedMarketplaceMediationContract.removeMediator({ from: mediatorAddressToBeRemoved});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediators.call(), 2,
+			"Number of Mediators should have reflected the removing of a Mediator!");
+
+		let mediatorAddress = accounts[(randomAddressIndex + 0) % NUMBER_OF_ACCOUNTS];
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(1), mediatorAddress,
+			`Second for loop: Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under ` +
+			`index 1 immediately after deleting the middle Mediator!`);
+
+		mediatorAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.getMediatorAddress.call(0), mediatorAddress,
+			`Second for loop: Mediator Address ${mediatorAddress} should be able to be accessed in the 'listOfMediators' double-linked list under ` +
+			`index 0 immediately after deleting the middle Mediator!`);
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - FranklinDecentralizedMarketplaceContract has not been set by the Contract Owner", async () => {
+		let contractOwnerAddress = accounts[randomAddressIndex];
+		let franklinDecentralizedMarketplaceMediationContractTemp = await FranklinDecentralizedMarketplaceMediation.new({from: contractOwnerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceMediationContractTemp.franklinDecentralizedMarketplaceContractHasBeenSet.call(), false,
+			"The franklinDecentralizedMarketplaceContractHasBeenSet should initially be false!");
+
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 1;
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContractTemp.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method until FranklinDecentralizedMarketplaceContract has not been set by the Contract Owner!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/The FranklinDecentralizedMarketplaceContract has not been set by the Contract Owner!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - quantity of items to purchase is zero", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 0;
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method when the quantity of items to purchase is zero!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Must purchase at least 1 quantity of the Item for Sale to happen!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - _keyItemIpfsHash input is an EMPTY_STRING", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = EMPTY_STRING;
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 1;
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method when the _keyItemIpfsHash input is an EMPTY_STRING!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Cannot have an empty String for the IPFS Hash Key of an Item you are purchasing!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - _mediatedSalesTransactionIpfsHash input is an EMPTY_STRING", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = EMPTY_STRING;
+		let quantity = 1;
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method when the _mediatedSalesTransactionIpfsHash input is an EMPTY_STRING!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Cannot have an empty String for the IPFS Hash Key of the Mediated Sales Transaction!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - given _sellerAddress does not exist as a seller", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 1;
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.sellerExists.call(sellerAddress), false,
+			"Seller Address should initially not exist as a Seller!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method when the _sellerAddress does not exist as a Seller!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Given Seller Address does not exist as a Seller!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - given _keyItemIpfsHash does not exist as an item for sale from the seller", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 1;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+
+		keyItemIpfsHash = `${keyItemIpfsHash}_NotSoldBySeller`;
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), false,
+			"Item requested to purchase should not exists as an item for sale from the seller!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method when _keyItemIpfsHash does not exist as an item for sale from the seller!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Given IPFS Hash of Item is not listed as an Item For Sale from the Seller!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - seller has zero quantity available for sale for the item requested to purchase", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 1;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash), 0,
+			"Number of items available for sale from the seller should be zero!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method when _keyItemIpfsHash does not exist as an item for sale from the seller!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Seller has Zero quantity available for Sale for the Item requested to purchase!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - quantity available for sale of the item from the seller is less than the quantity requested to purchase", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity - 1, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) < quantity,
+			"Number of items available for sale from the seller should be less than the number requested to purchase from the buyer!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method when quantity available for sale of the item from the seller is less than the quantity requested to purchase!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Quantity available For Sale of the Item from the Seller is less than the quantity requested to purchase!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - seller has not yet set a price for sale for the requested item", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 1, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		assert.equal(await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash), 0,
+			"Seller should not have set a price for the item requested to purchase from the buyer!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method when quantity available for sale of the item from the seller is less than the quantity requested to purchase!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/The Seller has not yet set a Price for Sale for the requested Item! Cannot purchase the Item!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - not enough ETH/WEI was sent by the buyer to purchase the quantity requested of the item", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 2, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		let amountBuyerSendsToPurchaseInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString()).sub(new BN(1));
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+			assert.fail("Should not be able to execute this method when buyer does not send enough ETH/WEI to purchase item(s)!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Not enough ETH\/WEI was sent to purchase the quantity requested of the Item!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - buyer address same as seller address", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		buyerAddress = sellerAddress;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 2, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		let amountBuyerSendsToPurchaseInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+			assert.fail("Should not be able to execute this method when buyer address is the same as the seller address!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/The Buyer Address cannot be the same as the Seller Address!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - buyer address same as mediator address", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		buyerAddress = mediatorAddress;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 2, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		let amountBuyerSendsToPurchaseInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+			assert.fail("Should not be able to execute this method when buyer address is the same as the mediator address!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/The Buyer Address cannot be the same as the Mediator Address!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - seller address same as mediator address", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		sellerAddress = mediatorAddress;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 2, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		let amountBuyerSendsToPurchaseInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+			assert.fail("Should not be able to execute this method when seller address same as mediator address!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/The Seller Address cannot be the same as the Mediator Address!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - given _mediatorAddress does not exist as a mediator", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 2, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		let amountBuyerSendsToPurchaseInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), false,
+			"Given Mediator Address should not exist as a Mediator!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+			assert.fail("Should not be able to execute this method when mediator address does not exist as a mediator!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Given Mediator Address does not exist as a Mediator!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - buyer sends amount of ETH/WEI equal to amount needed to purchase items and _mediatedSalesTransactionIpfsHash does not exist yet as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 2, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		let buyerBalanceBeforePurchaseStr = await web3.eth.getBalance(buyerAddress);
+		let buyerBalanceBeforePurchaseBN = new BN(buyerBalanceBeforePurchaseStr);
+		// console.log('buyerBalanceBeforePurchaseStr =', buyerBalanceBeforePurchaseStr);
+		// console.log('buyerBalanceBeforePurchaseBN =', buyerBalanceBeforePurchaseBN);
+		// console.log('buyerBalanceBeforePurchaseBN.toString() =', buyerBalanceBeforePurchaseBN.toString());
+
+		let mediationContractBalanceBeforePurchaseStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceBeforePurchaseBN = new BN(mediationContractBalanceBeforePurchaseStr);
+		// console.log('mediationContractBalanceBeforePurchaseStr =', mediationContractBalanceBeforePurchaseStr);
+		// console.log('mediationContractBalanceBeforePurchaseBN =', mediationContractBalanceBeforePurchaseBN);
+		// console.log('mediationContractBalanceBeforePurchaseBN.toString() =', mediationContractBalanceBeforePurchaseBN.toString());
+
+		let results = await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Make sure Smart Contract keeps track of the existence of the Mediated Sales Transaction so that it can be Approved or Disapproved by the
+		// Buyer, Seller, and/or Mediator in the future.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"Given _mediatedSalesTransactionIpfsHash should exist after successfully purchasing item(s) with mediator!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsHash, BUYER_INDEX),
+			buyerAddress, `Given ${buyerAddress} should exist as a buyer for the ${mediatedSalesTransactionIpfsHash} Mediation Sales Transation ` +
+			` under mediatedSalesTransactionAddresses[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}]!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsHash, SELLER_INDEX),
+			sellerAddress, `Given ${sellerAddress} should exist as a seller for the ${mediatedSalesTransactionIpfsHash} Mediation Sales Transation ` +
+			` under mediatedSalesTransactionAddresses[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}]!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX),
+			mediatorAddress, `Given ${mediatorAddress} should exist as a mediator for the ${mediatedSalesTransactionIpfsHash} Mediation Sales Transation ` +
+			` under mediatedSalesTransactionAddresses[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}]!`);
+
+		// Make sure that Smart Contract keeps track of what Mediated Sales Transactions each party has been involved.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionsAddressInvolved.call(buyerAddress, 0),
+			mediatedSalesTransactionIpfsHash, `Given ${mediatedSalesTransactionIpfsHash} Mediated Sales Transaction should exist as one of the ` +
+			`Mediated Sales Transactions for the buyer in the mediatedSalesTransactionsAddressInvolved[${buyerAddress}] array!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionsAddressInvolved.call(sellerAddress, 0),
+			mediatedSalesTransactionIpfsHash, `Given ${mediatedSalesTransactionIpfsHash} Mediated Sales Transaction should exist as one of the ` +
+			`Mediated Sales Transactions for the seller in the mediatedSalesTransactionsAddressInvolved[${sellerAddress}] array!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionsAddressInvolved.call(mediatorAddress, 0),
+			mediatedSalesTransactionIpfsHash, `Given ${mediatedSalesTransactionIpfsHash} Mediated Sales Transaction should exist as one of the ` +
+			`Mediated Sales Transactions for the mediator in the mediatedSalesTransactionsAddressInvolved[${mediatorAddress}] array!`);
+
+		// Make sure that the Smart Contract keeps track of the "amountNeededToPurchaseItemsInWeiBN" for the given "mediatedSalesTransactionIpfsHash"
+		// Mediation Sales Transaction.
+		let returnedMediatedSalesTransactionAmountBN = await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionAmount.call(
+			mediatedSalesTransactionIpfsHash);
+		// console.log('returnedMediatedSalesTransactionAmountBN =', returnedMediatedSalesTransactionAmountBN);
+		// console.log('returnedMediatedSalesTransactionAmountBN.toString() =', returnedMediatedSalesTransactionAmountBN.toString());
+		assert.equal(returnedMediatedSalesTransactionAmountBN.toString(), amountNeededToPurchaseItemsInWeiBN.toString(),
+			`Given ${mediatedSalesTransactionIpfsHash} Mediated Sales Transaction amount needed to make purchase ` +
+			`should be stored at mediatedSalesTransactionAmount[${mediatedSalesTransactionIpfsHash}]!`);
+
+		// Make sure that the number of mediations that the mediator is involved is properly incremented by one.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 1,
+			"Number of mediations mediator has been involved was not properly incremented!");
+
+		// Make sure that the quantity available for sale of this item being sold by the seller is properly updated.
+		assert.equal(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash), 2,
+			"Quantity available for sale of this item being sold by the seller was not properly updated!");
+
+		let buyerBalanceAfterPurchaseStr = await web3.eth.getBalance(buyerAddress);
+		let buyerBalanceAfterPurchaseBN = new BN(buyerBalanceAfterPurchaseStr);
+		// console.log('buyerBalanceAfterPurchaseStr =', buyerBalanceAfterPurchaseStr);
+		// console.log('buyerBalanceAfterPurchaseBN =', buyerBalanceAfterPurchaseBN);
+		// console.log('buyerBalanceAfterPurchaseBN.toString() =', buyerBalanceAfterPurchaseBN.toString());
+
+		let mediationContractBalanceAfterPurchaseStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceAfterPurchaseBN = new BN(mediationContractBalanceAfterPurchaseStr);
+		// console.log('mediationContractBalanceAfterPurchaseStr =', mediationContractBalanceAfterPurchaseStr);
+		// console.log('mediationContractBalanceAfterPurchaseBN =', mediationContractBalanceAfterPurchaseBN);
+		// console.log('mediationContractBalanceAfterPurchaseBN.toString() =', mediationContractBalanceAfterPurchaseBN.toString());
+
+		let cummulativeGasUsed = results.receipt.cumulativeGasUsed;
+		// console.log('cummulativeGasUsed =', cummulativeGasUsed);
+
+		let expectedBuyerBalanceAfterPurchaseBN = buyerBalanceBeforePurchaseBN.sub(amountNeededToPurchaseItemsInWeiBN); // subtract value spent
+		expectedBuyerBalanceAfterPurchaseBN = expectedBuyerBalanceAfterPurchaseBN.sub(new BN(cummulativeGasUsed * GAS_BASE_UNIT)); // subtract gas spent
+		let expectedMediationContractBalanceAfterPurchaseBN = mediationContractBalanceBeforePurchaseBN.add(amountNeededToPurchaseItemsInWeiBN);
+		// console.log('expectedBuyerBalanceAfterPurchaseBN.toString() =', expectedBuyerBalanceAfterPurchaseBN.toString());
+		// console.log('expectedMediationContractBalanceAfterPurchaseBN.toString() =', expectedMediationContractBalanceAfterPurchaseBN.toString());
+
+		assert.equal(buyerBalanceAfterPurchaseBN.toString(), expectedBuyerBalanceAfterPurchaseBN.toString(),
+			"Buyer Address balance after purchase is not correct!");
+		assert.equal(mediationContractBalanceAfterPurchaseBN.toString(), expectedMediationContractBalanceAfterPurchaseBN.toString(),
+			"FranklinDecentralizedMarketplaceMediation Contract balance after purchase is not correct!");
+
+		// Making sure that PurchaseItemWithMediatorEvent(msg.sender, _sellerAddress, _mediatorAddress, _keyItemIpfsHash, _mediatedSalesTransactionIpfsHash, _quantity) fired off
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'PurchaseItemWithMediatorEvent', "There should have been a PurchaseItemWithMediatorEvent Event Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 6, "There should have been 6 arguments in the PurchaseItemWithoutMediatorEvent Event that Fired Off!");
+		assert.equal(results.logs[0].args._msgSender, buyerAddress, "The _msgSender argument should be the Buyer Address!");
+		assert.equal(results.logs[0].args._sellerAddress, sellerAddress, "The _sellerAddress argument should be the Seller Address!");
+		assert.equal(results.logs[0].args._mediatorAddress, mediatorAddress, "The _mediatorAddress argument should be the Mediator Address!");
+		assert.equal(results.logs[0].args._keyItemIpfsHash, keyItemIpfsHash, "The _keyItemIpfsHash argument should be IPFS Hash of Item bought!");
+		assert.equal(results.logs[0].args._mediatedSalesTransactionIpfsHash, mediatedSalesTransactionIpfsHash, "The _mediatedSalesTransactionIpfsHash argument should be IPFS Hash of Item bought!");
+		assert.equal(results.logs[0].args._quantity.toString(), quantity.toString(), "The _quantity argument should be quantity of the Items bought!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - given _mediatedSalesTransactionIpfsHash exists already as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+			assert.fail("Should not be able to execute this method when the given _mediatedSalesTransactionIpfsHash exists already as a " +
+				"Mediated Sales Transaction in the Smart Contract!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Mediated Sales Transaction already exists!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test purchaseItemWithMediator method - buyer sends amount of ETH/WEI greater than amount needed to purchase items and _mediatedSalesTransactionIpfsHash does not exist yet as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 2, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountExtraInWei = 0.2 * ETH;
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN.add(new BN(amountExtraInWei.toString()));
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		let buyerBalanceBeforePurchaseStr = await web3.eth.getBalance(buyerAddress);
+		let buyerBalanceBeforePurchaseBN = new BN(buyerBalanceBeforePurchaseStr);
+		// console.log('buyerBalanceBeforePurchaseStr =', buyerBalanceBeforePurchaseStr);
+		// console.log('buyerBalanceBeforePurchaseBN =', buyerBalanceBeforePurchaseBN);
+		// console.log('buyerBalanceBeforePurchaseBN.toString() =', buyerBalanceBeforePurchaseBN.toString());
+
+		let mediationContractBalanceBeforePurchaseStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceBeforePurchaseBN = new BN(mediationContractBalanceBeforePurchaseStr);
+		// console.log('mediationContractBalanceBeforePurchaseStr =', mediationContractBalanceBeforePurchaseStr);
+		// console.log('mediationContractBalanceBeforePurchaseBN =', mediationContractBalanceBeforePurchaseBN);
+		// console.log('mediationContractBalanceBeforePurchaseBN.toString() =', mediationContractBalanceBeforePurchaseBN.toString());
+
+		let results = await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Make sure Smart Contract keeps track of the existence of the Mediated Sales Transaction so that it can be Approved or Disapproved by the
+		// Buyer, Seller, and/or Mediator in the future.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"Given _mediatedSalesTransactionIpfsHash should exist after successfully purchasing item(s) with mediator!");
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsHash, BUYER_INDEX),
+			buyerAddress, `Given ${buyerAddress} should exist as a buyer for the ${mediatedSalesTransactionIpfsHash} Mediation Sales Transation ` +
+			` under mediatedSalesTransactionAddresses[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}]!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsHash, SELLER_INDEX),
+			sellerAddress, `Given ${sellerAddress} should exist as a seller for the ${mediatedSalesTransactionIpfsHash} Mediation Sales Transation ` +
+			` under mediatedSalesTransactionAddresses[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}]!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX),
+			mediatorAddress, `Given ${mediatorAddress} should exist as a mediator for the ${mediatedSalesTransactionIpfsHash} Mediation Sales Transation ` +
+			` under mediatedSalesTransactionAddresses[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}]!`);
+
+		// Make sure that Smart Contract keeps track of what Mediated Sales Transactions each party has been involved.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionsAddressInvolved.call(buyerAddress, 0),
+			mediatedSalesTransactionIpfsHash, `Given ${mediatedSalesTransactionIpfsHash} Mediated Sales Transaction should exist as one of the ` +
+			`Mediated Sales Transactions for the buyer in the mediatedSalesTransactionsAddressInvolved[${buyerAddress}] array!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionsAddressInvolved.call(sellerAddress, 0),
+			mediatedSalesTransactionIpfsHash, `Given ${mediatedSalesTransactionIpfsHash} Mediated Sales Transaction should exist as one of the ` +
+			`Mediated Sales Transactions for the seller in the mediatedSalesTransactionsAddressInvolved[${sellerAddress}] array!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionsAddressInvolved.call(mediatorAddress, 0),
+			mediatedSalesTransactionIpfsHash, `Given ${mediatedSalesTransactionIpfsHash} Mediated Sales Transaction should exist as one of the ` +
+			`Mediated Sales Transactions for the mediator in the mediatedSalesTransactionsAddressInvolved[${mediatorAddress}] array!`);
+
+		// Make sure that the Smart Contract keeps track of the "amountNeededToPurchaseItemsInWeiBN" for the given "mediatedSalesTransactionIpfsHash"
+		// Mediation Sales Transaction.
+		let returnedMediatedSalesTransactionAmountBN = await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionAmount.call(
+			mediatedSalesTransactionIpfsHash);
+		// console.log('returnedMediatedSalesTransactionAmountBN =', returnedMediatedSalesTransactionAmountBN);
+		// console.log('returnedMediatedSalesTransactionAmountBN.toString() =', returnedMediatedSalesTransactionAmountBN.toString());
+		assert.equal(returnedMediatedSalesTransactionAmountBN.toString(), amountNeededToPurchaseItemsInWeiBN.toString(),
+			`Given ${mediatedSalesTransactionIpfsHash} Mediated Sales Transaction amount needed to make purchase ` +
+			`should be stored at mediatedSalesTransactionAmount[${mediatedSalesTransactionIpfsHash}]!`);
+
+		// Make sure that the number of mediations that the mediator is involved is properly incremented by one.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 1,
+			"Number of mediations mediator has been involved was not properly incremented!");
+
+		// Make sure that the quantity available for sale of this item being sold by the seller is properly updated.
+		assert.equal(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash), 2,
+			"Quantity available for sale of this item being sold by the seller was not properly updated!");
+
+		let buyerBalanceAfterPurchaseStr = await web3.eth.getBalance(buyerAddress);
+		let buyerBalanceAfterPurchaseBN = new BN(buyerBalanceAfterPurchaseStr);
+		// console.log('buyerBalanceAfterPurchaseStr =', buyerBalanceAfterPurchaseStr);
+		// console.log('buyerBalanceAfterPurchaseBN =', buyerBalanceAfterPurchaseBN);
+		// console.log('buyerBalanceAfterPurchaseBN.toString() =', buyerBalanceAfterPurchaseBN.toString());
+
+		let mediationContractBalanceAfterPurchaseStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceAfterPurchaseBN = new BN(mediationContractBalanceAfterPurchaseStr);
+		// console.log('mediationContractBalanceAfterPurchaseStr =', mediationContractBalanceAfterPurchaseStr);
+		// console.log('mediationContractBalanceAfterPurchaseBN =', mediationContractBalanceAfterPurchaseBN);
+		// console.log('mediationContractBalanceAfterPurchaseBN.toString() =', mediationContractBalanceAfterPurchaseBN.toString());
+
+		let cummulativeGasUsed = results.receipt.cumulativeGasUsed;
+		// console.log('cummulativeGasUsed =', cummulativeGasUsed);
+
+		let expectedBuyerBalanceAfterPurchaseBN = buyerBalanceBeforePurchaseBN.sub(amountNeededToPurchaseItemsInWeiBN); // subtract value spent
+		expectedBuyerBalanceAfterPurchaseBN = expectedBuyerBalanceAfterPurchaseBN.sub(new BN(cummulativeGasUsed * GAS_BASE_UNIT)); // subtract gas spent
+		let expectedMediationContractBalanceAfterPurchaseBN = mediationContractBalanceBeforePurchaseBN.add(amountNeededToPurchaseItemsInWeiBN);
+		// console.log('expectedBuyerBalanceAfterPurchaseBN.toString() =', expectedBuyerBalanceAfterPurchaseBN.toString());
+		// console.log('expectedMediationContractBalanceAfterPurchaseBN.toString() =', expectedMediationContractBalanceAfterPurchaseBN.toString());
+
+		assert.equal(buyerBalanceAfterPurchaseBN.toString(), expectedBuyerBalanceAfterPurchaseBN.toString(),
+			"Buyer Address balance after purchase is not correct!");
+		assert.equal(mediationContractBalanceAfterPurchaseBN.toString(), expectedMediationContractBalanceAfterPurchaseBN.toString(),
+			"FranklinDecentralizedMarketplaceMediation Contract balance after purchase is not correct!");
+
+		// Making sure that PurchaseItemWithMediatorEvent(msg.sender, _sellerAddress, _mediatorAddress, _keyItemIpfsHash, _mediatedSalesTransactionIpfsHash, _quantity) fired off
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'PurchaseItemWithMediatorEvent', "There should have been a PurchaseItemWithMediatorEvent Event Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 6, "There should have been 6 arguments in the PurchaseItemWithoutMediatorEvent Event that Fired Off!");
+		assert.equal(results.logs[0].args._msgSender, buyerAddress, "The _msgSender argument should be the Buyer Address!");
+		assert.equal(results.logs[0].args._sellerAddress, sellerAddress, "The _sellerAddress argument should be the Seller Address!");
+		assert.equal(results.logs[0].args._mediatorAddress, mediatorAddress, "The _mediatorAddress argument should be the Mediator Address!");
+		assert.equal(results.logs[0].args._keyItemIpfsHash, keyItemIpfsHash, "The _keyItemIpfsHash argument should be IPFS Hash of Item bought!");
+		assert.equal(results.logs[0].args._mediatedSalesTransactionIpfsHash, mediatedSalesTransactionIpfsHash, "The _mediatedSalesTransactionIpfsHash argument should be IPFS Hash of Item bought!");
+		assert.equal(results.logs[0].args._quantity.toString(), quantity.toString(), "The _quantity argument should be quantity of the Items bought!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test mediatedSalesTransactionHasBeenApproved method - given _mediatedSalesTransactionIpfsHash does not exist yet as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"The given _mediatedSalesTransactionIpfsHash should not exist in the Smart Contract!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved(mediatedSalesTransactionIpfsHash);
+			assert.fail("Should not be able to execute this method when _mediatedSalesTransactionIpfsHash does not exist in the Smart Contract!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Given Mediated Sales Transaction IPFS Hash does not exist!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test mediatedSalesTransactionHasBeenApproved method - none of the involved parties have approved the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved(mediatedSalesTransactionIpfsHash), false,
+			"The given _mediatedSalesTransactionIpfsHash Mediated Sales Transaction should NOT be in the Approved state when none of the involved " +
+			"parties have approved the given _mediatedSalesTransactionIpfsHash Mediated Sales Transaction!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test mediatedSalesTransactionHasBeenDisapproved method - given _mediatedSalesTransactionIpfsHash does not exist yet as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"The given _mediatedSalesTransactionIpfsHash should not exist in the Smart Contract!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved(mediatedSalesTransactionIpfsHash);
+			assert.fail("Should not be able to execute this method when _mediatedSalesTransactionIpfsHash does not exist in the Smart Contract!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Given Mediated Sales Transaction IPFS Hash does not exist!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test mediatedSalesTransactionHasBeenDisapproved method - none of the involved parties have disapproved the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved(mediatedSalesTransactionIpfsHash), false,
+			"The given _mediatedSalesTransactionIpfsHash Mediated Sales Transaction should NOT be in the Disapproved state when none of the involved " +
+			"parties have disapproved the given _mediatedSalesTransactionIpfsHash Mediated Sales Transaction!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - given _mediatedSalesTransactionIpfsHash does not exist yet as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"The given _mediatedSalesTransactionIpfsHash should not exist in the Smart Contract!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(
+				mediatedSalesTransactionIpfsHash, {from: accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS]});
+			assert.fail("Should not be able to execute this method when _mediatedSalesTransactionIpfsHash does not exist in the Smart Contract!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Given Mediated Sales Transaction IPFS Hash does not exist!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - message sender is neither the buyer, seller, or mediator address of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(
+				mediatedSalesTransactionIpfsHash, {from: accounts[(randomAddressIndex + 4) % NUMBER_OF_ACCOUNTS]});
+			assert.fail("Should not be able to execute this method when Message Sender is neither the Buyer, Seller, nor Mediator Address!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Not allowed to Approve Mediated Sales Transaction, because Message Sender is neither the Buyer, Seller, or Mediator!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - nobody has yet done approval and message sender is the buyer address of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		// Note the approval from the "msg.sender" Address. If one approves, than one cannot disapprove.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), true,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean true!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), false,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean false!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Approved State if only one party has signaled approval!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - buyer and seller addresses signal approval of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		// First Buyer signals Approval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		// Note the approval from the "msg.sender" Address. If one approves, than one cannot disapprove.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), true,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean true!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), false,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean false!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Approved State if only one party has signaled approval!");
+
+		let sellerBalanceBeforeApprovalStr = await web3.eth.getBalance(sellerAddress);
+		let sellerBalanceBeforeApprovalBN = new BN(sellerBalanceBeforeApprovalStr);
+		// console.log('sellerBalanceBeforeApprovalStr =', sellerBalanceBeforeApprovalStr);
+		// console.log('sellerBalanceBeforeApprovalBN =', sellerBalanceBeforeApprovalBN);
+		// console.log('sellerBalanceBeforeApprovalBN.toString() =', sellerBalanceBeforeApprovalBN.toString());
+
+		let mediatorBalanceBeforeApprovalStr = await web3.eth.getBalance(mediatorAddress);
+		let mediatorBalanceBeforeApprovalBN = new BN(mediatorBalanceBeforeApprovalStr);
+		// console.log('mediatorBalanceBeforeApprovalStr =', mediatorBalanceBeforeApprovalStr);
+		// console.log('mediatorBalanceBeforeApprovalBN =', mediatorBalanceBeforeApprovalBN);
+		// console.log('mediatorBalanceBeforeApprovalBN.toString() =', mediatorBalanceBeforeApprovalBN.toString());
+
+		let mediationContractBalanceBeforeApprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceBeforeApprovalBN = new BN(mediationContractBalanceBeforeApprovalStr);
+		// console.log('mediationContractBalanceBeforeApprovalStr =', mediationContractBalanceBeforeApprovalStr);
+		// console.log('mediationContractBalanceBeforeApprovalBN =', mediationContractBalanceBeforeApprovalBN);
+		// console.log('mediationContractBalanceBeforeApprovalBN.toString() =', mediationContractBalanceBeforeApprovalBN.toString());
+
+		// Second... Seller signals Approval of the Mediated Sales Transaction
+		let results = await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		let sellerBalanceAfterApprovalStr = await web3.eth.getBalance(sellerAddress);
+		let sellerBalanceAfterApprovalBN = new BN(sellerBalanceAfterApprovalStr);
+		// console.log('sellerBalanceAfterApprovalStr =', sellerBalanceAfterApprovalStr);
+		// console.log('sellerBalanceAfterApprovalBN =', sellerBalanceAfterApprovalBN);
+		// console.log('sellerBalanceAfterApprovalBN.toString() =', sellerBalanceAfterApprovalBN.toString());
+
+		let mediatorBalanceAfterApprovalStr = await web3.eth.getBalance(mediatorAddress);
+		let mediatorBalanceAfterApprovalBN = new BN(mediatorBalanceAfterApprovalStr);
+		// console.log('mediatorBalanceAfterApprovalStr =', mediatorBalanceAfterApprovalStr);
+		// console.log('mediatorBalanceAfterApprovalBN =', mediatorBalanceAfterApprovalBN);
+		// console.log('mediatorBalanceAfterApprovalBN.toString() =', mediatorBalanceAfterApprovalBN.toString());
+
+		let mediationContractBalanceAfterApprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceAfterApprovalBN = new BN(mediationContractBalanceAfterApprovalStr);
+		// console.log('mediationContractBalanceAfterApprovalStr =', mediationContractBalanceAfterApprovalStr);
+		// console.log('mediationContractBalanceAfterApprovalBN =', mediationContractBalanceAfterApprovalBN);
+		// console.log('mediationContractBalanceAfterApprovalBN.toString() =', mediationContractBalanceAfterApprovalBN.toString());
+
+		let amountOfWeiToSendMediatorBN = amountNeededToPurchaseItemsInWeiBN.mul(new BN(5)).div(new BN(100)); // 5% to mediator
+		// console.log('amountOfWeiToSendMediatorBN.toString() =', amountOfWeiToSendMediatorBN.toString());
+		let amountOfWeiToSendSellerBN = amountNeededToPurchaseItemsInWeiBN.sub(amountOfWeiToSendMediatorBN); // 95% to seller
+		// console.log('amountOfWeiToSendSellerBN.toString() =', amountOfWeiToSendSellerBN.toString());
+
+		let cummulativeGasUsed = results.receipt.cumulativeGasUsed;
+		// console.log('cummulativeGasUsed =', cummulativeGasUsed);
+
+		let expectedSellerBalanceAfterApprovalBN = sellerBalanceBeforeApprovalBN.add(amountOfWeiToSendSellerBN); // 95% to seller
+		expectedSellerBalanceAfterApprovalBN = expectedSellerBalanceAfterApprovalBN.sub(new BN(cummulativeGasUsed * GAS_BASE_UNIT)); // subtract gas spent
+		// console.log('expectedSellerBalanceAfterApprovalBN.toString() =', expectedSellerBalanceAfterApprovalBN.toString());
+
+		let expectedMediatorBalanceAfterApprovalBN = mediatorBalanceBeforeApprovalBN.add(amountOfWeiToSendMediatorBN); // 5% to mediator
+		// console.log('expectedMediatorBalanceAfterApprovalBN.toString() =', expectedMediatorBalanceAfterApprovalBN.toString());
+
+		let expectedMediationContractBalanceAfterApprovalBN = mediationContractBalanceBeforeApprovalBN.sub(amountNeededToPurchaseItemsInWeiBN);
+		// console.log('expectedMediationContractBalanceAfterApprovalBN.toString() =', expectedMediationContractBalanceAfterApprovalBN.toString());
+
+		assert.equal(mediationContractBalanceAfterApprovalBN.toString(), expectedMediationContractBalanceAfterApprovalBN.toString(),
+			"Mediation Contract Address Balance after approval is incorrect!");
+		assert.equal(sellerBalanceAfterApprovalBN.toString(), expectedSellerBalanceAfterApprovalBN.toString(),
+			"Seller Address Balance after approval is incorrect!");
+		assert.equal(mediatorBalanceAfterApprovalBN.toString(), expectedMediatorBalanceAfterApprovalBN.toString(),
+			"Mediator Address Balance after approval is incorrect!");
+
+		// Note the approval from the "msg.sender" Address. If one approves, than one cannot disapprove.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), true,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean true!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), false,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean false!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should now be in the Approved State because two parties have signaled approval!");
+
+		// Making sure that MediatedSalesTransactionHasBeenFullyApprovedEvent(_mediatedSalesTransactionIpfsHash) fired off
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'MediatedSalesTransactionHasBeenFullyApprovedEvent', "There should have been a MediatedSalesTransactionHasBeenFullyApprovedEvent Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 1, "There should have been 1 argument(s) in the MediatedSalesTransactionHasBeenFullyApproved that Fired Off!");
+		assert.equal(results.logs[0].args._mediatedSalesTransactionIpfsHash, mediatedSalesTransactionIpfsHash, "The _mediatedSalesTransactionIpfsHash argument should be IPFS Hash of Item bought!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - nobody has yet done approval and message sender is the seller address of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		// Note the approval from the "msg.sender" Address. If one approves, than one cannot disapprove.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), true,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean true!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), false,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean false!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Approved State if only one party has signaled approval!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - seller and mediator addresses signal approval of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		// First Seller signals Approval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		// Note the approval from the "msg.sender" Address. If one approves, than one cannot disapprove.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), true,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean true!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), false,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean false!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Approved State if only one party has signaled approval!");
+
+		let sellerBalanceBeforeApprovalStr = await web3.eth.getBalance(sellerAddress);
+		let sellerBalanceBeforeApprovalBN = new BN(sellerBalanceBeforeApprovalStr);
+		// console.log('sellerBalanceBeforeApprovalStr =', sellerBalanceBeforeApprovalStr);
+		// console.log('sellerBalanceBeforeApprovalBN =', sellerBalanceBeforeApprovalBN);
+		// console.log('sellerBalanceBeforeApprovalBN.toString() =', sellerBalanceBeforeApprovalBN.toString());
+
+		let mediatorBalanceBeforeApprovalStr = await web3.eth.getBalance(mediatorAddress);
+		let mediatorBalanceBeforeApprovalBN = new BN(mediatorBalanceBeforeApprovalStr);
+		// console.log('mediatorBalanceBeforeApprovalStr =', mediatorBalanceBeforeApprovalStr);
+		// console.log('mediatorBalanceBeforeApprovalBN =', mediatorBalanceBeforeApprovalBN);
+		// console.log('mediatorBalanceBeforeApprovalBN.toString() =', mediatorBalanceBeforeApprovalBN.toString());
+
+		let mediationContractBalanceBeforeApprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceBeforeApprovalBN = new BN(mediationContractBalanceBeforeApprovalStr);
+		// console.log('mediationContractBalanceBeforeApprovalStr =', mediationContractBalanceBeforeApprovalStr);
+		// console.log('mediationContractBalanceBeforeApprovalBN =', mediationContractBalanceBeforeApprovalBN);
+		// console.log('mediationContractBalanceBeforeApprovalBN.toString() =', mediationContractBalanceBeforeApprovalBN.toString());
+
+		// Second... Mediator signals Approval of the Mediated Sales Transaction
+		let results = await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+
+		let sellerBalanceAfterApprovalStr = await web3.eth.getBalance(sellerAddress);
+		let sellerBalanceAfterApprovalBN = new BN(sellerBalanceAfterApprovalStr);
+		// console.log('sellerBalanceAfterApprovalStr =', sellerBalanceAfterApprovalStr);
+		// console.log('sellerBalanceAfterApprovalBN =', sellerBalanceAfterApprovalBN);
+		// console.log('sellerBalanceAfterApprovalBN.toString() =', sellerBalanceAfterApprovalBN.toString());
+
+		let mediatorBalanceAfterApprovalStr = await web3.eth.getBalance(mediatorAddress);
+		let mediatorBalanceAfterApprovalBN = new BN(mediatorBalanceAfterApprovalStr);
+		// console.log('mediatorBalanceAfterApprovalStr =', mediatorBalanceAfterApprovalStr);
+		// console.log('mediatorBalanceAfterApprovalBN =', mediatorBalanceAfterApprovalBN);
+		// console.log('mediatorBalanceAfterApprovalBN.toString() =', mediatorBalanceAfterApprovalBN.toString());
+
+		let mediationContractBalanceAfterApprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceAfterApprovalBN = new BN(mediationContractBalanceAfterApprovalStr);
+		// console.log('mediationContractBalanceAfterApprovalStr =', mediationContractBalanceAfterApprovalStr);
+		// console.log('mediationContractBalanceAfterApprovalBN =', mediationContractBalanceAfterApprovalBN);
+		// console.log('mediationContractBalanceAfterApprovalBN.toString() =', mediationContractBalanceAfterApprovalBN.toString());
+
+		let amountOfWeiToSendMediatorBN = amountNeededToPurchaseItemsInWeiBN.mul(new BN(5)).div(new BN(100)); // 5% to mediator
+		// console.log('amountOfWeiToSendMediatorBN.toString() =', amountOfWeiToSendMediatorBN.toString());
+		let amountOfWeiToSendSellerBN = amountNeededToPurchaseItemsInWeiBN.sub(amountOfWeiToSendMediatorBN); // 95% to seller
+		// console.log('amountOfWeiToSendSellerBN.toString() =', amountOfWeiToSendSellerBN.toString());
+
+		let cummulativeGasUsed = results.receipt.cumulativeGasUsed;
+		// console.log('cummulativeGasUsed =', cummulativeGasUsed);
+
+		let expectedSellerBalanceAfterApprovalBN = sellerBalanceBeforeApprovalBN.add(amountOfWeiToSendSellerBN); // 95% to seller
+		// expectedSellerBalanceAfterApprovalBN = expectedSellerBalanceAfterApprovalBN.sub(new BN(cummulativeGasUsed * GAS_BASE_UNIT)); // subtract gas spent
+		// console.log('expectedSellerBalanceAfterApprovalBN.toString() =', expectedSellerBalanceAfterApprovalBN.toString());
+
+		let expectedMediatorBalanceAfterApprovalBN = mediatorBalanceBeforeApprovalBN.add(amountOfWeiToSendMediatorBN); // 5% to mediator
+		expectedMediatorBalanceAfterApprovalBN = expectedMediatorBalanceAfterApprovalBN.sub(new BN(cummulativeGasUsed * GAS_BASE_UNIT)); // subtract gas spent
+		// console.log('expectedMediatorBalanceAfterApprovalBN.toString() =', expectedMediatorBalanceAfterApprovalBN.toString());
+
+		let expectedMediationContractBalanceAfterApprovalBN = mediationContractBalanceBeforeApprovalBN.sub(amountNeededToPurchaseItemsInWeiBN);
+		// console.log('expectedMediationContractBalanceAfterApprovalBN.toString() =', expectedMediationContractBalanceAfterApprovalBN.toString());
+
+		assert.equal(mediationContractBalanceAfterApprovalBN.toString(), expectedMediationContractBalanceAfterApprovalBN.toString(),
+			"Mediation Contract Address Balance after approval is incorrect!");
+		assert.equal(sellerBalanceAfterApprovalBN.toString(), expectedSellerBalanceAfterApprovalBN.toString(),
+			"Seller Address Balance after approval is incorrect!");
+		assert.equal(mediatorBalanceAfterApprovalBN.toString(), expectedMediatorBalanceAfterApprovalBN.toString(),
+			"Mediator Address Balance after approval is incorrect!");
+
+		// Note the approval from the "msg.sender" Address. If one approves, than one cannot disapprove.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), true,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean true!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), false,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean false!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should now be in the Approved State because two parties have signaled approval!");
+
+		// Making sure that MediatedSalesTransactionHasBeenFullyApprovedEvent(_mediatedSalesTransactionIpfsHash) fired off
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'MediatedSalesTransactionHasBeenFullyApprovedEvent', "There should have been a MediatedSalesTransactionHasBeenFullyApprovedEvent Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 1, "There should have been 1 argument(s) in the MediatedSalesTransactionHasBeenFullyApprovedEvent that Fired Off!");
+		assert.equal(results.logs[0].args._mediatedSalesTransactionIpfsHash, mediatedSalesTransactionIpfsHash, "The _mediatedSalesTransactionIpfsHash argument should be IPFS Hash of Item bought!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - nobody has yet done approval and message sender is the mediator address of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+
+		// Note the approval from the "msg.sender" Address. If one approves, than one cannot disapprove.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), true,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean true!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), false,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean false!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Approved State if only one party has signaled approval!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - mediator and buyer addresses signal approval of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		// First Mediator signals Approval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+
+		// Note the approval from the "msg.sender" Address. If one approves, than one cannot disapprove.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), true,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean true!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), false,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean false!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Approved State if only one party has signaled approval!");
+
+		let sellerBalanceBeforeApprovalStr = await web3.eth.getBalance(sellerAddress);
+		let sellerBalanceBeforeApprovalBN = new BN(sellerBalanceBeforeApprovalStr);
+		// console.log('sellerBalanceBeforeApprovalStr =', sellerBalanceBeforeApprovalStr);
+		// console.log('sellerBalanceBeforeApprovalBN =', sellerBalanceBeforeApprovalBN);
+		// console.log('sellerBalanceBeforeApprovalBN.toString() =', sellerBalanceBeforeApprovalBN.toString());
+
+		let mediatorBalanceBeforeApprovalStr = await web3.eth.getBalance(mediatorAddress);
+		let mediatorBalanceBeforeApprovalBN = new BN(mediatorBalanceBeforeApprovalStr);
+		// console.log('mediatorBalanceBeforeApprovalStr =', mediatorBalanceBeforeApprovalStr);
+		// console.log('mediatorBalanceBeforeApprovalBN =', mediatorBalanceBeforeApprovalBN);
+		// console.log('mediatorBalanceBeforeApprovalBN.toString() =', mediatorBalanceBeforeApprovalBN.toString());
+
+		let mediationContractBalanceBeforeApprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceBeforeApprovalBN = new BN(mediationContractBalanceBeforeApprovalStr);
+		// console.log('mediationContractBalanceBeforeApprovalStr =', mediationContractBalanceBeforeApprovalStr);
+		// console.log('mediationContractBalanceBeforeApprovalBN =', mediationContractBalanceBeforeApprovalBN);
+		// console.log('mediationContractBalanceBeforeApprovalBN.toString() =', mediationContractBalanceBeforeApprovalBN.toString());
+
+		// Second... Buyer signals Approval of the Mediated Sales Transaction
+		let results = await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		let sellerBalanceAfterApprovalStr = await web3.eth.getBalance(sellerAddress);
+		let sellerBalanceAfterApprovalBN = new BN(sellerBalanceAfterApprovalStr);
+		// console.log('sellerBalanceAfterApprovalStr =', sellerBalanceAfterApprovalStr);
+		// console.log('sellerBalanceAfterApprovalBN =', sellerBalanceAfterApprovalBN);
+		// console.log('sellerBalanceAfterApprovalBN.toString() =', sellerBalanceAfterApprovalBN.toString());
+
+		let mediatorBalanceAfterApprovalStr = await web3.eth.getBalance(mediatorAddress);
+		let mediatorBalanceAfterApprovalBN = new BN(mediatorBalanceAfterApprovalStr);
+		// console.log('mediatorBalanceAfterApprovalStr =', mediatorBalanceAfterApprovalStr);
+		// console.log('mediatorBalanceAfterApprovalBN =', mediatorBalanceAfterApprovalBN);
+		// console.log('mediatorBalanceAfterApprovalBN.toString() =', mediatorBalanceAfterApprovalBN.toString());
+
+		let mediationContractBalanceAfterApprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceAfterApprovalBN = new BN(mediationContractBalanceAfterApprovalStr);
+		// console.log('mediationContractBalanceAfterApprovalStr =', mediationContractBalanceAfterApprovalStr);
+		// console.log('mediationContractBalanceAfterApprovalBN =', mediationContractBalanceAfterApprovalBN);
+		// console.log('mediationContractBalanceAfterApprovalBN.toString() =', mediationContractBalanceAfterApprovalBN.toString());
+
+		let amountOfWeiToSendMediatorBN = amountNeededToPurchaseItemsInWeiBN.mul(new BN(5)).div(new BN(100)); // 5% to mediator
+		// console.log('amountOfWeiToSendMediatorBN.toString() =', amountOfWeiToSendMediatorBN.toString());
+		let amountOfWeiToSendSellerBN = amountNeededToPurchaseItemsInWeiBN.sub(amountOfWeiToSendMediatorBN); // 95% to seller
+		// console.log('amountOfWeiToSendSellerBN.toString() =', amountOfWeiToSendSellerBN.toString());
+
+		let cummulativeGasUsed = results.receipt.cumulativeGasUsed;
+		// console.log('cummulativeGasUsed =', cummulativeGasUsed);
+
+		let expectedSellerBalanceAfterApprovalBN = sellerBalanceBeforeApprovalBN.add(amountOfWeiToSendSellerBN); // 95% to seller
+		// expectedSellerBalanceAfterApprovalBN = expectedSellerBalanceAfterApprovalBN.sub(new BN(cummulativeGasUsed * GAS_BASE_UNIT)); // subtract gas spent
+		// console.log('expectedSellerBalanceAfterApprovalBN.toString() =', expectedSellerBalanceAfterApprovalBN.toString());
+
+		let expectedMediatorBalanceAfterApprovalBN = mediatorBalanceBeforeApprovalBN.add(amountOfWeiToSendMediatorBN); // 5% to mediator
+		// expectedMediatorBalanceAfterApprovalBN = expectedMediatorBalanceAfterApprovalBN.sub(new BN(cummulativeGasUsed * GAS_BASE_UNIT)); // subtract gas spent
+		// console.log('expectedMediatorBalanceAfterApprovalBN.toString() =', expectedMediatorBalanceAfterApprovalBN.toString());
+
+		let expectedMediationContractBalanceAfterApprovalBN = mediationContractBalanceBeforeApprovalBN.sub(amountNeededToPurchaseItemsInWeiBN);
+		// console.log('expectedMediationContractBalanceAfterApprovalBN.toString() =', expectedMediationContractBalanceAfterApprovalBN.toString());
+
+		assert.equal(mediationContractBalanceAfterApprovalBN.toString(), expectedMediationContractBalanceAfterApprovalBN.toString(),
+			"Mediation Contract Address Balance after approval is incorrect!");
+		assert.equal(sellerBalanceAfterApprovalBN.toString(), expectedSellerBalanceAfterApprovalBN.toString(),
+			"Seller Address Balance after approval is incorrect!");
+		assert.equal(mediatorBalanceAfterApprovalBN.toString(), expectedMediatorBalanceAfterApprovalBN.toString(),
+			"Mediator Address Balance after approval is incorrect!");
+
+		// Note the approval from the "msg.sender" Address. If one approves, than one cannot disapprove.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), true,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean true!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), false,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean false!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should now be in the Approved State because two parties have signaled approval!");
+
+		// Making sure that MediatedSalesTransactionHasBeenFullyApprovedEvent(_mediatedSalesTransactionIpfsHash) fired off
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'MediatedSalesTransactionHasBeenFullyApprovedEvent', "There should have been a MediatedSalesTransactionHasBeenFullyApprovedEvent Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 1, "There should have been 1 argument(s) in the MediatedSalesTransactionHasBeenFullyApprovedEvent that Fired Off!");
+		assert.equal(results.logs[0].args._mediatedSalesTransactionIpfsHash, mediatedSalesTransactionIpfsHash, "The _mediatedSalesTransactionIpfsHash argument should be IPFS Hash of Item bought!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - buyer address attempts to approve Mediated Sales Transaction AFTER seller and mediator addresses signal disapproval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Mediator and Seller signal Disapproval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Disapproved State!");
+
+		// Buyer now attempts to Approve Mediated Sales Transaction that is already in Disapproved State.
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(
+				mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method when _mediatedSalesTransactionIpfsHash is in the Disapproved State!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Mediated Sales Transaction has already been Disapproved by at least 2-out-of-3 of the Buyer, Seller, and\/or Mediator! Cannot Approve at this point!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - seller address attempts to approve Mediated Sales Transaction AFTER mediator and buyer addresses signal disapproval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Mediator and Buyer signal Disapproval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Disapproved State!");
+
+		// Seller now attempts to Approve Mediated Sales Transaction that is already in Disapproved State.
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(
+				mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+			assert.fail("Should not be able to execute this method when _mediatedSalesTransactionIpfsHash is in the Disapproved State!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Mediated Sales Transaction has already been Disapproved by at least 2-out-of-3 of the Buyer, Seller, and\/or Mediator! Cannot Approve at this point!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - mediator address attempts to approve Mediated Sales Transaction AFTER buyer and addresses signal disapproval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Buyer and Seller signal Disapproval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Disapproved State!");
+
+		// Mediator now attempts to Approve Mediated Sales Transaction that is already in Disapproved State.
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(
+				mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+			assert.fail("Should not be able to execute this method when _mediatedSalesTransactionIpfsHash is in the Disapproved State!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Mediated Sales Transaction has already been Disapproved by at least 2-out-of-3 of the Buyer, Seller, and\/or Mediator! Cannot Approve at this point!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - buyer address attempts to approve Mediated Sales Transaction AFTER seller and mediator addresses signal approval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Mediator and Seller signal Approval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Approved State!");
+
+		// Buyer now attempts to Approve Mediated Sales Transaction that is already in Approved State.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(
+			mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), true, "Approval from the Buyer should have been noted!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should have stayed in the Approved State!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - seller address attempts to approve Mediated Sales Transaction AFTER mediator and buyer addresses signal approval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Mediator and Buyer signal Approval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Approved State!");
+
+		// Seller now attempts to Approve Mediated Sales Transaction that is already in Approved State.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(
+			mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), true, "Approval from the Seller should have been noted!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should have stayed in the Approved State!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test approveMediatedSalesTransaction method - mediator address attempts to approve Mediated Sales Transaction AFTER buyer and addresses signal approval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Buyer and Seller signal Approval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Approved State!");
+
+		// Mediator now attempts to Approve Mediated Sales Transaction that is already in Approved State.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(
+			mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), true, "Approval from the Mediator should have been noted!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should have stayed in the Approved State!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - given _mediatedSalesTransactionIpfsHash does not exist yet as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"The given _mediatedSalesTransactionIpfsHash should not exist in the Smart Contract!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(
+				mediatedSalesTransactionIpfsHash, {from: accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS]});
+			assert.fail("Should not be able to execute this method when _mediatedSalesTransactionIpfsHash does not exist in the Smart Contract!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Given Mediated Sales Transaction IPFS Hash does not exist!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - message sender is neither the buyer, seller, or mediator address of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(
+				mediatedSalesTransactionIpfsHash, {from: accounts[(randomAddressIndex + 4) % NUMBER_OF_ACCOUNTS]});
+			assert.fail("Should not be able to execute this method when Message Sender is neither the Buyer, Seller, nor Mediator Address!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Not allowed to Disapprove Mediated Sales Transaction, because Message Sender is neither the Buyer, Seller, or Mediator!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - nobody has yet done disapproval and message sender is the buyer address of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		// Note the approval from the "msg.sender" Address. If one disapproves, than one cannot approve.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), false,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean false!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), true,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean true!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Disapproved State if only one party has signaled disapproval!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - buyer and seller addresses signal disapproval of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		// First Buyer signals Disapproval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		// Note the approval from the "msg.sender" Address. If one disapproves, than one cannot approve.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), false,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean false!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), true,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean true!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Disapproved State if only one party has signaled disapproval!");
+
+		let buyerBalanceBeforeDisapprovalStr = await web3.eth.getBalance(buyerAddress);
+		let buyerBalanceBeforeDisapprovalBN = new BN(buyerBalanceBeforeDisapprovalStr);
+		// console.log('buyerBalanceBeforeDisapprovalStr =', buyerBalanceBeforeDisapprovalStr);
+		// console.log('buyerBalanceBeforeDisapprovalBN =', buyerBalanceBeforeDisapprovalBN);
+		// console.log('buyerBalanceBeforeDisapprovalBN.toString() =', buyerBalanceBeforeDisapprovalBN.toString());
+
+		let mediationContractBalanceBeforeDisapprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceBeforeDisapprovalBN = new BN(mediationContractBalanceBeforeDisapprovalStr);
+		// console.log('mediationContractBalanceBeforeDisapprovalStr =', mediationContractBalanceBeforeDisapprovalStr);
+		// console.log('mediationContractBalanceBeforeDisapprovalBN =', mediationContractBalanceBeforeDisapprovalBN);
+		// console.log('mediationContractBalanceBeforeDisapprovalBN.toString() =', mediationContractBalanceBeforeDisapprovalBN.toString());
+
+		// Second... Seller signals Dispproval of the Mediated Sales Transaction
+		let results = await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		let buyerBalanceAfterDisapprovalStr = await web3.eth.getBalance(buyerAddress);
+		let buyerBalanceAfterDisapprovalBN = new BN(buyerBalanceAfterDisapprovalStr);
+		// console.log('buyerBalanceAfterDisapprovalStr =', buyerBalanceAfterDisapprovalStr);
+		// console.log('buyerBalanceAfterDisapprovalBN =', buyerBalanceAfterDisapprovalBN);
+		// console.log('buyerBalanceAfterDisapprovalBN.toString() =', buyerBalanceAfterDisapprovalBN.toString());
+
+		let mediationContractBalanceAfterDisapprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceAfterDisapprovalBN = new BN(mediationContractBalanceAfterDisapprovalStr);
+		// console.log('mediationContractBalanceAfterDisapprovalStr =', mediationContractBalanceAfterDisapprovalStr);
+		// console.log('mediationContractBalanceAfterDisapprovalBN =', mediationContractBalanceAfterDisapprovalBN);
+		// console.log('mediationContractBalanceAfterDisapprovalBN.toString() =', mediationContractBalanceAfterDisapprovalBN.toString());
+
+		let amountOfWeiToSendBuyerBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountOfWeiToSendBuyerBN.toString() =', amountOfWeiToSendBuyerBN.toString());
+
+		let cummulativeGasUsed = results.receipt.cumulativeGasUsed;
+		// console.log('cummulativeGasUsed =', cummulativeGasUsed);
+
+		let expectedBuyerBalanceAfterDisapprovalBN = buyerBalanceBeforeDisapprovalBN.add(amountOfWeiToSendBuyerBN); // 100% refund to buyer
+		// expectedBuyerBalanceAfterDisapprovalBN = expectedBuyerBalanceAfterDisapprovalBN.sub(new BN(cummulativeGasUsed * GAS_BASE_UNIT)); // subtract gas spent
+		// console.log('expectedBuyerBalanceAfterDisapprovalBN.toString() =', expectedBuyerBalanceAfterDisapprovalBN.toString());
+
+		let expectedMediationContractBalanceAfterDisapprovalBN = mediationContractBalanceBeforeDisapprovalBN.sub(amountNeededToPurchaseItemsInWeiBN);
+		// console.log('expectedMediationContractBalanceAfterDisapprovalBN.toString() =', expectedMediationContractBalanceAfterDisapprovalBN.toString());
+
+		assert.equal(mediationContractBalanceAfterDisapprovalBN.toString(), expectedMediationContractBalanceAfterDisapprovalBN.toString(),
+			"Mediation Contract Address Balance after disapproval is incorrect!");
+		assert.equal(buyerBalanceAfterDisapprovalBN.toString(), expectedBuyerBalanceAfterDisapprovalBN.toString(),
+			"Buyer Address Balance after disaapproval is incorrect!");
+
+		// Note the disaapproval from the "msg.sender" Address. If one disapproves, than one cannot approve.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), false,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean false!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), true,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean true!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should now be in the Disapproved State because two parties have signaled disapproval!");
+
+		// Making sure that MediatedSalesTransactionHasBeenFullyDisapprovedEvent(_mediatedSalesTransactionIpfsHash) fired off
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'MediatedSalesTransactionHasBeenFullyDisapprovedEvent', "There should have been a MediatedSalesTransactionHasBeenFullyDisapprovedEvent Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 1, "There should have been 1 argument(s) in the MediatedSalesTransactionHasBeenFullyDisapprovedEvent that Fired Off!");
+		assert.equal(results.logs[0].args._mediatedSalesTransactionIpfsHash, mediatedSalesTransactionIpfsHash, "The _mediatedSalesTransactionIpfsHash argument should be IPFS Hash of Item bought!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - nobody has yet done disapproval and message sender is the seller address of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		// Note the approval from the "msg.sender" Address. If one disapproves, than one cannot approve.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), false,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean false!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), true,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean true!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Disapproved State if only one party has signaled disapproval!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - seller and mediator addresses signal disapproval of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		// First Seller signals Disapproval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		// Note the approval from the "msg.sender" Address. If one disapproves, than one cannot approve.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), false,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean false!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), true,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${SELLER_INDEX}] should be boolean true!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Disapproved State if only one party has signaled disapproval!");
+
+		let buyerBalanceBeforeDisapprovalStr = await web3.eth.getBalance(buyerAddress);
+		let buyerBalanceBeforeDisapprovalBN = new BN(buyerBalanceBeforeDisapprovalStr);
+		// console.log('buyerBalanceBeforeDisapprovalStr =', buyerBalanceBeforeDisapprovalStr);
+		// console.log('buyerBalanceBeforeDisapprovalBN =', buyerBalanceBeforeDisapprovalBN);
+		// console.log('buyerBalanceBeforeDisapprovalBN.toString() =', buyerBalanceBeforeDisapprovalBN.toString());
+
+		let mediationContractBalanceBeforeDisapprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceBeforeDisapprovalBN = new BN(mediationContractBalanceBeforeDisapprovalStr);
+		// console.log('mediationContractBalanceBeforeDisapprovalStr =', mediationContractBalanceBeforeDisapprovalStr);
+		// console.log('mediationContractBalanceBeforeDisapprovalBN =', mediationContractBalanceBeforeDisapprovalBN);
+		// console.log('mediationContractBalanceBeforeDisapprovalBN.toString() =', mediationContractBalanceBeforeDisapprovalBN.toString());
+
+		// Second... Mediator signals Disapproval of the Mediated Sales Transaction
+		let results = await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+
+		let buyerBalanceAfterDisapprovalStr = await web3.eth.getBalance(buyerAddress);
+		let buyerBalanceAfterDisapprovalBN = new BN(buyerBalanceAfterDisapprovalStr);
+		// console.log('buyerBalanceAfterDisapprovalStr =', buyerBalanceAfterDisapprovalStr);
+		// console.log('buyerBalanceAfterDisapprovalBN =', buyerBalanceAfterDisapprovalBN);
+		// console.log('buyerBalanceAfterDisapprovalBN.toString() =', buyerBalanceAfterDisapprovalBN.toString());
+
+		let mediationContractBalanceAfterDisapprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceAfterDisapprovalBN = new BN(mediationContractBalanceAfterDisapprovalStr);
+		// console.log('mediationContractBalanceAfterDisapprovalStr =', mediationContractBalanceAfterDisapprovalStr);
+		// console.log('mediationContractBalanceAfterDisapprovalBN =', mediationContractBalanceAfterDisapprovalBN);
+		// console.log('mediationContractBalanceAfterDisapprovalBN.toString() =', mediationContractBalanceAfterDisapprovalBN.toString());
+
+		let amountOfWeiToSendBuyerBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountOfWeiToSendBuyerBN.toString() =', amountOfWeiToSendBuyerBN.toString());
+
+		let cummulativeGasUsed = results.receipt.cumulativeGasUsed;
+		// console.log('cummulativeGasUsed =', cummulativeGasUsed);
+
+		let expectedBuyerBalanceAfterDisapprovalBN = buyerBalanceBeforeDisapprovalBN.add(amountOfWeiToSendBuyerBN); // 100% refund to buyer
+		// expectedBuyerBalanceAfterDisapprovalBN = expectedBuyerBalanceAfterDisapprovalBN.sub(new BN(cummulativeGasUsed * GAS_BASE_UNIT)); // subtract gas spent
+		// console.log('expectedBuyerBalanceAfterDisapprovalBN.toString() =', expectedBuyerBalanceAfterDisapprovalBN.toString());
+
+		let expectedMediationContractBalanceAfterDisapprovalBN = mediationContractBalanceBeforeDisapprovalBN.sub(amountNeededToPurchaseItemsInWeiBN);
+		// console.log('expectedMediationContractBalanceAfterDisapprovalBN.toString() =', expectedMediationContractBalanceAfterDisapprovalBN.toString());
+
+		assert.equal(mediationContractBalanceAfterDisapprovalBN.toString(), expectedMediationContractBalanceAfterDisapprovalBN.toString(),
+			"Mediation Contract Address Balance after disapproval is incorrect!");
+		assert.equal(buyerBalanceAfterDisapprovalBN.toString(), expectedBuyerBalanceAfterDisapprovalBN.toString(),
+			"Buyer Address Balance after disaapproval is incorrect!");
+
+		// Note the disaapproval from the "msg.sender" Address. If one disapproves, than one cannot approve.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), false,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean false!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), true,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean true!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should now be in the Disapproved State because two parties have signaled disapproval!");
+
+		// Making sure that MediatedSalesTransactionHasBeenFullyDisapprovedEvent(_mediatedSalesTransactionIpfsHash) fired off
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'MediatedSalesTransactionHasBeenFullyDisapprovedEvent', "There should have been a MediatedSalesTransactionHasBeenFullyDisapprovedEvent Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 1, "There should have been 1 argument(s) in the MediatedSalesTransactionHasBeenFullyDisapprovedEvent that Fired Off!");
+		assert.equal(results.logs[0].args._mediatedSalesTransactionIpfsHash, mediatedSalesTransactionIpfsHash, "The _mediatedSalesTransactionIpfsHash argument should be IPFS Hash of Item bought!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - nobody has yet done disapproval and message sender is the mediator address of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+
+		// Note the approval from the "msg.sender" Address. If one disapproves, than one cannot approve.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), false,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean false!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), true,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean true!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Disapproved State if only one party has signaled disapproval!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - mediator and buyer addresses signal disapproval of the given _mediatedSalesTransactionIpfsHash that exists as a Mediated Sales Transaction in the Smart Contract", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		assert.equal(await franklinDecentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerAddress, keyItemIpfsHash), true,
+			"Item requested to purchase should exist as an item for sale from the seller!");
+
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+		assert.ok(await franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, keyItemIpfsHash) >= quantity,
+			"Number of items available for sale from the seller is greater than or equal to the number requested to purchase from the buyer!");
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let returnedPriceOfItemInWeiBN = await franklinDecentralizedMarketplaceContract.getPriceOfItem(sellerAddress, keyItemIpfsHash);
+		// console.log('returnedPriceOfItemInWeiBN =', returnedPriceOfItemInWeiBN);
+		// console.log('returnedPriceOfItemInWeiBN.toString() =', returnedPriceOfItemInWeiBN.toString());
+		assert.notEqual(returnedPriceOfItemInWeiBN, new BN(0), "Seller should have set a non-zero price for the item requested to purchase from the buyer!");
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), false,
+			"Given _mediatedSalesTransactionIpfsHash should not exist yet inside of Smart Contract!");
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatorExists.call(mediatorAddress), true,
+			"Given Mediator Address should exist as a Mediator!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved.call(mediatorAddress), 0,
+			"Number of mediations mediator has been involved should initially be zero in this case!");
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsHash), true,
+			"The given _mediatedSalesTransactionIpfsHash should exist in the Smart Contract!");
+
+		// First Mediator signals Disapproval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+
+		// Note the approval from the "msg.sender" Address. If one disapproves, than one cannot approve.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), false,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean false!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), true,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${MEDIATOR_INDEX}] should be boolean true!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), false,
+			"Mediated Sales Transaction should not be in the Disapproved State if only one party has signaled disapproval!");
+
+		let buyerBalanceBeforeDisapprovalStr = await web3.eth.getBalance(buyerAddress);
+		let buyerBalanceBeforeDisapprovalBN = new BN(buyerBalanceBeforeDisapprovalStr);
+		// console.log('buyerBalanceBeforeDisapprovalStr =', buyerBalanceBeforeDisapprovalStr);
+		// console.log('buyerBalanceBeforeDisapprovalBN =', buyerBalanceBeforeDisapprovalBN);
+		// console.log('buyerBalanceBeforeDisapprovalBN.toString() =', buyerBalanceBeforeDisapprovalBN.toString());
+
+		let mediationContractBalanceBeforeDisapprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceBeforeDisapprovalBN = new BN(mediationContractBalanceBeforeDisapprovalStr);
+		// console.log('mediationContractBalanceBeforeDisapprovalStr =', mediationContractBalanceBeforeDisapprovalStr);
+		// console.log('mediationContractBalanceBeforeDisapprovalBN =', mediationContractBalanceBeforeDisapprovalBN);
+		// console.log('mediationContractBalanceBeforeDisapprovalBN.toString() =', mediationContractBalanceBeforeDisapprovalBN.toString());
+
+		// Second... Buyer signals Disapproval of the Mediated Sales Transaction
+		let results = await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		let buyerBalanceAfterDisapprovalStr = await web3.eth.getBalance(buyerAddress);
+		let buyerBalanceAfterDisapprovalBN = new BN(buyerBalanceAfterDisapprovalStr);
+		// console.log('buyerBalanceAfterDisapprovalStr =', buyerBalanceAfterDisapprovalStr);
+		// console.log('buyerBalanceAfterDisapprovalBN =', buyerBalanceAfterDisapprovalBN);
+		// console.log('buyerBalanceAfterDisapprovalBN.toString() =', buyerBalanceAfterDisapprovalBN.toString());
+
+		let mediationContractBalanceAfterDisapprovalStr = await web3.eth.getBalance(franklinDecentralizedMarketplaceMediationContract.address);
+		let mediationContractBalanceAfterDisapprovalBN = new BN(mediationContractBalanceAfterDisapprovalStr);
+		// console.log('mediationContractBalanceAfterDisapprovalStr =', mediationContractBalanceAfterDisapprovalStr);
+		// console.log('mediationContractBalanceAfterDisapprovalBN =', mediationContractBalanceAfterDisapprovalBN);
+		// console.log('mediationContractBalanceAfterDisapprovalBN.toString() =', mediationContractBalanceAfterDisapprovalBN.toString());
+
+		let amountOfWeiToSendBuyerBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountOfWeiToSendBuyerBN.toString() =', amountOfWeiToSendBuyerBN.toString());
+
+		let cummulativeGasUsed = results.receipt.cumulativeGasUsed;
+		// console.log('cummulativeGasUsed =', cummulativeGasUsed);
+
+		let expectedBuyerBalanceAfterDisapprovalBN = buyerBalanceBeforeDisapprovalBN.add(amountOfWeiToSendBuyerBN); // 100% refund to buyer
+		expectedBuyerBalanceAfterDisapprovalBN = expectedBuyerBalanceAfterDisapprovalBN.sub(new BN(cummulativeGasUsed * GAS_BASE_UNIT)); // subtract gas spent
+		// console.log('expectedBuyerBalanceAfterDisapprovalBN.toString() =', expectedBuyerBalanceAfterDisapprovalBN.toString());
+
+		let expectedMediationContractBalanceAfterDisapprovalBN = mediationContractBalanceBeforeDisapprovalBN.sub(amountNeededToPurchaseItemsInWeiBN);
+		// console.log('expectedMediationContractBalanceAfterDisapprovalBN.toString() =', expectedMediationContractBalanceAfterDisapprovalBN.toString());
+
+		assert.equal(mediationContractBalanceAfterDisapprovalBN.toString(), expectedMediationContractBalanceAfterDisapprovalBN.toString(),
+			"Mediation Contract Address Balance after disapproval is incorrect!");
+		assert.equal(buyerBalanceAfterDisapprovalBN.toString(), expectedBuyerBalanceAfterDisapprovalBN.toString(),
+			"Buyer Address Balance after disaapproval is incorrect!");
+
+		// Note the disapproval from the "msg.sender" Address. If one disapproves, than one cannot approve.
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), false,
+			`The mediatedSalesTransactionApprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean false!`);
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), true,
+			`The mediatedSalesTransactionDisapprovedByParties[${mediatedSalesTransactionIpfsHash}][${BUYER_INDEX}] should be boolean true!`);
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should now be in the Disapproved State because two parties have signaled disapproval!");
+
+		// Making sure that MediatedSalesTransactionHasBeenFullyDisapprovedEvent(_mediatedSalesTransactionIpfsHash) fired off
+		assert.equal(results.logs.length, 1, "There should have been one Event Fired Off!");
+		assert.equal(results.logs[0].event, 'MediatedSalesTransactionHasBeenFullyDisapprovedEvent', "There should have been a MediatedSalesTransactionHasBeenFullyDisapprovedEvent Fired Off!");
+		assert.ok(results.logs[0].args !== undefined, "There should have been a results.logs[0].args object!");
+		assert.equal(results.logs[0].args.__length__, 1, "There should have been 1 argument(s) in the MediatedSalesTransactionHasBeenFullyDisapprovedEvent that Fired Off!");
+		assert.equal(results.logs[0].args._mediatedSalesTransactionIpfsHash, mediatedSalesTransactionIpfsHash, "The _mediatedSalesTransactionIpfsHash argument should be IPFS Hash of Item bought!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - buyer address attempts to disapprove Mediated Sales Transaction AFTER seller and mediator addresses signal approval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Mediator and Seller signal Approval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Approved State!");
+
+		// Buyer now attempts to Disapprove Mediated Sales Transaction that is already in Approved State.
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(
+				mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+			assert.fail("Should not be able to execute this method when _mediatedSalesTransactionIpfsHash is in the Approved State!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Mediated Sales Transaction has already been Approved by at least 2-out-of-3 of the Buyer, Seller, and\/or Mediator! Cannot Disapprove at this point!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - seller address attempts to disapprove Mediated Sales Transaction AFTER buyer and mediator addresses signal approval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Mediator and Buyer signal Approval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Approved State!");
+
+		// Seller now attempts to Disapprove Mediated Sales Transaction that is already in Approved State.
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(
+				mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+			assert.fail("Should not be able to execute this method when _mediatedSalesTransactionIpfsHash is in the Approved State!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Mediated Sales Transaction has already been Approved by at least 2-out-of-3 of the Buyer, Seller, and\/or Mediator! Cannot Disapprove at this point!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - mediator address attempts to disapprove Mediated Sales Transaction AFTER buyer and seller addresses signal approval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Buyer and Seller signal Approval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceMediationContract.approveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Approved State!");
+
+		// Mediator now attempts to Disapprove Mediated Sales Transaction that is already in Approved State.
+		try {
+			await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(
+				mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+			assert.fail("Should not be able to execute this method when _mediatedSalesTransactionIpfsHash is in the Approved State!");
+		} catch (error) {
+			assert.ok(/revert/.test(error.message), "String 'revert' not present in error message!");
+			assert.ok(/Mediated Sales Transaction has already been Approved by at least 2-out-of-3 of the Buyer, Seller, and\/or Mediator! Cannot Disapprove at this point!/.test(error.message),
+				"Appropriate error message not returned!");
+		}
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - buyer address attempts to disapprove Mediated Sales Transaction AFTER seller and mediator addresses signal disapproval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Mediator and Seller signal Disapproval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Disapproved State!");
+
+		// Buyer now attempts to Disapprove Mediated Sales Transaction that is already in Disapproved State.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(
+			mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, BUYER_INDEX), true, "Disapproval from the Buyer should have been noted!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should have stayed in the Disapproved State!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - seller address attempts to disapprove Mediated Sales Transaction AFTER buyer and mediator addresses signal disapproval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Mediator and Buyer signal Disapproval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Disapproved State!");
+
+		// Seller now attempts to Disapprove Mediated Sales Transaction that is already in Disapproved State.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(
+			mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, SELLER_INDEX), true, "Disapproval from the Seller should have been noted!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should have stayed in the Disapproved State!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test disapproveMediatedSalesTransaction method - mediator address attempts to disapprove Mediated Sales Transaction AFTER buyer and seller addresses signal disapproval of the given existing _mediatedSalesTransactionIpfsHash", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHash = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 10, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		// This needs to be executed so that the given "mediatedSalesTransactionIpfsHash" gets stored as an already existing Mediated Sales Transaction in the
+		// Smart Contract.
+		await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+			mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+		// Buyer and Seller signal Disapproval of Mediated Sales Transaction.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(mediatedSalesTransactionIpfsHash, {from: buyerAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should initially be in the Disapproved State!");
+
+		// Mediator now attempts to Disapprove Mediated Sales Transaction that is already in Disapproved State.
+		await franklinDecentralizedMarketplaceMediationContract.disapproveMediatedSalesTransaction(
+			mediatedSalesTransactionIpfsHash, {from: mediatorAddress});
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(
+			mediatedSalesTransactionIpfsHash, MEDIATOR_INDEX), true, "Disapproval from the Mediator should have been noted!");
+
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved.call(mediatedSalesTransactionIpfsHash), true,
+			"Mediated Sales Transaction should have stayed in the Disapproved State!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test numberOfMediatedSalesTransactionsAddressInvolved method - given _party address has NOT been involved in any Mediated Sales Transactions", async () => {
+		assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediatedSalesTransactionsAddressInvolved(
+			accounts[randomAddressIndex % NUMBER_OF_ACCOUNTS]), 0, "Given address should have indicated no involvement in any Mediated Sales Transactions!");
+	});
+
+	it("FranklinDecentralizedMarketplaceMediation : test numberOfMediatedSalesTransactionsAddressInvolved method - given _party addresse(s) have been involved in several Mediated Sales Transactions", async () => {
+		let buyerAddress = accounts[(randomAddressIndex + 1) % NUMBER_OF_ACCOUNTS];
+		let sellerAddress = accounts[(randomAddressIndex + 2) % NUMBER_OF_ACCOUNTS];
+		let mediatorAddress = accounts[(randomAddressIndex + 3) % NUMBER_OF_ACCOUNTS];
+		let keyItemIpfsHash = "DummyItem_IpfsHash";
+		let mediatedSalesTransactionIpfsHashBase = "DummyMediationSalesTransaction_IpfsHash";
+		let quantity = 3;
+
+		await franklinDecentralizedMarketplaceContract.addItemForSale(keyItemIpfsHash, {from: sellerAddress});
+		await franklinDecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(keyItemIpfsHash, quantity + 15, {from: sellerAddress})
+
+		let priceOfItemInWei = 0.25 * ETH;
+		// console.log('priceOfItemInWei =', priceOfItemInWei);
+		// console.log('priceOfItemInWei.toString() =', priceOfItemInWei.toString());
+		let priceOfItemInWeiBN = new BN(priceOfItemInWei.toString());
+		// console.log('priceOfItemInWeiBN =', priceOfItemInWeiBN);
+		// console.log('priceOfItemInWeiBN.toString() =', priceOfItemInWeiBN.toString());
+		await franklinDecentralizedMarketplaceContract.setPriceOfItem(keyItemIpfsHash, priceOfItemInWeiBN, {from: sellerAddress});
+
+		let amountNeededToPurchaseItemsInWei = quantity * priceOfItemInWei;
+		let amountNeededToPurchaseItemsInWeiBN = new BN(amountNeededToPurchaseItemsInWei.toString());
+		// console.log('amountNeededToPurchaseItemsInWei =', amountNeededToPurchaseItemsInWei);
+		// console.log('amountNeededToPurchaseItemsInWeiBN =', amountNeededToPurchaseItemsInWeiBN);
+		// console.log('amountNeededToPurchaseItemsInWeiBN.toString() =', amountNeededToPurchaseItemsInWeiBN.toString());
+		let amountBuyerSendsToPurchaseInWeiBN = amountNeededToPurchaseItemsInWeiBN;
+		// console.log('amountBuyerSendsToPurchaseInWeiBN =', amountBuyerSendsToPurchaseInWeiBN);
+		// console.log('amountBuyerSendsToPurchaseInWeiBN.toString() =', amountBuyerSendsToPurchaseInWeiBN.toString());
+
+		let mediatorIpfsHashDescription = "DummyMediatorIpfsHashDescription";
+		await franklinDecentralizedMarketplaceMediationContract.addOrUpdateMediator(mediatorIpfsHashDescription, {from: mediatorAddress})
+
+		for (let i = 0; i < 3; i++) {
+			let mediatedSalesTransactionIpfsHash = `${mediatedSalesTransactionIpfsHashBase}_${i}`;
+			await franklinDecentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerAddress, mediatorAddress, keyItemIpfsHash,
+				mediatedSalesTransactionIpfsHash, quantity, {from: buyerAddress, value: amountBuyerSendsToPurchaseInWeiBN});
+
+			assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediatedSalesTransactionsAddressInvolved(
+				buyerAddress), i + 1, `Given Buyer Address should have at this point been involved in ${i + 1} Mediated Sales Transactions!`);
+			assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediatedSalesTransactionsAddressInvolved(
+				sellerAddress), i + 1, `Given Seller Address should have at this point been involved in ${i + 1} Mediated Sales Transactions!`);
+			assert.equal(await franklinDecentralizedMarketplaceMediationContract.numberOfMediatedSalesTransactionsAddressInvolved(
+				mediatorAddress), i + 1, `Given Mediator Address should have at this point been involved in ${i + 1} Mediated Sales Transactions!`);
+		}
+	});
 
 	// Below is what's returned in function calls that change the contract.
     /*
@@ -2048,7 +5241,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 				let itemIpfsHash = `Item ${itemIndex}`;
 				await franklinDecentralizedMarketplaceContract.addItemForSale(itemIpfsHash, {from: accounts[sellerAccountIndex]});
 
-				let sellerExistsFlag = await franklinDecentralizedMarketplaceContract.sellerExists(accounts[sellerAccountIndex]);
+				let sellerExistsFlag = await franklinDecentralizedMarketplaceContract.sellerExists.call(accounts[sellerAccountIndex]);
 				assert.equal(sellerExistsFlag, true, `Seller accounts[${sellerAccountIndex}] = ${accounts[sellerAccountIndex]} should exist in ` +
 					`"listOfSellers" double-linked list but appears to not exist!`);
 
@@ -2068,7 +5261,7 @@ contract("FranklinDecentralizedMarketplace and FranklinDecentralizedMarketplaceM
 		// Make sure that ALL the Sellers that were added STILL exist as Sellers and are in the correct location in the "listOfSellers" double-linked list.
 		let sellerAccountDecrementingIndex = 99;
 		for (let sellerAccountIndex = 0; sellerAccountIndex < 100; sellerAccountIndex++) {
-			let sellerExistsFlag = await franklinDecentralizedMarketplaceContract.sellerExists(accounts[sellerAccountIndex]);
+			let sellerExistsFlag = await franklinDecentralizedMarketplaceContract.sellerExists.call(accounts[sellerAccountIndex]);
 			assert.equal(sellerExistsFlag, true, `Seller accounts[${sellerAccountIndex}] = ${accounts[sellerAccountIndex]} should exist in ` +
 				`"listOfSellers" double-linked list but appears to not exist!`);
 

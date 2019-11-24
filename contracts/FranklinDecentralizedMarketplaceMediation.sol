@@ -141,8 +141,8 @@ contract FranklinDecentralizedMarketplaceMediation {
     mapping (address => string[]) public mediatedSalesTransactionsAddressInvolved;
     
     event PurchaseItemWithMediatorEvent(address _msgSender, address _sellerAddress, address _mediatorAddress, string _keyItemIpfsHash, string _mediatedSalesTransactionIpfsHash, uint _quantity);
-    event MediatedSalesTransactionHasBeenFullyApproved(string _mediatedSalesTransactionIpfsHash);
-    event MediatedSalesTransactionHasBeenFullyDisapproved(string _mediatedSalesTransactionIpfsHash);
+    event MediatedSalesTransactionHasBeenFullyApprovedEvent(string _mediatedSalesTransactionIpfsHash);
+    event MediatedSalesTransactionHasBeenFullyDisapprovedEvent(string _mediatedSalesTransactionIpfsHash);
     
     // Below is the Contract Address of the FranklinDecentralizedMarketplace Contract that was set by the "setFranklinDecentralizedMarketplaceContract" method.
     // The Contract code had to be split in two, because the Etherum Virtual Machine (EVM) would not allow deployment of a Contract
@@ -347,7 +347,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         uint quantityAvailableForSaleOfItem = franklinDecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(_sellerAddress, _keyItemIpfsHash);
         require(quantityAvailableForSaleOfItem > 0, "Seller has Zero quantity available for Sale for the Item requested to purchase!");
         require(quantityAvailableForSaleOfItem >= _quantity, 
-            "Quantity available For Sale of the Item from the Seller is less than the quantity requested to purchase! Not enough of the Itenm available For Sale");
+            "Quantity available For Sale of the Item from the Seller is less than the quantity requested to purchase! Not enough of the Item available For Sale");
         
         uint priceOfItem = franklinDecentralizedMarketplaceContract.getPriceOfItem(_sellerAddress, _keyItemIpfsHash);
         require(priceOfItem > 0, "The Seller has not yet set a Price for Sale for the requested Item! Cannot purchase the Item!"); 
@@ -467,7 +467,7 @@ contract FranklinDecentralizedMarketplaceMediation {
             sellerAddress.transfer(amountOfWeiToSendSeller);
             mediatorAddress.transfer(amountOfWeiToSendMediator);
             
-            emit MediatedSalesTransactionHasBeenFullyApproved(_mediatedSalesTransactionIpfsHash);
+            emit MediatedSalesTransactionHasBeenFullyApprovedEvent(_mediatedSalesTransactionIpfsHash);
         }
     }
     
@@ -512,13 +512,13 @@ contract FranklinDecentralizedMarketplaceMediation {
         
         // If after the "msg.sender" Disapproves the Mediated Sales Transaction, this reaches a State where 2-out-of-3 Buyer, Seller, and/or Mediator have Disapproved, then send 100% of the Sales Amount 
         // back to the Buyer Address.
-        if (mediatedSalesTransactionHasBeenApproved(_mediatedSalesTransactionIpfsHash)) {
+        if (mediatedSalesTransactionHasBeenDisapproved(_mediatedSalesTransactionIpfsHash)) {
             uint totalSalesAmount = mediatedSalesTransactionAmount[_mediatedSalesTransactionIpfsHash];
         
             address payable buyerAddress = GeneralUtilities._convertAddressToAddressPayable(mediatedSalesTransactionAddresses[_mediatedSalesTransactionIpfsHash][BUYER_INDEX]);
             buyerAddress.transfer(totalSalesAmount);
             
-            emit MediatedSalesTransactionHasBeenFullyDisapproved(_mediatedSalesTransactionIpfsHash);
+            emit MediatedSalesTransactionHasBeenFullyDisapprovedEvent(_mediatedSalesTransactionIpfsHash);
         }
     }
     
