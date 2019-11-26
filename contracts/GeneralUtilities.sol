@@ -21,7 +21,7 @@ library GeneralUtilities {
     // Source --> https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/math/SafeMath.sol
     function _safeMathAdd(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
-        require(c >= a, "_safeMathAdd : Addition Overflow");
+        require(c >= a && c >= b, "_safeMathAdd : Addition Overflow");
 
         return c;
     }
@@ -60,7 +60,7 @@ library GeneralUtilities {
     }
     
     // Converts an Ethereum Address string that was obtained from the "_addressToString" method above and converts it into
-    // an Ehereum "address" type.
+    // an Ethereum "address" type.
     //
     // Reference --> https://ethereum.stackexchange.com/questions/67436/a-solidity-0-5-x-function-to-convert-adress-string-to-ethereum-address
     function _parseEthereumAddressStringToAddress(string memory _a) internal pure returns (address) {
@@ -101,13 +101,13 @@ library GeneralUtilities {
     function _safeMathDivide(uint256 a, uint256 b) internal pure returns (uint256) {
         require(b > 0, "_safeMathDivide : Denominator is 0"); // Solidity automatically throws when dividing by 0
         uint256 c = a / b;
-        require(a == b * c + a % b, "_safeMathDivide : Division Overflow"); // There is no case in which this doesn't hold
+        // require(a == b * c + a % b, "_safeMathDivide : Division Overflow"); // There is no case in which this doesn't hold
         return c;
     }
     
     // Allows for safely multiplying two numbers.
     // Source --> Simple Timed Auction Homeowrk Assignment and https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/math/SafeMath.sol
-    function _safeMathMultiply(uint _a, uint _b) internal pure returns (uint) {
+    function _safeMathMultiply(uint256 _a, uint256 _b) internal pure returns (uint256) {
         if (_a == 0 || _b == 0) {
             return 0;
         }
