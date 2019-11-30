@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8"/>
+    <title>Franklin Decentralized Marketplace DApp</title>
+    <link rel="stylesheet" type="text/css" href="decentralized-marketplace.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/ipfs-api/dist/index.js"></script>
+    <script src="lib/GeneralUtilities.js"></script>
+    <script src="decentralized-marketplace.js"></script>
+</head>
+
+<body>
+<header id="menu">
+    <a href="#" id="linkHome">Home</a>
+    <a href="#" id="linkMediators">Mediators</a>
+</header>
+
+<main>
+
+    <section id="loadingBox">Loading ...</section>
+
+    <section id="infoBox"><header>x</header><p>Info</p></section>
+
+    <section id="errorBox"><header>x</header><p>Error</p></section>
+
+    <section id="viewHome">
+        <h1>Franklin Decentralized Marketplace DApp</h1>
+        Welcome to the <b>Franklin Decentralized Marketplace DApp</b>.
+        <br><br>
+        The <b>Franklin Decentralized Marketplace DApp</b> is a Decentralized Application created by Franklin Perez as part of the <b>Kingsland University DApps Individual Project 2019</b> assignment.
+        This DApp allows someone with a Metamask Ethereum Wallet to act as a Buyer, Seller, and/or Mediator in the <b>Franklin Decentralized Marketplace DApp</b>.
+       	You <b>must have</b> the <b>Metamask Ethereum Wallet</b> plugin installed inside your browser in order to use this DApp.
+       	<br><br>
+       	The current Ethereum Address that you will be identified by is the current Ethereum Address that shows up when you open your Metamask Ethereum Wallet. You may
+       	use multiple Ethereum Addresses that are in your Metamask Ethereum Wallet, but it's the currently active one that will be used to identify who you are in the
+       	<b>Franklin Decentralized Marketplace DApp</b>.
+       	<br><br>
+		The way you add yourself as a Seller is to add an Item you wish to sell via the currently active Metamask Ethereum Address, and you will be automatically added as a Seller and
+		identified as a Seller via the currently active Metamask Ethereum Address you used to add the Item. You may use multiple Seller Ethereum Addresses if you'd like.
+       	<br><br>
+       	<b>Franklin Decentralized Marketplace DApp Functionality (for the currently active Metamask Ethereum Address):</b>
+       	<ul>
+			<li><b>Sellers</b></li>
+				<ul>
+                    <li>View All currently available Sellers</li>
+                    <li>Remove Yourself (i.e., currently active Metamask Ethereum Address) as a Seller</li>
+                </ul>
+			<li><b>Items</b></li>
+				<ul>
+                    <li>View all Items for Sale from a Specific Seller Ethereum Address</li>
+                    <li>Add an Item for Sale for the currently active Metamask Ethereum Address</li>
+                    <li>Remove an Item for Sale for the currently active Metamask Ethereum Address</li>
+                    <li>Add Yourself (i.e., currently active Metamask Ethereum Address) as a Seller by adding your Item for Sale</li>
+                    <li>Remove Yourself (i.e., currently active Metamask Ethereum Address) as a Seller by removing your Last Item for Sale</li>
+                </ul>
+			<li><b>Mediators</b></li>
+				<ul>
+                    <li>View All currently available Mediators</li>
+                    <li>Add Yourself (i.e., currently active Metamask Ethereum Address) as a Mediator</li>
+                    <li>Remove Yourself (i.e., currently active Metamask Ethereum Address) as a Mediator</li>
+                </ul>
+			<li><b>Mediated Sales Transactions</b></li>
+       	</ul>
+    </section>
+
+	<!--
+		Source for table code techniques:
+		1) https://codebun.com/create-dynamic-table-using-jquery
+		2) https://www.w3schools.com/html/html_tables.asp
+	-->
+
+    <section id="viewMediators">
+    	<b>Your Current Metamask Ethereum Address:</b> <input type="text" size="40" readonly="true" id="viewMediatorsYourCurrentMetamaskEthereumAddress"><br><br>
+		<h1>View Current Mediators</h1>
+		<input type="button" id="buttonGetCurrentMediators" value="Get Current Mediators"/>
+    	<input type="button" id="buttonClearCurrentMediatorsResults" value="Clear Current Mediators Results"/>
+    	<br><br>
+		<b>Results of Getting Current Mediators:</b> <br><br>
+		Number of Current Mediators: <input type="text" size="10" readonly="true" id="numberOfCurrentMediatorsViewCurrentMediatorsResults"><br><br>
+    	<div id="currentMediatorsViewTableResultsDiv"></div>
+
+    	<br><hr><br>
+    	<h1>View Detailed Information About a Mediator</h1>
+    	Ethereum Public Address (40-Hex lowercase digits with optional '0x' at the beginning): <input type="text" size="40" id="textViewDetailedInformationAboutMediatorEthereumAddress"><br><br>
+    	<input type="button" id="buttonViewDetailedInformationAboutMediator" value="View Mediator Detailed Information">
+    	<input type="button" id="buttonClearViewDetailedInformationAboutMediator" value="Clear Inputs and Ouputs for View Mediator Detailed Information">
+    	<br><br>
+    	Name: <input type="text" size="100" readonly="true" id="textViewDetailedInformationAboutMediatorName"><br><br>
+    	Number of Mediations Involved: <input type="text" size="10" readonly="true" id="textViewDetailedInformationAboutMediatorNumberOfMediationsInvolved"><br><br>
+    	Physical Address:<br>
+    	<textarea readonly="true" id="textareaViewDetailedInformationAboutMediatorPhysicalAddress"></textarea><br>
+		Mailing Address:<br>
+    	<textarea readonly="true" id="textareaViewDetailedInformationAboutMediatorMailingAddress"></textarea><br>
+    	Website: <input readonly="true" type="text" size="100" id="textViewDetailedInformationAboutMediatorWebsite"><br><br>
+    	E-mail: <input readonly="true" type="text" size="100" id="textViewDetailedInformationAboutMediatorEmail"><br><br>
+    	Phone: <input readonly="true" type="text" size="100" id="textViewDetailedInformationAboutMediatorPhone"><br><br>
+    	Fax: <input readonly="true" type="text" size="100" id="textViewDetailedInformationAboutMediatorFax"><br><br>
+    	Picture:<br> <img id="pictureViewDetailedInformationAboutMediator" src="" alt=""><br><br>
+    	Description:<br>
+    	<textarea readonly="true" id="textareaViewDetailedInformationAboutMediatorDescription"></textarea><br>
+
+    	<br><hr><br>
+    	<h1>Add/Update/Remove Yourself as a Mediator</h1>
+    	<input type="button" id="buttonAddUpdateYourselfAsMediator" value="Add or Update Yourself as a Mediator">
+    	<input type="button" id="buttonClearAddUpdateYourselfAsMediator" value="Clear Inputs for Add or Update Yourself as a Mediator">
+    	<input type="button" id="buttonRemoveYourselfAsMediator" value="Remove Yourself as a Mediator">
+    	<br><br>
+    	Name: <input type="text" size="100" id="textAddUpdateYourselfAsMediatorName"><br><br>
+    	Physical Address:<br>
+    	<textarea id="textareaAddUpdateYourselfAsMediatorPhysicalAddress"></textarea><br>
+		Mailing Address:<br>
+    	<textarea id="textareaAddUpdateYourselfAsMediatorMailingAddress"></textarea><br>
+    	Website: <input type="text" size="100" id="textAddUpdateYourselfAsMediatorWebsite"><br><br>
+    	E-mail: <input type="text" size="100" id="textAddUpdateYourselfAsMediatorEmail"><br><br>
+    	Phone: <input type="text" size="100" id="textAddUpdateYourselfAsMediatorPhone"><br><br>
+    	Fax: <input type="text" size="100" id="textAddUpdateYourselfAsMediatorFax"><br><br>
+    	Picture:<br><input type="file" id="fileAddUpdateYourselfAsMediatorPicture"><br><br>
+    	Description:<br>
+    	<textarea id="textareaAddUpdateYourselfAsMediatorDescription"></textarea><br>
+
+    </section>
+
+</main>
+
+<footer>Franklin Decentralized Marketplace DApp</footer>
+</body>
+</html>
