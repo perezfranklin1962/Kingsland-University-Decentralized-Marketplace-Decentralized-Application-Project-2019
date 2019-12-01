@@ -1000,14 +1000,23 @@ $(document).ready(function () {
 
 	console.log('currentMetamaskEthereumAddress =', currentMetamaskEthereumAddress);
 
-	// Used to keep track of the Current Mediators;
+	// Used to keep track of the Current Mediators
 	var currentMediatorsArray = [ ];
+
+	// Used to keep track of the Current Sellers
+	var currentSellersArray = [ ];
 
 	showView("viewHome");
 
 	$('#linkHome').click(function () {
 		console.log('linkHome clicked');
 	    showView("viewHome");
+    });
+
+	$('#linkSellers').click(function () {
+		console.log('linkSellers clicked');
+		createViewSellersTable();
+	    showView("viewSellers");
     });
 
 	$('#linkMediators').click(function () {
@@ -1021,9 +1030,16 @@ $(document).ready(function () {
     $('#buttonClearAddUpdateYourselfAsMediator').click(clearAddUpdateYourselfAsMediator);
     $('#buttonAddUpdateYourselfAsMediator').click(addUpdateYourselfAsMediator);
     $('#buttonRemoveYourselfAsMediator').click(removeYourselfAsMediator);
-
     $('#buttonViewDetailedInformationAboutMediator').click(viewDetailedInformationAboutMediator);
     $('#buttonClearViewDetailedInformationAboutMediator').click(clearViewDetailedInformationAboutMediator);
+
+    $('#buttonGetCurrentSellers').click(getCurrentSellers);
+    $('#buttonClearCurrentSellersResults').click(clearCurrentSellersResults);
+    $('#buttonClearAddUpdateDescriptionOfYourselfAsSeller').click(clearAddUpdateDescriptionOfYourselfAsSeller);
+    $('#buttonAddUpdateDescriptionOfYourselfAsSeller').click(addUpdateDescriptionOfYourselfAsSeller);
+    $('#buttonRemoveYourselfAsSeller').click(removeYourselfAsSeller);
+    $('#buttonViewDetailedInformationAboutSeller').click(viewDetailedInformationAboutSeller);
+    $('#buttonClearViewDetailedInformationAboutSeller').click(clearViewDetailedInformationAboutSeller);
 
 	// Attach AJAX "loading" event listener
 	$(document).on({
@@ -1046,6 +1062,7 @@ $(document).ready(function () {
 
 		if (currentMetamaskEthereumAddress === undefined) {
 			$('#viewMediatorsYourCurrentMetamaskEthereumAddress').val('');
+			$('#viewSellersYourCurrentMetamaskEthereumAddress').val('');
 
 			showError("You must install the Metamask Ethereum Wallet plugin inside your browser in order to use this DApp. " +
 				"Please install MetaMask to access the Ethereum Web3 API from your browser. If you've already installede Metamask, then " +
@@ -1062,7 +1079,24 @@ $(document).ready(function () {
 			}
 
 			$('#viewMediatorsYourCurrentMetamaskEthereumAddress').val(currentMetamaskEthereumAddress);
+			$('#viewSellersYourCurrentMetamaskEthereumAddress').val(currentMetamaskEthereumAddress);
 		}
+	}
+
+	function clearViewDetailedInformationAboutSeller() {
+		$('#textViewDetailedInformationAboutSellerEthereumAddress').val('');
+		$('#textViewDetailedInformationAboutSellerName').val('');
+		$('#textViewDetailedInformationAboutSellerNumberOfDifferentItemsBeingSold').val('');
+		$('#textareaViewDetailedInformationAboutSellerPhysicalAddress').val('');
+		$('#textareaViewDetailedInformationAboutSellerMailingAddress').val('');
+		$('#textViewDetailedInformationAboutSellerWebsite').val('');
+		$('#textViewDetailedInformationAboutSellerEmail').val('');
+		$('#textViewDetailedInformationAboutSellerPhone').val('');
+		$('#textViewDetailedInformationAboutSellerFax').val('');
+		$('#textareaViewDetailedInformationAboutSellerDescription').val('');
+
+		$('#pictureViewDetailedInformationAboutSeller').attr('src', '');
+		$('#pictureViewDetailedInformationAboutSeller').attr('alt', '');
 	}
 
 	function clearViewDetailedInformationAboutMediator() {
@@ -1079,6 +1113,10 @@ $(document).ready(function () {
 
 		$('#pictureViewDetailedInformationAboutMediator').attr('src', '');
 		$('#pictureViewDetailedInformationAboutMediator').attr('alt', '');
+	}
+
+	async function removeYourselfAsSeller() {
+
 	}
 
 	async function removeYourselfAsMediator() {
@@ -1133,6 +1171,10 @@ $(document).ready(function () {
 			showInfo(`Your current Metamask Ethereum Address ${currentMetamaskEthereumAddress} <b>successfully removed as Mediator</b> from Franklin Decentralized Marketplace. ` +
 				`Transaction hash: ${txHash}`);
 		});
+	}
+
+	async function viewDetailedInformationAboutSeller() {
+
 	}
 
 	async function viewDetailedInformationAboutMediator() {
@@ -1287,8 +1329,14 @@ $(document).ready(function () {
 		$('#textViewDetailedInformationAboutMediatorFax').val(ipfsFileGetForMediatorJson.fax);
 		$('#textareaViewDetailedInformationAboutMediatorDescription').val(ipfsFileGetForMediatorJson.description);
 
-		$('#pictureViewDetailedInformationAboutMediator').attr('src', `https://ipfs.infura.io/ipfs/${ipfsFileGetForMediatorJson.picture}`);
-		$('#pictureViewDetailedInformationAboutMediator').attr('alt', `${ipfsFileGetForMediatorJson.picture}`);
+		if (ipfsFileGetForMediatorJson.picture === EMPTY_STRING) {
+			$('#pictureViewDetailedInformationAboutMediator').attr('src', '');
+			$('#pictureViewDetailedInformationAboutMediator').attr('alt', '');
+		}
+		else {
+			$('#pictureViewDetailedInformationAboutMediator').attr('src', `https://ipfs.infura.io/ipfs/${ipfsFileGetForMediatorJson.picture}`);
+			$('#pictureViewDetailedInformationAboutMediator').attr('alt', `${ipfsFileGetForMediatorJson.picture}`);
+		}
 
 		hideInfo();
 	}
@@ -1313,10 +1361,26 @@ $(document).ready(function () {
 
 	// Reference --> https://blog.shovonhasan.com/using-promises-with-filereader
 	async function uploadPictureToIPFS(inputFileElementId) {
+		/*
+		let numberOfFiles_1 = $('#' + inputFileElementId)[0].files.length;
+		let numberOfFiles_2 = $('#' + inputFileElementId).length;
+		console.log('uploadPictureToIPFS : elementInfo =', $('#' + inputFileElementId));
+
+		var input = document.getElementById(inputFileElementId);
+		console.log('uploadPictureToIPFS : input =', input);
+		console.log('uploadPictureToIPFS : input.files =', input.files);
+
+		console.log('uploadPictureToIPFS : numberOfFiles_1 =', numberOfFiles_1);
+		console.log('uploadPictureToIPFS : numberOfFiles_2 =', numberOfFiles_2);
+		for (let i = 0; i < numberOfFiles_1; i++) {
+			console.log(`uploadPictureToIPFS : file[${i}] = `, $('#' + inputFileElementId)[0].files[0]);
+		}
+
 		if ($('#' + inputFileElementId)[0].files.length === 0) {
 			console.log('uploadPicture: No picture to upload!');
 			return EMPTY_STRING;
 		}
+		*/
 
 		showInfo("Loading chosen input picture file onto IPFS (InterPlanetary File System)....");
 
@@ -1368,6 +1432,10 @@ $(document).ready(function () {
 
 		console.log('ipfsFileHash =', ipfsFileHash);
 		return ipfsFileHash;
+	}
+
+	async function addUpdateDescriptionOfYourselfAsSeller() {
+
 	}
 
 	async function addUpdateYourselfAsMediator() {
@@ -1454,6 +1522,18 @@ $(document).ready(function () {
 		});
 	}
 
+	function clearAddUpdateDescriptionOfYourselfAsSeller() {
+		$('#textAddUpdateDescriptionOfYourselfAsSellerName').val('');
+		$('#textareaAddUpdateDescriptionOfYourselfAsSellerPhysicalAddress').val('');
+		$('#textareaAddUpdateDescriptionOfYourselfAsSellerMailingAddress').val('');
+		$('#textAddUpdateDescriptionOfYourselfAsSellerWebsite').val('');
+		$('#textAddUpdateDescriptionOfYourselfAsSellerEmail').val('');
+		$('#textAddUpdateDescriptionOfYourselfAsSellerPhone').val('');
+		$('#textAddUpdateDescriptionOfYourselfAsSellerFax').val('');
+		$('#fileAddUpdateDescriptionOfYourselfAsSellerPicture').val('');
+		$('#textareaAddUpdateDescriptionOfYourselfAsSellerDescription').val('');
+	}
+
 	function clearAddUpdateYourselfAsMediator() {
 		$('#textAddUpdateYourselfAsMediatorName').val('');
 		$('#textareaAddUpdateYourselfAsMediatorPhysicalAddress').val('');
@@ -1466,10 +1546,20 @@ $(document).ready(function () {
 		$('#textareaAddUpdateYourselfAsMediatorDescription').val('');
 	}
 
+	function clearCurrentSellersResults() {
+		currentSellersArray = [ ];
+		createViewSellersTable();
+		$('#numberOfCurrentSellersViewCurrentSellersResults').val('');
+	}
+
 	function clearCurrentMediatorsResults() {
 		currentMediatorsArray = [ ];
 		createViewMediatorsTable();
 		$('#numberOfCurrentMediatorsViewCurrentMediatorsResults').val('');
+	}
+
+	async function getCurrentSellers() {
+
 	}
 
 	async function getCurrentMediators() {
@@ -1652,7 +1742,12 @@ $(document).ready(function () {
 				}
 				else if (j === 2) {
 					// table_data += rowData.picture;
-					table_data += `<img src="https://ipfs.infura.io/ipfs/${rowData.picture}" alt="${rowData.picture}" width="40" height="40"/>`;
+					if (rowData.picture === EMPTY_STRING) {
+						table_data += '';
+					}
+					else {
+						table_data += `<img src="https://ipfs.infura.io/ipfs/${rowData.picture}" alt="${rowData.picture}" width="40" height="40"/>`;
+					}
 				}
 				else if (j === 3) {
 					table_data += rowData.numberOfMediationsInvolved;
@@ -1667,6 +1762,55 @@ $(document).ready(function () {
 
         table_body += '</table>';
         $('#currentMediatorsViewTableResultsDiv').html(table_body);
+	}
+
+	function createViewSellersTable() {
+        var number_of_rows = currentSellersArray.length;
+        var number_of_cols = 4;
+
+        var table_body = '<table style="width:100%">';
+        table_body += '<tr>';
+		table_body += '<th>Ethereum Address</th>';
+		table_body += '<th>Name</th>';
+		table_body += '<th>Picture</th>';
+		table_body += '<th>Number of Different Items Sold</th>';
+  		table_body += '</tr>';
+
+        for (var i = 0 ; i < number_of_rows; i++) {
+			table_body += '<tr>';
+            for (var j = 0; j < number_of_cols; j++) {
+            	table_body += '<td>';
+
+				let rowData = currentMediatorsArray[i];
+                let table_data = '';
+                if (j === 0) {
+					table_data += rowData.ethereumAddress;
+				}
+				else if (j === 1) {
+					table_data += rowData.name;
+				}
+				else if (j === 2) {
+					// table_data += rowData.picture;
+					if (rowData.picture === EMPTY_STRING) {
+						table_data += '';
+					}
+					else {
+						table_data += `<img src="https://ipfs.infura.io/ipfs/${rowData.picture}" alt="${rowData.picture}" width="40" height="40"/>`;
+					}
+				}
+				else if (j === 3) {
+					table_data += rowData.numberOfDifferentItemsSold;
+				}
+
+                table_body += table_data;
+                table_body += '</td>';
+             }
+
+             table_body += '</tr>';
+        }
+
+        table_body += '</table>';
+        $('#currentSellersViewTableResultsDiv').html(table_body);
 	}
 
 	// Reference --> https://www.reddit.com/r/ethdev/comments/8dyfyr/how_to_make_metamask_accept_promiseswait_for

@@ -15,6 +15,7 @@
 <body>
 <header id="menu">
     <a href="#" id="linkHome">Home</a>
+    <a href="#" id="linkSellers">Sellers</a>
     <a href="#" id="linkMediators">Mediators</a>
 </header>
 
@@ -72,8 +73,62 @@
 		2) https://www.w3schools.com/html/html_tables.asp
 	-->
 
+	<section id="viewSellers">
+
+		<b>Your Current Metamask Ethereum Address:</b> <input type="text" size="50" readonly="true" id="viewSellersYourCurrentMetamaskEthereumAddress"><br><br>
+		<h1>View Current Sellers</h1>
+		<input type="button" id="buttonGetCurrentSellers" value="Get Current Sellers"/>
+		<input type="button" id="buttonClearCurrentSellersResults" value="Clear Current Sellers Results"/>
+		<br><br>
+		<b>Results of Getting Current Sellers:</b> <br><br>
+		Number of Current Sellers: <input type="text" size="10" readonly="true" id="numberOfCurrentSellersViewCurrentSellersResults"><br><br>
+    	<div id="currentSellersViewTableResultsDiv"></div>
+
+   		<br><hr><br>
+    	<h1>View Detailed Information About a Seller</h1>
+    	Ethereum Public Address (40-Hex lowercase digits with optional '0x' at the beginning): <input type="text" size="50" id="textViewDetailedInformationAboutSellerEthereumAddress"><br><br>
+    	<input type="button" id="buttonViewDetailedInformationAboutSeller" value="View Seller Detailed Information">
+    	<input type="button" id="buttonClearViewDetailedInformationAboutSeller" value="Clear Inputs and Ouputs for View Seller Detailed Information">
+    	<br><br>
+    	Name: <input type="text" size="100" readonly="true" id="textViewDetailedInformationAboutSellerName"><br><br>
+    	Number of Different Items being Sold: <input type="text" size="10" readonly="true" id="textViewDetailedInformationAboutSellerNumberOfDifferentItemsBeingSold"><br><br>
+    	Physical Address:<br>
+    	<textarea readonly="true" id="textareaViewDetailedInformationAboutSellerPhysicalAddress"></textarea><br>
+		Mailing Address:<br>
+    	<textarea readonly="true" id="textareaViewDetailedInformationAboutSellerMailingAddress"></textarea><br>
+    	Website: <input readonly="true" type="text" size="100" id="textViewDetailedInformationAboutSellerWebsite"><br><br>
+    	E-mail: <input readonly="true" type="text" size="100" id="textViewDetailedInformationAboutSellerEmail"><br><br>
+    	Phone: <input readonly="true" type="text" size="100" id="textViewDetailedInformationAboutSellerPhone"><br><br>
+    	Fax: <input readonly="true" type="text" size="100" id="textViewDetailedInformationAboutSellerFax"><br><br>
+    	Picture:<br> <img id="pictureViewDetailedInformationAboutSeller" src="" alt=""><br><br>
+    	Description:<br>
+    	<textarea readonly="true" id="textareaViewDetailedInformationAboutSellerDescription"></textarea><br>
+
+    	<br><hr><br>
+    	<h1>Add/Update Description of Yourself as a Seller -- Remove Yourself as a Seller</h1>
+    	<input type="button" id="buttonAddUpdateDescriptionOfYourselfAsSeller" value="Add or Update Description of Yourself as a Seller">
+    	<input type="button" id="buttonClearAddUpdateDescriptionOfYourselfAsSeller" value="Clear Inputs for Add or Update Description of Yourself as a Seller">
+    	<input type="button" id="buttonRemoveYourselfAsSeller" value="Remove Yourself as a Seller">
+    	<br><br>
+    	Name: <input type="text" size="100" id="textAddUpdateDescriptionOfYourselfAsSellerName"><br><br>
+    	Physical Address:<br>
+    	<textarea id="textareaAddUpdateDescriptionOfYourselfAsSellerPhysicalAddress"></textarea><br>
+		Mailing Address:<br>
+    	<textarea id="textareaAddUpdateDescriptionOfYourselfAsSellerMailingAddress"></textarea><br>
+    	Website: <input type="text" size="100" id="textAddUpdateDescriptionOfYourselfAsSellerWebsite"><br><br>
+    	E-mail: <input type="text" size="100" id="textAddUpdateDescriptionOfYourselfAsSellerEmail"><br><br>
+    	Phone: <input type="text" size="100" id="textAddUpdateDescriptionOfYourselfAsSellerPhone"><br><br>
+    	Fax: <input type="text" size="100" id="textAddUpdateDescriptionOfYourselfAsSellerFax"><br><br>
+   		Picture:<br><input type="file" id="fileAddUpdateDescriptionOfYourselfAsSellerPicture"><br><br>
+    	Description:<br>
+    	<textarea id="textareaAddUpdateDescriptionOfYourselfAsSellerDescription"></textarea><br>
+
+	</section>
+
+
     <section id="viewMediators">
-    	<b>Your Current Metamask Ethereum Address:</b> <input type="text" size="40" readonly="true" id="viewMediatorsYourCurrentMetamaskEthereumAddress"><br><br>
+
+    	<b>Your Current Metamask Ethereum Address:</b> <input type="text" size="50" readonly="true" id="viewMediatorsYourCurrentMetamaskEthereumAddress"><br><br>
 		<h1>View Current Mediators</h1>
 		<input type="button" id="buttonGetCurrentMediators" value="Get Current Mediators"/>
     	<input type="button" id="buttonClearCurrentMediatorsResults" value="Clear Current Mediators Results"/>
@@ -84,7 +139,7 @@
 
     	<br><hr><br>
     	<h1>View Detailed Information About a Mediator</h1>
-    	Ethereum Public Address (40-Hex lowercase digits with optional '0x' at the beginning): <input type="text" size="40" id="textViewDetailedInformationAboutMediatorEthereumAddress"><br><br>
+    	Ethereum Public Address (40-Hex lowercase digits with optional '0x' at the beginning): <input type="text" size="50" id="textViewDetailedInformationAboutMediatorEthereumAddress"><br><br>
     	<input type="button" id="buttonViewDetailedInformationAboutMediator" value="View Mediator Detailed Information">
     	<input type="button" id="buttonClearViewDetailedInformationAboutMediator" value="Clear Inputs and Ouputs for View Mediator Detailed Information">
     	<br><br>
@@ -117,7 +172,7 @@
     	E-mail: <input type="text" size="100" id="textAddUpdateYourselfAsMediatorEmail"><br><br>
     	Phone: <input type="text" size="100" id="textAddUpdateYourselfAsMediatorPhone"><br><br>
     	Fax: <input type="text" size="100" id="textAddUpdateYourselfAsMediatorFax"><br><br>
-    	Picture:<br><input type="file" id="fileAddUpdateYourselfAsMediatorPicture"><br><br>
+   		Picture:<br><input type="file" id="fileAddUpdateYourselfAsMediatorPicture"><br><br>
     	Description:<br>
     	<textarea id="textareaAddUpdateYourselfAsMediatorDescription"></textarea><br>
 
