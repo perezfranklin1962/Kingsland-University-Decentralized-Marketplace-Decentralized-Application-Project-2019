@@ -134,7 +134,7 @@ contract FranklinDecentralizedMarketplace {
     // In such cases involving a Mediator, the Buyer's ETH is not sent to the Seller, but sent to this Smart Contract. Once two out of the three parties gives the OK for the Sale, then 95% of the
     // Sales Price of the Item goes to the Seller and 5% goes to the Mediator.
     //
-    // The "key" is the Ethereum Seller Address and the value is a boolen. If the Seller is willing to sell via a Mediator, then this value if boolean true. 
+    // The "key" is the Ethereum Seller Address and the value is a boolean. If the Seller is willing to sell via a Mediator, then this value if boolean true. 
     // If the Seller is NOT willing to sell via a Mediator, then this value if boolean false.
     mapping(address => bool) private sellerWillingToSellItemsViaMediator;
     
