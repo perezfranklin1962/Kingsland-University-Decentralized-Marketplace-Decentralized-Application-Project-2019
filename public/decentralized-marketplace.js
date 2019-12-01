@@ -1035,6 +1035,7 @@ $(document).ready(function () {
 
     $('#buttonGetCurrentSellers').click(getCurrentSellers);
     $('#buttonClearCurrentSellersResults').click(clearCurrentSellersResults);
+    $('#buttonSetMiscellanousSettingsOfYourselfAsSeller').click(setMiscellanousSettingsOfYourselfAsSeller);
     $('#buttonClearAddUpdateDescriptionOfYourselfAsSeller').click(clearAddUpdateDescriptionOfYourselfAsSeller);
     $('#buttonAddUpdateDescriptionOfYourselfAsSeller').click(addUpdateDescriptionOfYourselfAsSeller);
     $('#buttonRemoveYourselfAsSeller').click(removeYourselfAsSeller);
@@ -1087,6 +1088,7 @@ $(document).ready(function () {
 		$('#textViewDetailedInformationAboutSellerEthereumAddress').val('');
 		$('#textViewDetailedInformationAboutSellerName').val('');
 		$('#textViewDetailedInformationAboutSellerNumberOfDifferentItemsBeingSold').val('');
+		$('#textViewDetailedInformationAboutSellerWillingToSellItemsViaMediator').val('');
 		$('#textareaViewDetailedInformationAboutSellerPhysicalAddress').val('');
 		$('#textareaViewDetailedInformationAboutSellerMailingAddress').val('');
 		$('#textViewDetailedInformationAboutSellerWebsite').val('');
@@ -1116,7 +1118,56 @@ $(document).ready(function () {
 	}
 
 	async function removeYourselfAsSeller() {
+		makeSureMetamaskInstalled();
 
+		showInfo(`Removing as Seller your current Metamask Ethereum Public Address ${currentMetamaskEthereumAddress} ....`);
+
+		let decentralizedMarketplaceContract =
+			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
+
+		var sellerExists =
+				PROMISIFY(cb => decentralizedMarketplaceContract.sellerExists.call(currentMetamaskEthereumAddress, cb));
+		let sellerExistsFlag = undefined;
+		let sellerExistsError = undefined;
+		await sellerExists
+			.then(function (response) {
+				console.log('sellerExists : response =', response);
+				sellerExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('sellerExists : error =', error);
+				sellerExistsError = error;
+  		});
+
+  		if (sellerExistsError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method: " +
+				sellerExistsError);
+		}
+
+		if (sellerExistsFlag === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method!");
+		}
+
+		console.log('sellerExistsFlag =', sellerExistsFlag);
+		if (!sellerExistsFlag) {
+			hideInfo();
+			return showError(`Ethereum Public Address ${currentMetamaskEthereumAddress} is not listed as a Seller in the Franklin Decentralized Marketplace!`);
+		}
+
+		decentralizedMarketplaceContract.removeSeller(function (err, txHash) {
+			hideInfo();
+
+			if (err) {
+				// return showError("Smart contract call failed: " + err);
+				console.log('err =', err);
+				return showError(`DecentralizedMarketplaceContract.removeSeller call failed:  + ${err.message}`);
+			}
+
+			showInfo(`Your current Metamask Ethereum Address ${currentMetamaskEthereumAddress} <b>successfully removed as Seller</b> from Franklin Decentralized Marketplace. ` +
+				`Transaction hash: ${txHash}`);
+		});
 	}
 
 	async function removeYourselfAsMediator() {
@@ -1174,7 +1225,196 @@ $(document).ready(function () {
 	}
 
 	async function viewDetailedInformationAboutSeller() {
+		let ethereumPublicAddress = $('#textViewDetailedInformationAboutSellerEthereumAddress').val().trim().toLowerCase();
+		if (ethereumPublicAddress.length === 0) {
+			showError('The Ethereum Public Address cannot be an empty string or consist only of white space. Please enter an ' +
+				'Ethereum Public Address value that is a 40-hex lowercase string.');
+			return;
+		}
 
+		if (ethereumPublicAddress.startsWith("0x")) {
+			if (ethereumPublicAddress.length > 2) {
+				ethereumPublicAddress = ethereumPublicAddress.substring(2);
+			}
+		}
+
+		if (!isValidPublicAddress(ethereumPublicAddress)) {
+			showError("Entered Ethereum Public Address is not a 40-hex valued lower case string. " +
+				"Please enter an Ethereum Public Address that is a 40-hex valued lower case string.");
+			return;
+		}
+
+		ethereumPublicAddress = "0x" + ethereumPublicAddress;
+
+		makeSureMetamaskInstalled();
+
+		showInfo(`Getting Seller Detailed Information about Ethereum Public Address: ${ethereumPublicAddress}`);
+
+		let decentralizedMarketplaceContract =
+			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
+
+		var sellerExists =
+				PROMISIFY(cb => decentralizedMarketplaceContract.sellerExists.call(ethereumPublicAddress, cb));
+		let sellerExistsFlag = undefined;
+		let sellerExistsError = undefined;
+		await sellerExists
+			.then(function (response) {
+				console.log('sellerExists : response =', response);
+				sellerExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('sellerExists : error =', error);
+				sellerExistsError = error;
+  		});
+
+  		if (sellerExistsError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method: " +
+				sellerExistsError);
+		}
+
+		if (sellerExistsFlag === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method!");
+		}
+
+		console.log('sellerExistsFlag =', sellerExistsFlag);
+		if (!sellerExistsFlag) {
+			hideInfo();
+			return showError(`Ethereum Public Address ${ethereumPublicAddress} is not listed as a Seller in the Franklin Decentralized Marketplace!`);
+		}
+
+		let sellerAddress = ethereumPublicAddress;
+		var getIpfsDescriptionInfoAboutSeller =
+				PROMISIFY(cb => decentralizedMarketplaceContract.getSellerIpfsHashDescription(sellerAddress, cb));
+		let ipfsHashDescOfSeller = undefined;
+		let getIpfsDescriptionInfoAboutSellerError = undefined;
+		await getIpfsDescriptionInfoAboutSeller
+			.then(function (response) {
+				ipfsHashDescOfSeller = response;
+				console.log('getIpfsDescriptionInfoAboutSeller : response =', response);
+			})
+			.catch(function (error) {
+				console.log('getIpfsDescriptionInfoAboutSeller : error =', error);
+				getIpfsDescriptionInfoAboutSellerError = error;
+  		});
+
+  		if (getIpfsDescriptionInfoAboutMediatorError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.getSellerIpfsHashDescription method: " +
+				getIpfsDescriptionInfoAboutMediatorError);
+		}
+
+		if (ipfsHashDescOfMediator === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.getSellerIpfsHashDescription method!");
+		}
+
+		var ipfsFileGetForSeller = PROMISIFY(cb => IPFS.get(ipfsHashDescOfSeller, {timeout: '8000ms'}, cb));
+		let ipfsFileGetForSellerJson = undefined;
+		let ipfsFileGetForSellerError = undefined;
+		await ipfsFileGetForSeller
+			.then(function (response) {
+				console.log('ipfsFileGetForSeller : response =', response);
+				let ipfsFileGetForSellerJsonString = response[0].content.toString();
+				ipfsFileGetForSellerJson = JSON.parse(ipfsFileGetForSellerJsonString);
+			})
+			.catch(function (error) {
+				console.log('ipfsFileGetForSeller : error =', error);
+				ipfsFileGetForSellerError = error;
+  		});
+
+  		if (ipfsFileGetForSellerError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfSeller}) method: ${ipfsFileGetForSellerError}`);
+		}
+
+		if (ipfsFileGetForSellerJson === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfSeller}) method!`);
+		}
+
+		console.log('ipfsFileGetForSellerJson =', ipfsFileGetForSellerJson);
+
+		var getNumberOfDifferentItemsSoldBySeller =
+				PROMISIFY(cb => decentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress, cb));
+		let numberOfDifferentItemsSoldBySeller = undefined;
+		let getNumberOfDifferentItemsSoldBySellerError = undefined;
+		await getNumberOfDifferentItemsSoldBySeller
+			.then(function (response) {
+				console.log('getNumberOfDifferentItemsSoldBySeller : response =', response);
+				let numberOfDifferentItemsSoldBySeller_X = response;
+				numberOfDifferentItemsSoldBySeller = numberOfDifferentItemsSoldBySeller_X.c[0];
+			})
+			.catch(function (error) {
+				console.log('getNumberOfDifferentItemsSoldBySeller  : error =', error);
+				getNumberOfDifferentItemsSoldBySellerError = error;
+  		});
+
+  		if (getNumberOfDifferentItemsSoldBySellerError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling ` +
+				`DecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(${sellerAddress}) method: ` +
+				`${getNumberOfDifferentItemsSoldBySellerError}`);
+		}
+
+		if (numberOfDifferentItemsSoldBySeller === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling DecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(${sellerAddress}) method!`);
+		}
+
+		console.log('numberOfDifferentItemsSoldBySeller =', numberOfDifferentItemsSoldBySeller);
+
+		var sellerIsWillingToSellItemsViaMediator =
+				PROMISIFY(cb => decentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(sellerAddress, cb));
+		let sellerIsWillingToSellItemsViaMediatorFlag = undefined;
+		let sellerIsWillingToSellItemsViaMediatorError = undefined;
+		await sellerIsWillingToSellItemsViaMediator
+			.then(function (response) {
+				console.log('sellerIsWillingToSellItemsViaMediator : response =', response);
+				sellerIsWillingToSellItemsViaMediatorFlag = response;
+			})
+			.catch(function (error) {
+				console.log('sellerIsWillingToSellItemsViaMediator : error =', error);
+				sellerIsWillingToSellItemsViaMediatorError = error;
+  		});
+
+  		if (sellerIsWillingToSellItemsViaMediatorError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling ` +
+				`DecentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(${sellerAddress}) method: ` +
+				`${sellerIsWillingToSellItemsViaMediatorError}`);
+		}
+
+		if (sellerIsWillingToSellItemsViaMediatorFlag === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling DecentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(${sellerAddress}) method!`);
+		}
+
+		console.log('sellerIsWillingToSellItemsViaMediatorFlag =', sellerIsWillingToSellItemsViaMediatorFlag);
+
+		$('#textViewDetailedInformationAboutSellerEthereumAddress').val(sellerAddress);
+		$('#textViewDetailedInformationAboutSellerName').val(ipfsFileGetForSellerJson.name);
+		$('#textViewDetailedInformationAboutSellerNumberOfDifferentItemsBeingSold').val(BigInt(numberOfDifferentItemsSoldBySeller).toString());
+		$('#textViewDetailedInformationAboutSellerWillingToSellItemsViaMediator').val(sellerIsWillingToSellItemsViaMediatorFlag);
+		$('#textareaViewDetailedInformationAboutSellerPhysicalAddress').val(ipfsFileGetForSellerJson.physicalAddress);
+		$('#textareaViewDetailedInformationAboutSellerMailingAddress').val(ipfsFileGetForSellerJson.mailingAddress);
+		$('#textViewDetailedInformationAboutSellerWebsite').val(ipfsFileGetForSellerJson.website);
+		$('#textViewDetailedInformationAboutSellerEmail').val(ipfsFileGetForSellerJson.email);
+		$('#textViewDetailedInformationAboutSellerPhone').val(ipfsFileGetForSellerJson.phone);
+		$('#textViewDetailedInformationAboutSellerFax').val(ipfsFileGetForSellerJson.fax);
+		$('#textareaViewDetailedInformationAboutSellerDescription').val(ipfsFileGetForSellerJson.description);
+
+		if (ipfsFileGetForSellerJson.picture === EMPTY_STRING) {
+			$('#pictureViewDetailedInformationAboutSeller').attr('src', '');
+			$('#pictureViewDetailedInformationAboutSeller').attr('alt', '');
+		}
+		else {
+			$('#pictureViewDetailedInformationAboutSeller').attr('src', `https://ipfs.infura.io/ipfs/${ipfsFileGetForSellerJson.picture}`);
+			$('#pictureViewDetailedInformationAboutSeller').attr('alt', `${ipfsFileGetForSellerJson.picture}`);
+		}
+
+		hideInfo();
 	}
 
 	async function viewDetailedInformationAboutMediator() {
@@ -1249,13 +1489,13 @@ $(document).ready(function () {
 			})
 			.catch(function (error) {
 				console.log('getIpfsDescriptionInfoAboutMediator : error =', error);
-				numberOfMediatorsError = error;
+				getIpfsDescriptionInfoAboutMediatorError = error;
   		});
 
   		if (getIpfsDescriptionInfoAboutMediatorError !== undefined) {
 			hideInfo();
 			return showError("Error encountered while calling the DecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators method: " +
-				getMediatorAddressError);
+				getIpfsDescriptionInfoAboutMediatorError);
 		}
 
 		if (ipfsHashDescOfMediator === undefined) {
@@ -1279,7 +1519,7 @@ $(document).ready(function () {
 
   		if (ipfsFileGetForMediatorError !== undefined) {
 			hideInfo();
-			return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfMediator}) method: ${getMediatorAddressError}`);
+			return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfMediator}) method: ${ipfsFileGetForMediatorError}`);
 		}
 
 		if (ipfsFileGetForMediatorJson === undefined) {
@@ -1435,7 +1675,183 @@ $(document).ready(function () {
 	}
 
 	async function addUpdateDescriptionOfYourselfAsSeller() {
+		makeSureMetamaskInstalled();
 
+		showInfo("Adding/Updating Seller Information about Yourself onto Franklin Decentralized Marketplace....");
+
+		let decentralizedMarketplaceContract =
+			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
+
+		var sellerExists =
+				PROMISIFY(cb => decentralizedMarketplaceContract.sellerExists.call(currentMetamaskEthereumAddress, cb));
+		let sellerExistsFlag = undefined;
+		let sellerExistsError = undefined;
+		await sellerExists
+			.then(function (response) {
+				console.log('sellerExists : response =', response);
+				sellerExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('sellerExists : error =', error);
+				sellerExistsError = error;
+  		});
+
+  		if (sellerExistsError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method: " +
+				sellerExistsError);
+		}
+
+		if (sellerExistsFlag === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method!");
+		}
+
+		console.log('sellerExistsFlag =', sellerExistsFlag);
+		if (!sellerExistsFlag) {
+			hideInfo();
+			return showError(`Your current Metamask Ethereum Public Address ${currentMetamaskEthereumAddress} is not listed as a Seller in the ` +
+				`Franklin Decentralized Marketplace! Please add at least one Item to Sell to automatically become a Seller!`);
+		}
+
+		let pictureIpfsHash = undefined;
+		try {
+			console.log('BEFORE Executing : uploadPictureToIPFS');
+			pictureIpfsHash = await uploadPictureToIPFS("fileAddUpdateDescriptionOfYourselfAsSellerPicture");
+			console.log('AFTER Executing : uploadPictureToIPFS');
+		}
+		catch (error) {
+			hideInfo();
+			showError(error);
+			return;
+		}
+
+		console.log('addUpdateDescriptionOfYourselfAsSeller : pictureIpfsHash =', pictureIpfsHash);
+
+		let aName = $('#textAddUpdateDescriptionOfYourselfAsSellerName').val().trim();
+		let aPhysicalAddress = $('#textareaAddUpdateDescriptionOfYourselfAsSellerPhysicalAddress').val().trim();
+		let aMailingAddress = $('#textareaAddUpdateDescriptionOfYourselfAsSellerMailingAddress').val().trim();
+		let aWebsite = $('#textAddUpdateDescriptionOfYourselfAsSellerWebsite').val().trim();
+		let aEmail = $('#textAddUpdateDescriptionOfYourselfAsSellerEmail').val().trim();
+		let aPhone = $('#textAddUpdateDescriptionOfYourselfAsSellerPhone').val().trim();
+		let aFax = $('#textAddUpdateDescriptionOfYourselfAsSellerFax').val().trim();
+		let aDescription = $('#textareaAddUpdateDescriptionOfYourselfAsSellerDescription').val().trim();
+
+		let fileContentsJson = {
+				name: aName,
+				physicalAddress: aPhysicalAddress,
+				mailingAddress: aMailingAddress,
+				website: aWebsite,
+				email: aEmail,
+				phone: aPhone,
+				fax: aFax,
+				picture: pictureIpfsHash,
+				description: aDescription
+		}
+
+		let fileContents = JSON.stringify(fileContentsJson);
+
+		hideInfo();
+		showInfo("Loading given input information about you as a Seller onto IPFS (InterPlanetary File System)....");
+
+		var ipfsFileHash = undefined;
+		errorObject = undefined;
+		try {
+			let fileBuffer = Buffer.from(fileContents);
+			var ipfsFileAdd = PROMISIFY(cb => IPFS.add(fileBuffer, cb));
+
+			let fileInfo = await ipfsFileAdd;
+			ipfsFileHash = fileInfo[0].hash;;
+		} catch (error) {
+			console.log('addUpdateDescriptionOfYourselfAsSeller ipfsFileAdd : error =', error);
+			errorObject = error;
+		}
+
+		hideInfo();
+
+		if (errorObject !== undefined) {
+			showError(errorObject);
+			return;
+		}
+		if (ipfsFileHash === undefined) {
+			showError("Unable to add the information for the Seller onto IPFS!");
+			return;
+		}
+
+		console.log('addUpdateDescriptionOfYourselfAsSeller : ipfsFileHash =', ipfsFileHash);
+
+		showInfo("Adding/Updating Seller Information about Yourself onto Franklin Decentralized Marketplace....");
+
+		let decentralizedMarketplaceMediationContract =
+			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
+
+		decentralizedMarketplaceContract.addOrUpdateSellerDescription(ipfsFileHash, function (err, txHash) {
+			hideInfo();
+
+			if (err) {
+				// return showError("Smart contract call failed: " + err);
+				console.log('err =', err);
+				return showError(`DecentralizedMarketplaceMediationContract.addOrUpdateSellerDescription(${ipfsFileHash}) call failed:  + ${err.message}`);
+			}
+
+			showInfo(`Document ${ipfsFileHash} for Seller ${currentMetamaskEthereumAddress} <b>successfully added</b> to Franklin Decentralized Marketplace. Transaction hash: ${txHash}`);
+		});
+	}
+
+	async function setMiscellanousSettingsOfYourselfAsSeller() {
+		makeSureMetamaskInstalled();
+
+		showInfo(`Setting Miscellaneous Seller Information about your current Metamask Ethereum Address : ${currentMetamaskEthereumAddress}`);
+
+		let decentralizedMarketplaceContract =
+			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
+
+		var sellerExists =
+				PROMISIFY(cb => decentralizedMarketplaceContract.sellerExists.call(currentMetamaskEthereumAddress, cb));
+		let sellerExistsFlag = undefined;
+		let sellerExistsError = undefined;
+		await sellerExists
+			.then(function (response) {
+				console.log('sellerExists : response =', response);
+				sellerExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('sellerExists : error =', error);
+				sellerExistsError = error;
+  		});
+
+  		if (sellerExistsError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method: " +
+				sellerExistsError);
+		}
+
+		if (sellerExistsFlag === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method!");
+		}
+
+		console.log('sellerExistsFlag =', sellerExistsFlag);
+		if (!sellerExistsFlag) {
+			hideInfo();
+			return showError(`Your current Metamask Ethereum Public Address ${currentMetamaskEthereumAddress} is not listed as a Seller in the ` +
+				`Franklin Decentralized Marketplace! Please add at least one Item to Sell to automatically become a Seller!`);
+		}
+
+		let willingToSellItemsViaMediator = $('#checkboxWillingToSellItemsViaMediator')[0].checked;
+		console.log('willingToSellItemsViaMediator =', willingToSellItemsViaMediator);
+
+		decentralizedMarketplaceContract.setSellerWillingToSellItemsViaMediator(willingToSellItemsViaMediator, function (err, txHash) {
+			hideInfo();
+
+			if (err) {
+				// return showError("Smart contract call failed: " + err);
+				console.log('err =', err);
+				return showError(`DecentralizedMarketplaceMediationContract.setSellerWillingToSellItemsViaMediator(${willingToSellItemsViaMediator}) call failed:  + ${err.message}`);
+			}
+
+			showInfo(`Successfully set Miscellaneous Settings for Seller ${currentMetamaskEthereumAddress} onto the Franklin Decentralized Marketplace. Transaction hash: ${txHash}`);
+		});
 	}
 
 	async function addUpdateYourselfAsMediator() {
@@ -1506,6 +1922,8 @@ $(document).ready(function () {
 		console.log('addUpdateYourselfAsMediator : ipfsFileHash =', ipfsFileHash);
 		// showInfo(`Successfully added/update Mediator Information! IPFS Hash = ${ipfsFileHash}`)
 
+		showInfo("Adding/Updating Mediator Information about Yourself onto Franklin Decentralized Marketplace....");
+
 		let decentralizedMarketplaceMediationContract =
 			web3.eth.contract(decentralizedMarketplaceMediationContractABI).at(decentralizedMarketplaceMediationContractAddress);
 
@@ -1559,7 +1977,185 @@ $(document).ready(function () {
 	}
 
 	async function getCurrentSellers() {
+		makeSureMetamaskInstalled();
 
+		showInfo("Getting Current Sellers in Franklin Decentralized Marketplace....");
+
+		let decentralizedMarketplaceContract =
+			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
+
+		var getNumberOfSellers = PROMISIFY(cb => decentralizedMarketplaceContract.getNumberOfSellers(cb));
+		let numberOfSellersX = undefined;
+		let numberOfSellersError = undefined;
+		await getNumberOfSellers
+			.then(function (response) {
+				numberOfSellersX = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				numberOfSellersError = error;
+  		});
+
+  		if (numberOfSellersX === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.getNumberOfSellers method: " +
+				numberOfSellersError);
+		}
+
+		console.log('numberOfSellersX =', numberOfSellersX);
+		let numberOfSellers = numberOfSellersX.c[0];
+		console.log('numberOfSellers =', numberOfSellers)
+
+		$('#numberOfCurrentSellersViewCurrentSellersResults').val(numberOfSellers.toString(10));
+
+		currentSellersArray = [ ];
+		for (let i = 0; i < numberOfSellers; i++) {
+			var getSellerAddress = PROMISIFY(cb => decentralizedMarketplaceContract.getSellerAddress(i, cb));
+			let sellerAddress = undefined;
+			let getSellerAddressError = undefined;
+			await getSellerAddress
+				.then(function (response) {
+					sellerAddress = response;
+					console.log('getSellerAddress : response =', response);
+				})
+				.catch(function (error) {
+					console.log('getSellerAddress : error =', error);
+					getSellerAddressError = error;
+  			});
+
+  			if (getSellerAddressError !== undefined) {
+				hideInfo();
+				return showError("Error encountered while calling the DecentralizedMarketplaceContract.getSellerAddress method: " +
+					getSellerAddressError);
+			}
+
+			if (sellerAddress === undefined) {
+				hideInfo();
+				return showError("Error encountered while calling the DecentralizedMarketplaceContract.getSellerAddress method!");
+			}
+
+			var getIpfsDescriptionInfoAboutSeller =
+					PROMISIFY(cb => decentralizedMarketplaceContract.getSellerIpfsHashDescription(sellerAddress, cb));
+			let ipfsHashDescOfSeller = undefined;
+			let getIpfsDescriptionInfoAboutSellerError = undefined;
+			await getIpfsDescriptionInfoAboutSeller
+				.then(function (response) {
+					ipfsHashDescOfSeller = response;
+					console.log('getIpfsDescriptionInfoAboutSeller : response =', response);
+				})
+				.catch(function (error) {
+					console.log('getIpfsDescriptionInfoAboutSeller : error =', error);
+					getIpfsDescriptionInfoAboutSellerError = error;
+  			});
+
+  			if (getIpfsDescriptionInfoAboutSellerError !== undefined) {
+				hideInfo();
+				return showError("Error encountered while calling the DecentralizedMarketplaceContract.getSellerIpfsHashDescription method: " +
+					getIpfsDescriptionInfoAboutSellerError);
+			}
+
+			if (ipfsHashDescOfSeller === undefined) {
+				hideInfo();
+				return showError("Error encountered while calling the DecentralizedMarketplaceContract.getSellerIpfsHashDescription method!");
+			}
+
+			var ipfsFileGetForSeller = PROMISIFY(cb => IPFS.get(ipfsHashDescOfSeller, {timeout: '8000ms'}, cb));
+			let ipfsFileGetForSellerJson = undefined;
+			let ipfsFileGetForSellerError = undefined;
+			await ipfsFileGetForSeller
+				.then(function (response) {
+					console.log('ipfsFileGetForSeller : response =', response);
+					let ipfsFileGetForSellerJsonString = response[0].content.toString();
+					ipfsFileGetForSellerJson = JSON.parse(ipfsFileGetForSellerJsonString);
+				})
+				.catch(function (error) {
+					console.log('ipfsFileGetForSeller : error =', error);
+					ipfsFileGetForSellerError = error;
+  			});
+
+  			if (ipfsFileGetForSellerError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfMediator}) method: ${ipfsFileGetForSellerError}`);
+			}
+
+			if (ipfsFileGetForSellerJson === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfSeller}) method!`);
+			}
+
+			console.log('ipfsFileGetForSellerJson =', ipfsFileGetForSellerJson);
+
+			var getNumberOfDifferentItemsSoldBySeller =
+					PROMISIFY(cb => decentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress, cb));
+			let numberOfDifferentItemsSoldBySeller = undefined;
+			let getNumberOfDifferentItemsSoldBySellerError = undefined;
+			await getNumberOfDifferentItemsSoldBySeller
+				.then(function (response) {
+					console.log('getNumberOfDifferentItemsSoldBySeller : response =', response);
+					let numberOfDifferentItemsSoldBySeller_X = response;
+					numberOfDifferentItemsSoldBySeller = numberOfDifferentItemsSoldBySeller_X.c[0];
+				})
+				.catch(function (error) {
+					console.log('getNumberOfDifferentItemsSoldBySeller  : error =', error);
+					getNumberOfDifferentItemsSoldBySellerError = error;
+  			});
+
+  			if (getNumberOfDifferentItemsSoldBySellerError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling ` +
+					`DecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(${sellerAddress}) method: ` +
+					`${getNumberOfDifferentItemsSoldBySellerError}`);
+			}
+
+			if (numberOfDifferentItemsSoldBySeller === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling DecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(${sellerAddress}) method!`);
+			}
+
+			console.log('numberOfDifferentItemsSoldBySeller =', numberOfDifferentItemsSoldBySeller);
+
+			var sellerIsWillingToSellItemsViaMediator =
+					PROMISIFY(cb => decentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(sellerAddress, cb));
+			let sellerIsWillingToSellItemsViaMediatorFlag = undefined;
+			let sellerIsWillingToSellItemsViaMediatorError = undefined;
+			await sellerIsWillingToSellItemsViaMediator
+				.then(function (response) {
+					console.log('sellerIsWillingToSellItemsViaMediator : response =', response);
+					sellerIsWillingToSellItemsViaMediatorFlag = response;
+				})
+				.catch(function (error) {
+					console.log('sellerIsWillingToSellItemsViaMediator : error =', error);
+					sellerIsWillingToSellItemsViaMediatorError = error;
+			});
+
+			if (sellerIsWillingToSellItemsViaMediatorError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling ` +
+					`DecentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(${sellerAddress}) method: ` +
+					`${sellerIsWillingToSellItemsViaMediatorError}`);
+			}
+
+			if (sellerIsWillingToSellItemsViaMediatorFlag === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling DecentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(${sellerAddress}) method!`);
+			}
+
+			console.log('sellerIsWillingToSellItemsViaMediatorFlag =', sellerIsWillingToSellItemsViaMediatorFlag);
+
+			let sellerRecord = {
+					ethereumAddress: sellerAddress,
+					name: ipfsFileGetForSellerJson.name,
+					picture: ipfsFileGetForSellerJson.picture,
+					numberOfDifferentItemsSold: BigInt(numberOfDifferentItemsSoldBySeller).toString(),
+					sellerIsWillingToSellItemsViaMediator: sellerIsWillingToSellItemsViaMediatorFlag
+			}
+
+			currentSellersArray.push(sellerRecord);
+		}
+
+		createViewSellersTable();
+
+		hideInfo();
 	}
 
 	async function getCurrentMediators() {
@@ -1631,13 +2227,13 @@ $(document).ready(function () {
 				})
 				.catch(function (error) {
 					console.log('getIpfsDescriptionInfoAboutMediator : error =', error);
-					numberOfMediatorsError = error;
+					getIpfsDescriptionInfoAboutMediatorError = error;
   			});
 
   			if (getIpfsDescriptionInfoAboutMediatorError !== undefined) {
 				hideInfo();
 				return showError("Error encountered while calling the DecentralizedMarketplaceMediationContract.descriptionInfoAboutMediators method: " +
-					getMediatorAddressError);
+					getIpfsDescriptionInfoAboutMediatorError);
 			}
 
 			if (ipfsHashDescOfMediator === undefined) {
@@ -1661,7 +2257,7 @@ $(document).ready(function () {
 
   			if (ipfsFileGetForMediatorError !== undefined) {
 				hideInfo();
-				return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfMediator}) method: ${getMediatorAddressError}`);
+				return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfMediator}) method: ${ipfsFileGetForMediatorError}`);
 			}
 
 			if (ipfsFileGetForMediatorJson === undefined) {
@@ -1693,7 +2289,7 @@ $(document).ready(function () {
 					`${getNumberOfMediationsMediatorInvolvedError}`);
 			}
 
-			if (ipfsFileGetForMediatorJson === undefined) {
+			if (numberOfMediationsMediatorInvolved === undefined) {
 				hideInfo();
 				return showError(`Error encountered while calling DecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved(${mediatorAddress}) method!`);
 			}
@@ -1766,7 +2362,7 @@ $(document).ready(function () {
 
 	function createViewSellersTable() {
         var number_of_rows = currentSellersArray.length;
-        var number_of_cols = 4;
+        var number_of_cols = 5;
 
         var table_body = '<table style="width:100%">';
         table_body += '<tr>';
@@ -1774,6 +2370,7 @@ $(document).ready(function () {
 		table_body += '<th>Name</th>';
 		table_body += '<th>Picture</th>';
 		table_body += '<th>Number of Different Items Sold</th>';
+		table_body += '<th>Willing to Sell via Mediator</th>';
   		table_body += '</tr>';
 
         for (var i = 0 ; i < number_of_rows; i++) {
@@ -1800,6 +2397,9 @@ $(document).ready(function () {
 				}
 				else if (j === 3) {
 					table_data += rowData.numberOfDifferentItemsSold;
+				}
+				else if (j === 4) {
+					table_data += rowData.sellerIsWillingToSellItemsViaMediator;
 				}
 
                 table_body += table_data;
