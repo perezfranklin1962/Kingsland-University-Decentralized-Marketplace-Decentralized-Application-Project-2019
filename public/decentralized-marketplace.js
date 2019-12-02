@@ -1060,6 +1060,8 @@ $(document).ready(function () {
     $('#buttonClearViewDetailedInformationAboutItemBeingSoldBySeller').click(clearViewDetailedInformationAboutItemBeingSoldBySeller);
     $('#buttonAddItemForSale').click(addItemForSale);
     $('#buttonClearAddItemForSale').click(clearAddItemForSale);
+	$('#buttonMiscellaneousSettingsOfAnItemYouAreSelling').click(setMiscellaneousSettingsOfAnItemYouAreSelling);
+	$('#buttonClearSetMiscellaneousSettingsOfAnItemYouAreSelling').click(clearSetMiscellaneousSettingsOfAnItemYouAreSelling);
 
 	// Attach AJAX "loading" event listener
 	$(document).on({
@@ -1070,6 +1072,51 @@ $(document).ready(function () {
 			$("#loadingBox").hide()
 		}
 	});
+
+	function convertMetamask_X_Value_to_IntegerString(metamask_X_value) {
+		let numberOfDigits = metamask_X_value.e + 1;
+		let numberStr = '';
+		for (let i = 0; i < metamask_X_value.c.length; i++) {
+			numberStr += metamask_X_value.c[i].toString();
+		}
+
+		numberStr = numberStr.padEnd(numberOfDigits, '0');
+		return numberStr;
+	}
+
+	function covertWEI_StringValue_to_ETH_StringValue(weiStringValue) {
+		let ethStringValue = '';
+
+		// console.log('covertWEI_StringValue_to_ETH_StringValue : weiStringValue =', weiStringValue);
+		// console.log('covertWEI_StringValue_to_ETH_StringValue : weiStringValue.length =', weiStringValue.length);
+
+		if (weiStringValue.length < 18) {
+			ethStringValue = weiStringValue.padStart(18, '0');
+			ethStringValue = '0.' + ethStringValue;
+		}
+		else if (weiStringValue.length === 18) {
+			ethStringValue = '0.' + weiStringValue;
+		}
+		else { // weiStringValue.length > 18
+			let dotIndex = weiStringValue.length - 18;
+			ethStringValue = weiStringValue.substring(0, dotIndex) + '.' + weiStringValue.substring(dotIndex);
+		}
+
+		let lastNonZeroIndex = ethStringValue.length - 1;
+		for (let index = lastNonZeroIndex; index >= 0; index--) {
+			if (ethStringValue[index] !== '0') {
+				lastNonZeroIndex = index;
+				break;
+			}
+		}
+
+		ethStringValue = ethStringValue.substring(0, lastNonZeroIndex + 1);
+		if (ethStringValue[lastNonZeroIndex] === '.') {
+			ethStringValue = ethStringValue.substring(0, lastNonZeroIndex);
+		}
+
+		return ethStringValue;
+	}
 
 	function convertNumberToString(aNumber) {
 		if (typeof aNumber === 'bigint') {
@@ -1083,10 +1130,22 @@ $(document).ready(function () {
 		catch (error) { }
 
 		if (typeof aNumber === 'number') {
+			console.log('   This is a number!');
 			// Remove unnecessary and unused '0' digits after decimal point. So, "1234.0000345000" get converted to
 			// "1234.0000345".
 			// Reference ---> https://stackoverflow.com/questions/1015402/chop-unused-decimals-with-javascript
-			return parseFloat(aNumber.toFixed(18)).toString(); // 10 to the negative 18 in ETH is one WEI, which is smallest unit!
+			// Does not work when "aNumber" is 1e-18 !!! Go figure!!!
+			// return parseFloat(aNumber.toFixed(18)).toString(); // 10 to the negative 18 in ETH is one WEI, which is smallest unit!
+			let decimalNumberStr = aNumber.toFixed(18);
+			let lastNonZeroIndex = decimalNumberStr.length - 1;
+			for (let index = lastNonZeroIndex; index >= 0; index--) {
+				if (decimalNumberStr[index] !== '0') {
+					lastNonZeroIndex = index;
+					break;
+				}
+			}
+
+			return decimalNumberStr.substring(0, lastNonZeroIndex + 1);
 		}
 
 		return aNumber.toString();
@@ -1171,6 +1230,209 @@ $(document).ready(function () {
 		}
 	}
 
+	function clearSetMiscellaneousSettingsOfAnItemYouAreSelling() {
+		$('#textSetMiscellaneousSettingsOfAnItemYouAreSellingItemIpfsId').val('');
+		$('#textSetMiscellaneousSettingsOfAnItemYouAreSellingItemUnitPrice').val('');
+		$('#textSetMiscellaneousSettingsOfAnItemYouAreSellingQuantityAvailableForSale').val('');
+
+		$('#checkboxSetMiscellaneousSettingsOfAnItemYouAreSellingSettingUnitPrice')[0].checked = false;
+		$('#checkboxSetMiscellaneousSettingsOfAnItemYouAreSellingSettingQuantity')[0].checked = false;
+	}
+
+	async function setMiscellaneousSettingsOfAnItemYouAreSelling() {
+		let itemIpfsHashId = $('#textSetMiscellaneousSettingsOfAnItemYouAreSellingItemIpfsId').val();
+		if (itemIpfsHashId.length === 0) {
+			showError('The Item IPFS ID identifying an Item cannot be an empty string or consist only of white space. Please enter an ' +
+				'Item IPFS ID value that has no spaces.');
+			return;
+		}
+
+		let settingUnitPriceFlag = $('#checkboxSetMiscellaneousSettingsOfAnItemYouAreSellingSettingUnitPrice')[0].checked;
+		let settingQuantityFlag = $('#checkboxSetMiscellaneousSettingsOfAnItemYouAreSellingSettingQuantity')[0].checked;
+		if (!settingUnitPriceFlag && !settingQuantityFlag) {
+			showError('None of the check boxes under the "Set Miscellaneous Settings of an Item You are Selling" section have been set!');
+			return;
+		}
+
+		let unitPriceInWeiStr = $('#textSetMiscellaneousSettingsOfAnItemYouAreSellingItemUnitPrice').val().trim();
+		let unitPriceInWei_BigInt = undefined;
+		if (settingUnitPriceFlag) {
+			if (unitPriceInWeiStr === EMPTY_STRING) {
+				showError('The Unit Price that you set in the "Set Miscellaneous Settings of an Item You are Selling" section was an empty string. If you wish to ' +
+					'set the Unit Price of the Item, please enter a positive integer value greater than or equal to zero!');
+				return;
+			}
+
+			if (!isNumeric(unitPriceInWeiStr)) {
+				showError('The Unit Price that you set in the "Set Miscellaneous Settings of an Item You are Selling" section is not a positive integer greater than or equal ' +
+					'to zero. If you wish to set the Unit Price of the Item, please enter a positive integer value greater than or equal to zero!');
+				return;
+			}
+
+			let largestUint256 = 2**256 - 1;
+			let largestUint256_BigInt = BigInt(largestUint256);
+			unitPriceInWei_BigInt = BigInt(unitPriceInWeiStr);
+			if (unitPriceInWei_BigInt > largestUint256_BigInt) {
+				showError(`The Unit Price (in WEI) that you entered in the "Set Miscellaneous Settings of an Item You are Selling" section has a ` +
+					`${unitPriceInWei_BigInt.toString()} integer value that is greater than the ${largestUint256_BigInt} integer value that an Ethereum Smart Contract can handle!`);
+				return;
+			}
+		}
+
+		let quantityAvailableStr = $('#textSetMiscellaneousSettingsOfAnItemYouAreSellingQuantityAvailableForSale').val().trim();
+		let quantityAvailable_BigInt = undefined;
+		if (settingQuantityFlag) {
+			if (quantityAvailableStr === EMPTY_STRING) {
+				showError('The Quantity Available that you set in the "Set Miscellaneous Settings of an Item You are Selling" section was an empty string. If you wish to ' +
+					'set the Quantity Available of the Item, please enter a positive integer value greater than or equal to zero!');
+				return;
+			}
+
+			if (!isNumeric(quantityAvailableStr)) {
+				showError('The Quantity Available that you set in the "Set Miscellaneous Settings of an Item You are Selling" section is not a positive integer greater than or equal ' +
+					'to zero. If you wish to set the Quantity Available of the Item, please enter a positive integer value greater than or equal to zero!');
+				return;
+			}
+
+			let largestUint256 = 2**256 - 1;
+			let largestUint256_BigInt = BigInt(largestUint256);
+			quantityAvailable_BigInt = BigInt(quantityAvailableStr);
+			if (quantityAvailable_BigInt > largestUint256_BigInt) {
+				showError(`The Quantity Available that you entered in the "Set Miscellaneous Settings of an Item You are Selling" section has a ` +
+					`${quantityAvailable_BigInt.toString()} integer value that is greater than the ${largestUint256_BigInt} integer value that an Ethereum Smart Contract can handle!`);
+				return;
+			}
+		}
+
+		makeSureMetamaskInstalled();
+
+		showInfo(`Setting Miscellaneous Settings for Item IPFS ID ${itemIpfsHashId} that you are Selling under Current Metamask Ethereum Public Address ${currentMetamaskEthereumAddress} ....`);
+
+		let decentralizedMarketplaceContract =
+			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
+
+		var sellerExists =
+				PROMISIFY(cb => decentralizedMarketplaceContract.sellerExists.call(currentMetamaskEthereumAddress, cb));
+		let sellerExistsFlag = undefined;
+		let sellerExistsError = undefined;
+		await sellerExists
+			.then(function (response) {
+				console.log('sellerExists : response =', response);
+				sellerExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('sellerExists : error =', error);
+				sellerExistsError = error;
+  		});
+
+  		if (sellerExistsError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method: " +
+				sellerExistsError);
+		}
+
+		if (sellerExistsFlag === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method!");
+		}
+
+		console.log('sellerExistsFlag =', sellerExistsFlag);
+		if (!sellerExistsFlag) {
+			hideInfo();
+			return showError(`Your current Metamask Ethereum Public Address ${currentMetamaskEthereumAddress} is not listed as a Seller in the Franklin Decentralized Marketplace!`);
+		}
+
+		let ethereumPublicAddress = currentMetamaskEthereumAddress;
+		var itemForSaleFromSellerExists = PROMISIFY(cb => decentralizedMarketplaceContract.itemForSaleFromSellerExists(ethereumPublicAddress, itemIpfsHashId, cb));
+		let itemForSaleFromSellerExistsFlag = undefined;
+		let itemForSaleFromSellerExistsError = undefined;
+		await itemForSaleFromSellerExists
+			.then(function (response) {
+				console.log('itemForSaleFromSellerExists : response =', response);
+				itemForSaleFromSellerExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('itemForSaleFromSellerExists : error =', error);
+				itemForSaleFromSellerExistsError = error;
+  		});
+
+  		if (itemForSaleFromSellerExistsError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.itemForSaleFromSellerExists method: " +
+				itemForSaleFromSellerExistsError);
+		}
+
+		if (itemForSaleFromSellerExistsFlag === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.itemForSaleFromSellerExists method!");
+		}
+
+		console.log('itemForSaleFromSellerExistsFlag =', itemForSaleFromSellerExistsFlag);
+		if (!itemForSaleFromSellerExistsFlag) {
+			hideInfo();
+			return showError(`No such Item ${itemIpfsHashId} is sold by Seller Ethereum Public Address ${ethereumPublicAddress} in the Franklin Decentralized Marketplace!`);
+		}
+
+		let setPriceOfItemResponse_TxHash = undefined;
+		if (settingUnitPriceFlag) {
+			var setPriceOfItem = PROMISIFY(cb => decentralizedMarketplaceContract.setPriceOfItem(itemIpfsHashId, unitPriceInWei_BigInt, cb));
+			let setPriceOfItemError = undefined;
+			await setPriceOfItem
+				.then(function (response) {
+					console.log('setPriceOfItem : response =', response);
+					setPriceOfItemResponse_TxHash = response;
+				})
+				.catch(function (error) {
+					console.log('setPriceOfItem : error =', error);
+					setPriceOfItemError = error;
+			});
+
+			if (setPriceOfItemError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceContract.setPriceOfItem(${itemIpfsHashId}, ${unitPriceInWei_BigInt.toString()}) method: ` +
+					setPriceOfItemError.message);
+			}
+
+			if (setPriceOfItemResponse_TxHash === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceContract.setPriceOfItem(${itemIpfsHashId}, ${unitPriceInWei_BigInt.toString()}) method!`);
+			}
+		}
+
+		let setQuantityAvailableForSaleOfAnItemResponse_TxHash = undefined;
+		if (settingQuantityFlag) {
+			var setQuantityAvailableForSaleOfAnItem = PROMISIFY(cb => decentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(itemIpfsHashId, quantityAvailable_BigInt, cb));
+			let setQuantityAvailableForSaleOfAnItemError = undefined;
+			await setQuantityAvailableForSaleOfAnItem
+				.then(function (response) {
+					console.log('setQuantityAvailableForSaleOfAnItem : response =', response);
+					setQuantityAvailableForSaleOfAnItemResponse_TxHash = response;
+				})
+				.catch(function (error) {
+					console.log('setQuantityAvailableForSaleOfAnItem : error =', error);
+					setQuantityAvailableForSaleOfAnItemError = error;
+			});
+
+			if (setQuantityAvailableForSaleOfAnItemError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(${itemIpfsHashId}, ${quantityAvailable_BigInt.toString()}) method: ` +
+					setQuantityAvailableForSaleOfAnItemError.message);
+			}
+
+			if (setQuantityAvailableForSaleOfAnItemResponse_TxHash === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceContract.setQuantityAvailableForSaleOfAnItem(${itemIpfsHashId}, ${quantityAvailable_BigInt.toString()}) method!`);
+			}
+		}
+
+		let successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has successfully had it's Unit Price set ` +
+				`to ${unitPriceInWei_BigInt.toString()} WEI and it's Quantity Available set to ${quantityAvailable_BigInt.toString()}. ` +
+				`Transaction hashes: ${setPriceOfItemResponse_TxHash} and ${setQuantityAvailableForSaleOfAnItemResponse_TxHash}`;
+
+		hideInfo();
+		showInfo(successString);
+	}
+
 	async function addItemForSale() {
 		makeSureMetamaskInstalled();
 
@@ -1179,10 +1441,10 @@ $(document).ready(function () {
 
 		// Coding Technique Reference --> https://stackoverflow.com/questions/17101972/how-to-make-an-array-from-a-string-by-newline-in-javascript/17102698
 		let itemCategoriesStr = $('#textareaAddItemForSaleCategories').val().trim();
-		let itemCategoriesTempArray = str.split("\n");
+		let itemCategoriesTempArray = itemCategoriesStr.split('\n');
 		let itemCategories = [ ];
 		for (let i = 0; i < itemCategoriesTempArray.length; i++) {
-			itemCategory = itemCategoriesTempArray.trim();
+			itemCategory = itemCategoriesTempArray[i].trim();
 			if (itemCategory === EMPTY_STRING) {
 				continue;
 			}
@@ -1205,7 +1467,7 @@ $(document).ready(function () {
 		}
 
 		let otherPicturesIpfsHashes = [ ];
-		for (let i = 0; i <=10; i++) {
+		for (let i = 1; i <=10; i++) {
 			let otherPictureIpfsHash = EMPTY_STRING;
 			try {
 				// console.log('BEFORE Executing : uploadPictureToIPFS');
@@ -1281,7 +1543,7 @@ $(document).ready(function () {
 				return showError(`DecentralizedMarketplaceMediationContract.addItemForSale(${ipfsFileHash}) call failed:  + ${err.message}`);
 			}
 
-			showInfo(`Item IPFS ID ${ipfsFileHash} for Seller ${currentMetamaskEthereumAddress} <b>successfully added</b> to Franklin Decentralized Marketplace. Transaction hash: ${txHash}`);
+			showInfo(`Item IPFS ID ${ipfsFileHash} for Seller Ethereum Address ${currentMetamaskEthereumAddress} <b>successfully added</b> to Franklin Decentralized Marketplace. Transaction hash: ${txHash}`);
 		});
 	}
 
@@ -1321,7 +1583,7 @@ $(document).ready(function () {
 		console.log('sellerExistsFlag =', sellerExistsFlag);
 		if (!sellerExistsFlag) {
 			hideInfo();
-			return showError(`Ethereum Public Address ${currentMetamaskEthereumAddress} is not listed as a Seller in the Franklin Decentralized Marketplace!`);
+			return showError(`Your current Metamask Ethereum Public Address ${currentMetamaskEthereumAddress} is not listed as a Seller in the Franklin Decentralized Marketplace!`);
 		}
 
 		decentralizedMarketplaceContract.removeSeller(function (err, txHash) {
@@ -1492,28 +1754,43 @@ $(document).ready(function () {
 			return showError("Error encountered while calling the DecentralizedMarketplaceContract.getSellerIpfsHashDescription method!");
 		}
 
-		var ipfsFileGetForSeller = PROMISIFY(cb => IPFS.get(ipfsHashDescOfSeller, {timeout: '8000ms'}, cb));
 		let ipfsFileGetForSellerJson = undefined;
 		let ipfsFileGetForSellerError = undefined;
-		await ipfsFileGetForSeller
-			.then(function (response) {
-				console.log('ipfsFileGetForSeller : response =', response);
-				let ipfsFileGetForSellerJsonString = response[0].content.toString();
-				ipfsFileGetForSellerJson = JSON.parse(ipfsFileGetForSellerJsonString);
-			})
-			.catch(function (error) {
-				console.log('ipfsFileGetForSeller : error =', error);
-				ipfsFileGetForSellerError = error;
-  		});
-
-  		if (ipfsFileGetForSellerError !== undefined) {
-			hideInfo();
-			return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfSeller}) method: ${ipfsFileGetForSellerError}`);
+		if (ipfsHashDescOfSeller === EMPTY_STRING) {
+			ipfsFileGetForSellerJson = {
+				name: '',
+				physicalAddress: '',
+				mailingAddress: '',
+				website: '',
+				email: '',
+				phone: '',
+				fax: '',
+				description: '',
+				picture: ''
+			}
 		}
+		else {
+			var ipfsFileGetForSeller = PROMISIFY(cb => IPFS.get(ipfsHashDescOfSeller, {timeout: '8000ms'}, cb));
+			await ipfsFileGetForSeller
+				.then(function (response) {
+					console.log('ipfsFileGetForSeller : response =', response);
+					let ipfsFileGetForSellerJsonString = response[0].content.toString();
+					ipfsFileGetForSellerJson = JSON.parse(ipfsFileGetForSellerJsonString);
+				})
+				.catch(function (error) {
+					console.log('ipfsFileGetForSeller : error =', error);
+					ipfsFileGetForSellerError = error;
+			});
 
-		if (ipfsFileGetForSellerJson === undefined) {
-			hideInfo();
-			return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfSeller}) method!`);
+			if (ipfsFileGetForSellerError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfSeller}) method: ${ipfsFileGetForSellerError}`);
+			}
+
+			if (ipfsFileGetForSellerJson === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfSeller}) method!`);
+			}
 		}
 
 		console.log('ipfsFileGetForSellerJson =', ipfsFileGetForSellerJson);
@@ -1732,7 +2009,8 @@ $(document).ready(function () {
 			.then(function (response) {
 				console.log('getNumberOfMediationsMediatorInvolved : response =', response);
 				let numberOfMediationsMediatorInvolved_X = response;
-				numberOfMediationsMediatorInvolved = numberOfMediationsMediatorInvolved_X.c[0];
+				// numberOfMediationsMediatorInvolved = numberOfMediationsMediatorInvolved_X.c[0];
+				numberOfMediationsMediatorInvolved = BigInt(convertMetamask_X_Value_to_IntegerString(numberOfMediationsMediatorInvolved_X));
 			})
 			.catch(function (error) {
 				console.log('getNumberOfMediationsMediatorInvolved : error =', error);
@@ -1751,11 +2029,11 @@ $(document).ready(function () {
 			return showError(`Error encountered while calling DecentralizedMarketplaceMediationContract.numberOfMediationsMediatorInvolved(${mediatorAddress}) method!`);
 		}
 
-		console.log('numberOfMediationsMediatorInvolved =', numberOfMediationsMediatorInvolved);
+		console.log('numberOfMediationsMediatorInvolved.toString() =', numberOfMediationsMediatorInvolved.toString());
 
 		$('#textViewDetailedInformationAboutMediatorEthereumAddress').val(mediatorAddress);
 		$('#textViewDetailedInformationAboutMediatorName').val(ipfsFileGetForMediatorJson.name);
-		$('#textViewDetailedInformationAboutMediatorNumberOfMediationsInvolved').val(BigInt(numberOfMediationsMediatorInvolved).toString());
+		$('#textViewDetailedInformationAboutMediatorNumberOfMediationsInvolved').val(numberOfMediationsMediatorInvolved.toString());
 		$('#textareaViewDetailedInformationAboutMediatorPhysicalAddress').val(ipfsFileGetForMediatorJson.physicalAddress);
 		$('#textareaViewDetailedInformationAboutMediatorMailingAddress').val(ipfsFileGetForMediatorJson.mailingAddress);
 		$('#textViewDetailedInformationAboutMediatorWebsite').val(ipfsFileGetForMediatorJson.website);
@@ -1811,6 +2089,9 @@ $(document).ready(function () {
 			console.log(`uploadPictureToIPFS : file[${i}] = `, $('#' + inputFileElementId)[0].files[0]);
 		}
 		*/
+
+		console.log('uploadPictureToIPFS : inputFileElementId =', inputFileElementId);
+		console.log(`uploadPictureToIPFS : $('#' + inputFileElementId) =`, $('#' + inputFileElementId));
 
 		if ($('#' + inputFileElementId)[0].files.length === 0) {
 			console.log('uploadPictureToIPFS: No picture to upload!');
@@ -2227,7 +2508,7 @@ $(document).ready(function () {
 		ethereumPublicAddress = "0x" + ethereumPublicAddress;
 
 		let itemIpfsHashId = $('#textViewDetailedInformationAboutItemBeingSoldBySellerItemIpfsId').val().trim();
-		if (ethereumPublicAddress.length === 0) {
+		if (itemIpfsHashId.length === 0) {
 			showError('The Item IPFS ID identifying an Item cannot be an empty string or consist only of white space. Please enter an ' +
 				'Item IPFS ID value that has no spaces.');
 			return;
@@ -2301,15 +2582,20 @@ $(document).ready(function () {
 			return showError(`No such Item ${itemIpfsHashId} is sold by Seller Ethereum Public Address ${ethereumPublicAddress} in the Franklin Decentralized Marketplace!`);
 		}
 
+		let sellerAddress = ethereumPublicAddress;
 		var getPriceOfItem = PROMISIFY(cb => decentralizedMarketplaceContract.getPriceOfItem(sellerAddress, itemIpfsHashId, cb));
 		let priceOfItemInETH = undefined;
 		let getPriceOfItemError = undefined;
-		await getNumberOfDifferentItemsSoldBySeller
+		await getPriceOfItem
 			.then(function (response) {
 				console.log('getPriceOfItem : response =', response);
 				let priceOfItemInWei_X = response;
-				let priceOfItemInWei = priceOfItemInWei_X.c[0];
-				priceOfItemInETH = priceOfItemInWei / ETH;
+				// let priceOfItemInWei = priceOfItemInWei_X.c[0];
+				let priceOfItemInWei = convertMetamask_X_Value_to_IntegerString(priceOfItemInWei_X);
+
+				// priceOfItemInETH = priceOfItemInWei / ETH;
+				// priceOfItemInETH = web3.utils.fromWei(priceOfItemInWei, 'ether'); // did not work
+				priceOfItemInETH = covertWEI_StringValue_to_ETH_StringValue(priceOfItemInWei);
 			})
 			.catch(function (error) {
 				console.log('getPriceOfItem : error =', error);
@@ -2387,7 +2673,7 @@ $(document).ready(function () {
 		console.log('ipfsFileGetForItemJson =', ipfsFileGetForItemJson);
 
 		$('#textViewDetailedInformationAboutItemBeingSoldBySellerName').val(ipfsFileGetForItemJson.name);
-		$('#textViewDetailedInformationAboutItemBeingSoldBySellerUnitPrice').val(convertNumberToString(priceOfItemInETH));
+		$('#textViewDetailedInformationAboutItemBeingSoldBySellerUnitPrice').val(priceOfItemInETH);
 		$('#textViewDetailedInformationAboutItemBeingSoldBySellerQuantityAvailable').val(convertNumberToString(quantityAvailableForSaleOfItem));
 		$('#textareaViewDetailedInformationAboutItemBeingSoldBySellerDescription').val(ipfsFileGetForItemJson.description);
 
@@ -2422,6 +2708,7 @@ $(document).ready(function () {
 		}
 
 		$('#picturesViewDetailedInformationAboutItemBeingSoldBySellerOtherPicturesDiv').html(otherPicturesHtml);
+		hideInfo();
 	}
 
 	async function getCurrentItemsBeingSoldBySeller() {
@@ -2489,14 +2776,15 @@ $(document).ready(function () {
 		}
 
 		var getNumberOfDifferentItemsSoldBySeller =
-				PROMISIFY(cb => decentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(sellerAddress, cb));
+				PROMISIFY(cb => decentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(ethereumPublicAddress, cb));
 		let numberOfDifferentItemsSoldBySeller = undefined;
 		let getNumberOfDifferentItemsSoldBySellerError = undefined;
 		await getNumberOfDifferentItemsSoldBySeller
 			.then(function (response) {
 				console.log('getNumberOfDifferentItemsSoldBySeller : response =', response);
 				let numberOfDifferentItemsSoldBySeller_X = response;
-				numberOfDifferentItemsSoldBySeller = numberOfDifferentItemsSoldBySeller_X.c[0];
+				// numberOfDifferentItemsSoldBySeller = numberOfDifferentItemsSoldBySeller_X.c[0];
+				numberOfDifferentItemsSoldBySeller = BigInt(convertMetamask_X_Value_to_IntegerString(numberOfDifferentItemsSoldBySeller_X));
 			})
 			.catch(function (error) {
 				console.log('getNumberOfDifferentItemsSoldBySeller  : error =', error);
@@ -2506,21 +2794,21 @@ $(document).ready(function () {
   		if (getNumberOfDifferentItemsSoldBySellerError !== undefined) {
 			hideInfo();
 			return showError(`Error encountered while calling ` +
-				`DecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(${sellerAddress}) method: ` +
+				`DecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(${ethereumPublicAddress}) method: ` +
 				`${getNumberOfDifferentItemsSoldBySellerError}`);
 		}
 
 		if (numberOfDifferentItemsSoldBySeller === undefined) {
 			hideInfo();
-			return showError(`Error encountered while calling DecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(${sellerAddress}) method!`);
+			return showError(`Error encountered while calling DecentralizedMarketplaceContract.getNumberOfDifferentItemsBeingSoldBySeller(${ethereumPublicAddress}) method!`);
 		}
 
 		console.log('numberOfDifferentItemsSoldBySeller =', numberOfDifferentItemsSoldBySeller);
 
 		let categoryFilter = $('#textViewCurrentItemsBeingSoldByCurrentSellerFilterByOneCategory').val().trim().toLowerCase();
 
-		for (let i = 0; i < numberOfDifferentItemsSoldBySeller; i++) {
-			var getItemForSale = PROMISIFY(cb => decentralizedMarketplaceContract.getItemForSale(sellerAddress, i, cb));
+		for (let i = BigInt(0); i < numberOfDifferentItemsSoldBySeller; i++) {
+			var getItemForSale = PROMISIFY(cb => decentralizedMarketplaceContract.getItemForSale(ethereumPublicAddress, i, cb));
 			let itemIpfsHashId = undefined;
 			let getItemForSaleError = undefined;
 			await getItemForSale
@@ -2536,26 +2824,31 @@ $(document).ready(function () {
 			if (getItemForSaleError !== undefined) {
 				hideInfo();
 				return showError(`Error encountered while calling ` +
-					`DecentralizedMarketplaceContract.getItemForSale(${sellerAddress}, ${i}) method: ` +
+					`DecentralizedMarketplaceContract.getItemForSale(${ethereumPublicAddress}, ${i}) method: ` +
 					`${getItemForSaleError}`);
 			}
 
 			if (itemIpfsHashId === undefined) {
 				hideInfo();
-				return showError(`Error encountered while calling DecentralizedMarketplaceContract.getItemForSale(${sellerAddress}, ${i}) method!`);
+				return showError(`Error encountered while calling DecentralizedMarketplaceContract.getItemForSale(${ethereumPublicAddress}, ${i}) method!`);
 			}
 
 			console.log('itemIpfsHashId =', itemIpfsHashId);
 
-			var getPriceOfItem = PROMISIFY(cb => decentralizedMarketplaceContract.getPriceOfItem(sellerAddress, itemIpfsHashId, cb));
+			var getPriceOfItem = PROMISIFY(cb => decentralizedMarketplaceContract.getPriceOfItem(ethereumPublicAddress, itemIpfsHashId, cb));
 			let priceOfItemInETH = undefined;
 			let getPriceOfItemError = undefined;
-			await getNumberOfDifferentItemsSoldBySeller
+			await getPriceOfItem
 				.then(function (response) {
 					console.log('getPriceOfItem : response =', response);
 					let priceOfItemInWei_X = response;
-					let priceOfItemInWei = priceOfItemInWei_X.c[0];
-					priceOfItemInETH = priceOfItemInWei / ETH;
+					// let priceOfItemInWei = priceOfItemInWei_X.c[0];
+					let priceOfItemInWei = convertMetamask_X_Value_to_IntegerString(priceOfItemInWei_X);
+
+					console.log('priceOfItemInWei =', priceOfItemInWei);
+					// priceOfItemInETH = priceOfItemInWei / ETH;
+					// priceOfItemInETH = web3.utils.fromWei(priceOfItemInWei, 'ether'); // did not work!
+					priceOfItemInETH = covertWEI_StringValue_to_ETH_StringValue(priceOfItemInWei);
 				})
 				.catch(function (error) {
 					console.log('getPriceOfItem : error =', error);
@@ -2565,26 +2858,27 @@ $(document).ready(function () {
 			if (getPriceOfItemError !== undefined) {
 				hideInfo();
 				return showError(`Error encountered while calling ` +
-					`DecentralizedMarketplaceContract.getPriceOfItem(${sellerAddress}, ${itemIpfsHashId}) method: ` +
+					`DecentralizedMarketplaceContract.getPriceOfItem(${ethereumPublicAddress}, ${itemIpfsHashId}) method: ` +
 					`${getPriceOfItemError}`);
 			}
 
 			if (priceOfItemInETH === undefined) {
 				hideInfo();
-				return showError(`Error encountered while calling DecentralizedMarketplaceContract.getPriceOfItem(${sellerAddress}, ${itemIpfsHashId}) method!`);
+				return showError(`Error encountered while calling DecentralizedMarketplaceContract.getPriceOfItem(${ethereumPublicAddress}, ${itemIpfsHashId}) method!`);
 			}
 
 			console.log('priceOfItemInETH =', priceOfItemInETH);
 
 			var getQuantityAvailableForSaleOfAnItemBySeller =
-					PROMISIFY(cb => decentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerAddress, itemIpfsHashId, cb));
+					PROMISIFY(cb => decentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(ethereumPublicAddress, itemIpfsHashId, cb));
 			let quantityAvailableForSaleOfItem = undefined;
 			let getQuantityAvailableForSaleOfAnItemBySellerError = undefined;
 			await getQuantityAvailableForSaleOfAnItemBySeller
 				.then(function (response) {
 					console.log('getQuantityAvailableForSaleOfAnItemBySeller : response =', response);
 					let quantityAvailableForSaleOfItem_X = response;
-					quantityAvailableForSaleOfItem = quantityAvailableForSaleOfItem_X.c[0];
+					// quantityAvailableForSaleOfItem = quantityAvailableForSaleOfItem_X.c[0];
+					quantityAvailableForSaleOfItem = BigInt(convertMetamask_X_Value_to_IntegerString(quantityAvailableForSaleOfItem_X));
 				})
 				.catch(function (error) {
 					console.log('getQuantityAvailableForSaleOfAnItemBySeller : error =', error);
@@ -2594,17 +2888,17 @@ $(document).ready(function () {
 			if (getQuantityAvailableForSaleOfAnItemBySellerError !== undefined) {
 				hideInfo();
 				return showError(`Error encountered while calling ` +
-					`DecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(${sellerAddress}, ${itemIpfsHashId}) method: ` +
+					`DecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(${ethereumPublicAddress}, ${itemIpfsHashId}) method: ` +
 					`${getQuantityAvailableForSaleOfAnItemBySellerError}`);
 			}
 
 			if (quantityAvailableForSaleOfItem === undefined) {
 				hideInfo();
-				return showError(`Error encountered while calling DecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySelle(${sellerAddress}, ${itemIpfsHashId}) ` +
+				return showError(`Error encountered while calling DecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySelle(${ethereumPublicAddress}, ${itemIpfsHashId}) ` +
 							`method!`);
 			}
 
-			console.log('quantityAvailableForSaleOfItem =', quantityAvailableForSaleOfItem);
+			console.log('quantityAvailableForSaleOfItem.toString() =', quantityAvailableForSaleOfItem.toString());
 
 			var ipfsFileGetForItem = PROMISIFY(cb => IPFS.get(itemIpfsHashId, {timeout: '8000ms'}, cb));
 			let ipfsFileGetForItemJson = undefined;
@@ -2636,23 +2930,25 @@ $(document).ready(function () {
 					itemIpfsHashId: itemIpfsHashId,
 					name: ipfsFileGetForItemJson.name,
 					picture: ipfsFileGetForItemJson.mainPicture,
-					unitPriceEth: convertNumberToString(priceOfItemInETH),
-					quantityAvailable: convertNumberToString(quantityAvailableForSaleOfItem)
+					unitPriceEth: priceOfItemInETH,
+					quantityAvailable: quantityAvailableForSaleOfItem.toString()
 			}
 
 			// Coding Technique Reference --> https://stackoverflow.com/questions/29719329/convert-array-into-upper-case/29719347
-			ipfsFileGetForItemJson.categories = ipfsFileGetForItemJson.categories.map(function(x){ return x.toLowerCase() })
+			ipfsFileGetForItemJson.categories = ipfsFileGetForItemJson.categories.map(function(x){ return x.trim().toLowerCase() })
 
 			if (categoryFilter !== EMPTY_STRING) {
 				// Coding Technique Reference --> https://www.w3schools.com/jsref/jsref_includes_array.asp
 				if (ipfsFileGetForItemJson.categories.includes(categoryFilter)) {
 					currentItemsBeingSoldByGivenSellerArray.push(itemRecord);
 				}
+			} else {
+				currentItemsBeingSoldByGivenSellerArray.push(itemRecord);
 			}
 		}
 
 		createCurrentItemsBeingSoldByGivenSellerTable();
-		$('#textViewCurrentItemsBeingSoldByCurrentSellerNumberOfDifferentItemsBeingSoldByGivenSellerResults').val(BigInt(currentItemsBeingSoldByGivenSellerArray.length).toString());
+		$('#textViewCurrentItemsBeingSoldByCurrentSellerNumberOfDifferentItemsBeingSoldByGivenSellerResults').val(convertNumberToString(currentItemsBeingSoldByGivenSellerArray.length));
 		hideInfo();
 	}
 
@@ -2683,13 +2979,14 @@ $(document).ready(function () {
 		}
 
 		console.log('numberOfSellersX =', numberOfSellersX);
-		let numberOfSellers = numberOfSellersX.c[0];
+		// let numberOfSellers = numberOfSellersX.c[0];
+		let numberOfSellers = BigInt(convertMetamask_X_Value_to_IntegerString(numberOfSellersX));
 		console.log('numberOfSellers =', numberOfSellers)
 
-		$('#numberOfCurrentSellersViewCurrentSellersResults').val(BigInt(numberOfSellers).toString());
+		$('#numberOfCurrentSellersViewCurrentSellersResults').val(numberOfSellers.toString());
 
 		currentSellersArray = [ ];
-		for (let i = 0; i < numberOfSellers; i++) {
+		for (let i = BigInt(0); i < numberOfSellers; i++) {
 			var getSellerAddress = PROMISIFY(cb => decentralizedMarketplaceContract.getSellerAddress(i, cb));
 			let sellerAddress = undefined;
 			let getSellerAddressError = undefined;
@@ -2739,28 +3036,48 @@ $(document).ready(function () {
 				return showError("Error encountered while calling the DecentralizedMarketplaceContract.getSellerIpfsHashDescription method!");
 			}
 
-			var ipfsFileGetForSeller = PROMISIFY(cb => IPFS.get(ipfsHashDescOfSeller, {timeout: '8000ms'}, cb));
-			let ipfsFileGetForSellerJson = undefined;
-			let ipfsFileGetForSellerError = undefined;
-			await ipfsFileGetForSeller
-				.then(function (response) {
-					console.log('ipfsFileGetForSeller : response =', response);
-					let ipfsFileGetForSellerJsonString = response[0].content.toString();
-					ipfsFileGetForSellerJson = JSON.parse(ipfsFileGetForSellerJsonString);
-				})
-				.catch(function (error) {
-					console.log('ipfsFileGetForSeller : error =', error);
-					ipfsFileGetForSellerError = error;
-  			});
-
-  			if (ipfsFileGetForSellerError !== undefined) {
-				hideInfo();
-				return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfMediator}) method: ${ipfsFileGetForSellerError}`);
+			console.log('getCurrentSellers : ipfsHashDescOfSeller =', ipfsHashDescOfSeller);
+			if (ipfsHashDescOfSeller === EMPTY_STRING) {
+				console.log('    getCurrentSellers : ipfsHashDescOfSeller = EMPTY_STRING');
 			}
 
-			if (ipfsFileGetForSellerJson === undefined) {
-				hideInfo();
-				return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfSeller}) method!`);
+			let ipfsFileGetForSellerJson = undefined;
+			let ipfsFileGetForSellerError = undefined;
+			if (ipfsHashDescOfSeller === EMPTY_STRING) {
+				ipfsFileGetForSellerJson = {
+					name: '',
+					physicalAddress: '',
+					mailingAddress: '',
+					website: '',
+					email: '',
+					phone: '',
+					fax: '',
+					description: '',
+					picture: ''
+				}
+			}
+			else {
+			var ipfsFileGetForSeller = PROMISIFY(cb => IPFS.get(ipfsHashDescOfSeller, {timeout: '8000ms'}, cb));
+				await ipfsFileGetForSeller
+					.then(function (response) {
+						console.log('ipfsFileGetForSeller : response =', response);
+						let ipfsFileGetForSellerJsonString = response[0].content.toString();
+						ipfsFileGetForSellerJson = JSON.parse(ipfsFileGetForSellerJsonString);
+					})
+					.catch(function (error) {
+						console.log('ipfsFileGetForSeller : error =', error);
+						ipfsFileGetForSellerError = error;
+				});
+
+				if (ipfsFileGetForSellerError !== undefined) {
+					hideInfo();
+					return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfSeller}) method: ${ipfsFileGetForSellerError}`);
+				}
+
+				if (ipfsFileGetForSellerJson === undefined) {
+					hideInfo();
+					return showError(`Error encountered while calling IPFS.get(${ipfsHashDescOfSeller}) method!`);
+				}
 			}
 
 			console.log('ipfsFileGetForSellerJson =', ipfsFileGetForSellerJson);
@@ -2773,7 +3090,8 @@ $(document).ready(function () {
 				.then(function (response) {
 					console.log('getNumberOfDifferentItemsSoldBySeller : response =', response);
 					let numberOfDifferentItemsSoldBySeller_X = response;
-					numberOfDifferentItemsSoldBySeller = numberOfDifferentItemsSoldBySeller_X.c[0];
+					// numberOfDifferentItemsSoldBySeller = numberOfDifferentItemsSoldBySeller_X.c[0];
+					numberOfDifferentItemsSoldBySeller = BigInt(convertMetamask_X_Value_to_IntegerString(numberOfDifferentItemsSoldBySeller_X));
 				})
 				.catch(function (error) {
 					console.log('getNumberOfDifferentItemsSoldBySeller  : error =', error);
@@ -2826,7 +3144,7 @@ $(document).ready(function () {
 					ethereumAddress: sellerAddress,
 					name: ipfsFileGetForSellerJson.name,
 					picture: ipfsFileGetForSellerJson.picture,
-					numberOfDifferentItemsSold: convertNumberToString(numberOfDifferentItemsSoldBySeller),
+					numberOfDifferentItemsSold: numberOfDifferentItemsSoldBySeller.toString(),
 					sellerIsWillingToSellItemsViaMediator: sellerIsWillingToSellItemsViaMediatorFlag
 			}
 
@@ -2864,13 +3182,14 @@ $(document).ready(function () {
 		}
 
 		console.log('numberOfMediatorsX =', numberOfMediatorsX);
-		let numberOfMediators = numberOfMediatorsX.c[0];
+		// let numberOfMediators = numberOfMediatorsX.c[0];
+		let numberOfMediators = BigInt(convertMetamask_X_Value_to_IntegerString(numberOfMediatorsX));
 		console.log('numberOfMediators =', numberOfMediators)
 
-		$('#numberOfCurrentMediatorsViewCurrentMediatorsResults').val(BigInt(numberOfMediators).toString());
+		$('#numberOfCurrentMediatorsViewCurrentMediatorsResults').val(numberOfMediators.toString());
 
 		currentMediatorsArray = [ ];
-		for (let i = 0; i < numberOfMediators; i++) {
+		for (let i = BigInt(0); i < numberOfMediators; i++) {
 			var getMediatorAddress = PROMISIFY(cb => decentralizedMarketplaceMediationContract.getMediatorAddress(i, cb));
 			let mediatorAddress = undefined;
 			let getMediatorAddressError = undefined;
@@ -2954,7 +3273,8 @@ $(document).ready(function () {
 				.then(function (response) {
 					console.log('getNumberOfMediationsMediatorInvolved : response =', response);
 					let numberOfMediationsMediatorInvolved_X = response;
-					numberOfMediationsMediatorInvolved = numberOfMediationsMediatorInvolved_X.c[0];
+					// numberOfMediationsMediatorInvolved = numberOfMediationsMediatorInvolved_X.c[0];
+					numberOfMediationsMediatorInvolved = BigInt(convertMetamask_X_Value_to_IntegerString(numberOfMediationsMediatorInvolved_X));
 				})
 				.catch(function (error) {
 					console.log('getNumberOfMediationsMediatorInvolved : error =', error);
@@ -2979,7 +3299,7 @@ $(document).ready(function () {
 					ethereumAddress: mediatorAddress,
 					name: ipfsFileGetForMediatorJson.name,
 					picture: ipfsFileGetForMediatorJson.picture,
-					numberOfMediationsInvolved: convertNumberToString(numberOfMediationsMediatorInvolved)
+					numberOfMediationsInvolved: numberOfMediationsMediatorInvolved.toString()
 			}
 
 			currentMediatorsArray.push(mediatorRecord);
@@ -3056,7 +3376,7 @@ $(document).ready(function () {
             for (var j = 0; j < number_of_cols; j++) {
             	table_body += '<td>';
 
-				let rowData = currentMediatorsArray[i];
+				let rowData = currentSellersArray[i];
                 let table_data = '';
                 if (j === 0) {
 					table_data += rowData.ethereumAddress;
@@ -3109,7 +3429,7 @@ $(document).ready(function () {
             for (var j = 0; j < number_of_cols; j++) {
             	table_body += '<td>';
 
-				let rowData = currentMediatorsArray[i];
+				let rowData = currentItemsBeingSoldByGivenSellerArray[i];
                 let table_data = '';
                 if (j === 0) {
 					table_data += rowData.itemIpfsHashId;

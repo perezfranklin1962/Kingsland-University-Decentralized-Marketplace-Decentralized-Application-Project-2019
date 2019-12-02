@@ -149,7 +149,7 @@
    		<br><hr><br>
     	<h1>View Detailed Information About an Item Being Sold by a Seller</h1>
     	Seller Ethereum Public Address (40-Hex lowercase digits with optional '0x' at the beginning): <input type="text" size="50" id="textViewDetailedInformationAboutItemBeingSoldBySellerEthereumAddress"><br><br>
-    	Item IPFS ID: <input type="text" size="50" id="textViewDetailedInformationAboutItemBeingSoldBySellerItemIpfsId"><br><br>
+    	Item IPFS ID: <input type="text" size="60" id="textViewDetailedInformationAboutItemBeingSoldBySellerItemIpfsId"><br><br>
     	<input type="button" id="buttonViewDetailedInformationAboutItemBeingSoldBySeller" value="Get Detailed Information about an Item Being Sold by a Seller">
     	<input type="button" id="buttonClearViewDetailedInformationAboutItemBeingSoldBySeller" value="Clear Inputs and Outputs for Get Detailed Information about an Item Being Sold by a Seller">
     	<br><br>
@@ -164,6 +164,19 @@
     	<div id="picturesViewDetailedInformationAboutItemBeingSoldBySellerOtherPicturesDiv"></div><br>
     	Description:<br>
     	<textarea readonly="true" id="textareaViewDetailedInformationAboutItemBeingSoldBySellerDescription"></textarea><br>
+
+    	<br><hr><br>
+    	<h1>Set Miscellaneous Settings of an Item You are Selling - You are Seller Identified by Your Current Metamask Ethereum Address</h1>
+    	Item IPFS ID: <input type="text" size="60" id="textSetMiscellaneousSettingsOfAnItemYouAreSellingItemIpfsId"><br><br>
+    	Unit Price (in WEI): <input type="text" size="90" id="textSetMiscellaneousSettingsOfAnItemYouAreSellingItemUnitPrice">
+    	<input type="checkbox" id="checkboxSetMiscellaneousSettingsOfAnItemYouAreSellingSettingUnitPrice">Setting Unit Price<br><br>
+    	A Unit Price of Zero (i.e., 0 WEI) for an Item means that that the Item is currently not For Sale. You must set the Unit Price to at least 1 WEI to be able to
+    	sell the Item. You cannot sell an Item for 0 WEI (i.e., free).
+    	<br><br>
+    	Quantity Available for Sale: <input type="text" size="90" id="textSetMiscellaneousSettingsOfAnItemYouAreSellingQuantityAvailableForSale">
+    	<input type="checkbox" id="checkboxSetMiscellaneousSettingsOfAnItemYouAreSellingSettingQuantity">Setting Quantity<br><br>
+    	<input type="button" id="buttonMiscellaneousSettingsOfAnItemYouAreSelling" value="Set Miscellaneous Settings of the Item You are Selling">
+    	<input type="button" id="buttonClearSetMiscellaneousSettingsOfAnItemYouAreSelling" value="Clear Inputs for Set Miscellaneous Settings of the Item You are Selling"><br>
 
     	<br><hr><br>
     	<h1>Add Item for Sale - You are Seller Identified by Your Current Metamask Ethereum Address</h1>
