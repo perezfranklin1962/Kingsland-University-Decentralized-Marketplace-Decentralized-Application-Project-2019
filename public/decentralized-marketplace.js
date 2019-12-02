@@ -1058,6 +1058,8 @@ $(document).ready(function () {
     $('#buttonClearViewCurrentItemsBeingSoldByCurrentSeller').click(clearCurrentItemsBeingSoldBySeller);
     $('#buttonViewDetailedInformationAboutItemBeingSoldBySeller').click(viewDetailedInformationAboutItemBeingSoldBySeller);
     $('#buttonClearViewDetailedInformationAboutItemBeingSoldBySeller').click(clearViewDetailedInformationAboutItemBeingSoldBySeller);
+    $('#buttonAddItemForSale').click(addItemForSale);
+    $('#buttonClearAddItemForSale').click(clearAddItemForSale);
 
 	// Attach AJAX "loading" event listener
 	$(document).on({
@@ -1069,7 +1071,7 @@ $(document).ready(function () {
 		}
 	});
 
-	function covertNumberToString(aNumber) {
+	function convertNumberToString(aNumber) {
 		if (typeof aNumber === 'bigint') {
 			return aNumber.toString();
 		}
@@ -1155,6 +1157,132 @@ $(document).ready(function () {
 
 		$('#pictureViewDetailedInformationAboutMediator').attr('src', '');
 		$('#pictureViewDetailedInformationAboutMediator').attr('alt', '');
+	}
+
+	function clearAddItemForSale() {
+		$('#textAddItemForSaleName').val('');
+		$('#textareaAddItemForSaleCategories').val('');
+		$('#textareaAddItemForSaleDescription').val('');
+
+		$('#fileAddItemForSaleMainPicture').val('');
+
+		for (let i = 1; i <= 10; i++) {
+			$(`#fileAddItemForSaleOtherPicture_${i}`).val('');
+		}
+	}
+
+	async function addItemForSale() {
+		makeSureMetamaskInstalled();
+
+		let itemName = $('#textAddItemForSaleName').val().trim();
+		let itemDescription = $('#textareaAddItemForSaleDescription').val().trim();
+
+		// Coding Technique Reference --> https://stackoverflow.com/questions/17101972/how-to-make-an-array-from-a-string-by-newline-in-javascript/17102698
+		let itemCategoriesStr = $('#textareaAddItemForSaleCategories').val().trim();
+		let itemCategoriesTempArray = str.split("\n");
+		let itemCategories = [ ];
+		for (let i = 0; i < itemCategoriesTempArray.length; i++) {
+			itemCategory = itemCategoriesTempArray.trim();
+			if (itemCategory === EMPTY_STRING) {
+				continue;
+			}
+
+			// Coding Technique Reference --> https://www.w3schools.com/jsref/jsref_includes_array.asp
+			if (!itemCategories.includes(itemCategory)) {
+				itemCategories.push(itemCategory);
+			}
+		}
+
+		let mainPictureIpfsHash = EMPTY_STRING;
+		try {
+			// console.log('BEFORE Executing : uploadPictureToIPFS');
+			mainPictureIpfsHash = await uploadPictureToIPFS("fileAddItemForSaleMainPicture");
+			// console.log('AFTER Executing : uploadPictureToIPFS');
+		}
+		catch (error) {
+			showError(error);
+			return;
+		}
+
+		let otherPicturesIpfsHashes = [ ];
+		for (let i = 0; i <=10; i++) {
+			let otherPictureIpfsHash = EMPTY_STRING;
+			try {
+				// console.log('BEFORE Executing : uploadPictureToIPFS');
+				otherPictureIpfsHash = await uploadPictureToIPFS(`fileAddItemForSaleOtherPicture_${i}`);
+				// console.log('AFTER Executing : uploadPictureToIPFS');
+			}
+			catch (error) {
+				showError(error);
+				return;
+			}
+
+			if (otherPictureIpfsHash !== EMPTY_STRING) {
+				if (!otherPicturesIpfsHashes.includes(otherPictureIpfsHash)) {
+					otherPicturesIpfsHashes.push(otherPictureIpfsHash);
+				}
+			}
+		}
+
+		if (mainPictureIpfsHash === EMPTY_STRING) {
+			if (otherPicturesIpfsHashes.length > 0) {
+				mainPictureIpfsHash = otherPicturesIpfsHashes[0];
+			}
+		}
+
+		hideInfo();
+		showInfo("Loading given input information about Item onto IPFS (InterPlanetary File System)....");
+
+		let fileContentsJson = {
+				name: itemName,
+				categories: itemCategories,
+				mainPicture: mainPictureIpfsHash,
+				pictures: otherPicturesIpfsHashes,
+				description: itemDescription
+		}
+
+		let fileContents = JSON.stringify(fileContentsJson);
+
+		var ipfsFileHash = undefined;
+		errorObject = undefined;
+		try {
+			let fileBuffer = Buffer.from(fileContents);
+			var ipfsFileAdd = PROMISIFY(cb => IPFS.add(fileBuffer, cb));
+
+			let fileInfo = await ipfsFileAdd;
+			ipfsFileHash = fileInfo[0].hash;;
+		} catch (error) {
+			console.log('addItemForSale ipfsFileAdd : error =', error);
+			errorObject = error;
+		}
+
+		hideInfo();
+
+		if (errorObject !== undefined) {
+			showError(errorObject);
+			return;
+		}
+		if (ipfsFileHash === undefined) {
+			showError("Unable to add the information for the Item onto IPFS!");
+			return;
+		}
+
+		showInfo(`Adding Item IPFS ID ${ipfsFileHash} for Sale where you are Seller Ethereum Address ${currentMetamaskEthereumAddress} onto Franklin Decentralized Marketplace....`);
+
+		let decentralizedMarketplaceContract =
+			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
+
+		decentralizedMarketplaceContract.addItemForSale(ipfsFileHash, function (err, txHash) {
+			hideInfo();
+
+			if (err) {
+				// return showError("Smart contract call failed: " + err);
+				console.log('err =', err);
+				return showError(`DecentralizedMarketplaceMediationContract.addItemForSale(${ipfsFileHash}) call failed:  + ${err.message}`);
+			}
+
+			showInfo(`Item IPFS ID ${ipfsFileHash} for Seller ${currentMetamaskEthereumAddress} <b>successfully added</b> to Franklin Decentralized Marketplace. Transaction hash: ${txHash}`);
+		});
 	}
 
 	async function removeYourselfAsSeller() {
@@ -1682,12 +1810,12 @@ $(document).ready(function () {
 		for (let i = 0; i < numberOfFiles_1; i++) {
 			console.log(`uploadPictureToIPFS : file[${i}] = `, $('#' + inputFileElementId)[0].files[0]);
 		}
+		*/
 
 		if ($('#' + inputFileElementId)[0].files.length === 0) {
-			console.log('uploadPicture: No picture to upload!');
+			console.log('uploadPictureToIPFS: No picture to upload!');
 			return EMPTY_STRING;
 		}
-		*/
 
 		showInfo("Loading chosen input picture file onto IPFS (InterPlanetary File System)....");
 
