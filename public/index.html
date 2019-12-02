@@ -16,6 +16,7 @@
 <header id="menu">
     <a href="#" id="linkHome">Home</a>
     <a href="#" id="linkSellers">Sellers</a>
+    <a href="#" id="linkItems">Items</a>
     <a href="#" id="linkMediators">Mediators</a>
 </header>
 
@@ -90,6 +91,7 @@
     	<input type="button" id="buttonViewDetailedInformationAboutSeller" value="View Seller Detailed Information">
     	<input type="button" id="buttonClearViewDetailedInformationAboutSeller" value="Clear Inputs and Ouputs for View Seller Detailed Information">
     	<br><br>
+    	<b>Results of Getting Detailed Information About a Seller:</b> <br><br>
     	Name: <input type="text" size="100" readonly="true" id="textViewDetailedInformationAboutSellerName"><br><br>
     	Number of Different Items being Sold: <input type="text" size="10" readonly="true" id="textViewDetailedInformationAboutSellerNumberOfDifferentItemsBeingSold"><br><br>
     	Willing to Sell Items via Mediator: <input type="text" size="10" readonly="true" id="textViewDetailedInformationAboutSellerWillingToSellItemsViaMediator"><br><br>
@@ -131,6 +133,40 @@
 
 	</section>
 
+	<section id="viewItems">
+
+		<b>Your Current Metamask Ethereum Address:</b> <input type="text" size="50" readonly="true" id="viewItemsYourCurrentMetamaskEthereumAddress"><br><br>
+		<h1>View Current Items Being Sold by a Seller</h1>
+		Seller Ethereum Public Address (40-Hex lowercase digits with optional '0x' at the beginning): <input type="text" size="50" id="textViewCurrentItemsBeingSoldByCurrentSellerEthereumAddress"><br><br>
+		Filter by One Category (optional): <input type="text" size="50" id="textViewCurrentItemsBeingSoldByCurrentSellerFilterByOneCategory"><br><br>
+		<input type="button" id="buttonViewCurrentItemsBeingSoldByCurrentSeller" value="Get Current Items Being Sold by Given Seller">
+		<input type="button" id="buttonClearViewCurrentItemsBeingSoldByCurrentSeller" value="Clear Inputs and Outputs for Get Current Items Being Sold by Given Seller">
+    	<br><br>
+    	<b>Results of Getting Current Items Being Sold by Given Seller:</b> <br><br>
+		Number of Different Items Being Sold by Given Seller: <input type="text" size="10" readonly="true" id="textViewCurrentItemsBeingSoldByCurrentSellerNumberOfDifferentItemsBeingSoldByGivenSellerResults"><br><br>
+    	<div id="currentItemsBeingSoldByCurrentSellerViewTableResultsDiv"></div>
+
+   		<br><hr><br>
+    	<h1>View Detailed Information About an Item Being Sold by a Seller</h1>
+    	Seller Ethereum Public Address (40-Hex lowercase digits with optional '0x' at the beginning): <input type="text" size="50" id="textViewDetailedInformationAboutItemBeingSoldBySellerEthereumAddress"><br><br>
+    	Item IPFS ID: <input type="text" size="50" id="textViewDetailedInformationAboutItemBeingSoldBySellerItemIpfsId"><br><br>
+    	<input type="button" id="buttonViewDetailedInformationAboutItemBeingSoldBySeller" value="Get Detailed Information about an Item Being Sold by a Seller">
+    	<input type="button" id="buttonClearViewDetailedInformationAboutItemBeingSoldBySeller" value="Clear Inputs and Ouputs for Get Detailed Information about an Item Being Sold by a Seller">
+    	<br><br>
+    	<b>Results of Getting Detailed Information About an Item Being Sold by a Seller:</b> <br><br>
+    	Name: <input type="text" readonly="true" size="100" id="textViewDetailedInformationAboutItemBeingSoldBySellerName"><br><br>
+    	Unit Price (in ETH): <input type="text" readonly="true" size="50" id="textViewDetailedInformationAboutItemBeingSoldBySellerUnitPrice"><br><br>
+    	Quantity Available: <input type="text" readonly="true" size="50" id="textViewDetailedInformationAboutItemBeingSoldBySellerQuantityAvailable"><br><br>
+    	Categories:<br>
+    	<textarea readonly="true" id="textareaViewDetailedInformationAboutItemBeingSoldBySellerCategories"></textarea><br>
+    	Main Picture:<br> <img id="pictureViewDetailedInformationAboutItemBeingSoldBySellerMainPicture" src="" alt=""><br>
+    	Other Pictures:<br>
+    	<div id="picturesViewDetailedInformationAboutItemBeingSoldBySellerOtherPicturesDiv"></div><br>
+    	Description:<br>
+    	<textarea readonly="true" id="textareaViewDetailedInformationAboutItemBeingSoldBySellerDescription"></textarea><br>
+
+	</section>
+
 
     <section id="viewMediators">
 
@@ -149,6 +185,7 @@
     	<input type="button" id="buttonViewDetailedInformationAboutMediator" value="View Mediator Detailed Information">
     	<input type="button" id="buttonClearViewDetailedInformationAboutMediator" value="Clear Inputs and Ouputs for View Mediator Detailed Information">
     	<br><br>
+    	<b>Results of Getting Detailed Information About a Mediator:</b> <br><br>
     	Name: <input type="text" size="100" readonly="true" id="textViewDetailedInformationAboutMediatorName"><br><br>
     	Number of Mediations Involved: <input type="text" size="10" readonly="true" id="textViewDetailedInformationAboutMediatorNumberOfMediationsInvolved"><br><br>
     	Physical Address:<br>
