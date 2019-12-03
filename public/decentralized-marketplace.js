@@ -957,9 +957,6 @@ $(document).ready(function () {
 		}
   	];
 
-  	// The amount of Wei that is returned back from the "web3.eth.getBalance" method is in 10^14 Wei.
-  	const WEB3_GET_BALANCE_MULTIPLIER = 10**14;
-
   	// Amount of Wei in 1 ETH
   	const ETH = 10**18; // Wei
 
@@ -987,19 +984,6 @@ $(document).ready(function () {
 				}
 			})
     );
-
-	/*
-	let balance = undefined;
-	getBalanceInWei()
-		.then(function (response) {
-			balance = response;
-			console.log('balance =', balance);
-
-			let balanceBigInt = BigInt(balance);
-			console.log('balanceBigInt =', balanceBigInt);
-			console.log('balanceBigInt.toString() =', balanceBigInt.toString());
-		});
-	*/
 
 	console.log('currentMetamaskEthereumAddress =', currentMetamaskEthereumAddress);
 
@@ -1255,6 +1239,7 @@ $(document).ready(function () {
 		$('#textPurchaseItemForSaleItemIpfsId').val('');
 		$('#textPurchaseItemForSaleItemQuantityBeingPurchased').val('');
 		$('#textPurchaseItemForSaleMediatorEthereumAddress').val('');
+		$('#textareaPurchaseItemForSaleFromSellerResults').val('');
 	}
 
 	async function removeItemForSale() {
@@ -1331,7 +1316,7 @@ $(document).ready(function () {
 		console.log('itemForSaleFromSellerExistsFlag =', itemForSaleFromSellerExistsFlag);
 		if (!itemForSaleFromSellerExistsFlag) {
 			hideInfo();
-			return showError(`No such Item ${itemIpfsHashId} is sold by Seller Ethereum Public Address ${ethereumPublicAddress} in the Franklin Decentralized Marketplace!`);
+			return showError(`No such Item IPFS ID "${itemIpfsHashId}" is sold by Seller Ethereum Public Address ${ethereumPublicAddress} in the Franklin Decentralized Marketplace!`);
 		}
 
 		decentralizedMarketplaceContract.removeItemForSale(itemIpfsHashId, function (err, txHash) {
@@ -1349,6 +1334,8 @@ $(document).ready(function () {
 	}
 
 	async function purchaseItemForSale() {
+		$('#textareaPurchaseItemForSaleFromSellerResults').val('');
+
 		let sellerEthereumAddress = $('#textPurchaseItemForSaleSellerEthereumAddress').val().trim().toLowerCase();
 		if (sellerEthereumAddress.length === 0) {
 			showError('The Seller Ethereum Public Address cannot be an empty string or consist only of white space. Please enter a ' +
@@ -1369,6 +1356,12 @@ $(document).ready(function () {
 		}
 
 		sellerEthereumAddress = "0x" + sellerEthereumAddress;
+
+		if (currentMetamaskEthereumAddress === sellerEthereumAddress) {
+			showError(`You cannot act as both a Buyer and Seller in a Sales Transaction! Entered Seller Ethereum Public Address ${sellerEthereumAddress} is the same as Buyer Ethereum ` +
+				`Public Address ${currentMetamaskEthereumAddress} !`);
+			return;
+		}
 
 		let itemIpfsHashId = $('#textPurchaseItemForSaleItemIpfsId').val().trim();
 		if (itemIpfsHashId.length === 0) {
@@ -1391,8 +1384,9 @@ $(document).ready(function () {
 			return;
 		}
 
-		if (quantityBeingPurchasedStr.equals('0')) {
-			showError('The Quantity Being Purchased that you set zero. You cannot make a purchase where the number of Items being purchased is zero. Please enter a ' +
+		quantityBeingPurchased_BigInt = BigInt(quantityBeingPurchasedStr);
+		if (quantityBeingPurchased_BigInt < BigInt(1)) {
+			showError('The Quantity Being Purchased that you set is zero. You cannot make a purchase where the number of Items being purchased is zero. Please enter a ' +
 				'Quantity Being Purchased that is a positive integer greater than or equal to one!');
 			return;
 		}
@@ -1400,7 +1394,6 @@ $(document).ready(function () {
 		let largestUint256 = 2**256 - 1;
 		let largestUint256_BigInt = BigInt(largestUint256);
 
-		quantityBeingPurchased_BigInt = BigInt(quantityBeingPurchasedStr);
 		if (quantityBeingPurchased_BigInt > largestUint256_BigInt) {
 			showError(`The Quantity Being Purchased that you entered has a ${quantityBeingPurchased_BigInt.toString()} integer value that is greater than the ` +
 				`${largestUint256_BigInt} maximum integer value that an Ethereum Smart Contract can handle!`);
@@ -1414,8 +1407,34 @@ $(document).ready(function () {
 				`${sellerEthereumAddress} ....`);
 		}
 		else {
+			if (mediatorEthereumAddress.startsWith("0x")) {
+				if (mediatorEthereumAddress.length > 2) {
+					mediatorEthereumAddress = mediatorEthereumAddress.substring(2);
+				}
+			}
+
+			if (!isValidPublicAddress(mediatorEthereumAddress)) {
+				showError("Entered Mediator Ethereum Public Address is not a 40-hex valued lower case string. " +
+					"Please enter a Mediator Ethereum Public Address that is a 40-hex valued lower case string if you wish to make a Mediated Sales Transaction.");
+				return;
+			}
+
+			mediatorEthereumAddress = "0x" + mediatorEthereumAddress;
+
+			if (mediatorEthereumAddress === currentMetamaskEthereumAddress) {
+				showError(`You cannot act as both a Buyer and Mediator in a Sales Transaction! Entered Mediator Ethereum Public Address ${mediatorEthereumAddress} is the same as ` +
+					`Buyer Ethereum Public Address ${currentMetamaskEthereumAddress} !`);
+				return;
+			}
+
+			if (mediatorEthereumAddress === sellerEthereumAddress) {
+				showError(`The Seller and Mediator in a Sales Transaction must be different! Entered Mediator Ethereum Public Address ${mediatorEthereumAddress} is the same as ` +
+					`Seller Ethereum Public Address ${sellerEthereumAddress} !`);
+					return;
+			}
+
 			showInfo(`Buyer Ethereum Address ${currentMetamaskEthereumAddress} is in the process of purchasing Item IPFS ID ${itemIpfsHashId} from Seller Ethereum Address ` +
-				`${sellerEthereumAddress} via Mediator Ethereum Address ${mediatorEthereumAddress}....`);
+				`${sellerEthereumAddress} via Mediator Ethereum Address ${mediatorEthereumAddress} as part of a Mediated Sales Transaction ....`);
 		}
 
 		let decentralizedMarketplaceContract =
@@ -1450,6 +1469,217 @@ $(document).ready(function () {
 		if (!sellerExistsFlag) {
 			hideInfo();
 			return showError(`The Seller Ethereum Public Address ${sellerEthereumAddress} is not listed as a Seller in the Franklin Decentralized Marketplace!`);
+		}
+
+		var itemForSaleFromSellerExists = PROMISIFY(cb => decentralizedMarketplaceContract.itemForSaleFromSellerExists(sellerEthereumAddress, itemIpfsHashId, cb));
+		let itemForSaleFromSellerExistsFlag = undefined;
+		let itemForSaleFromSellerExistsError = undefined;
+		await itemForSaleFromSellerExists
+			.then(function (response) {
+				console.log('itemForSaleFromSellerExists : response =', response);
+				itemForSaleFromSellerExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('itemForSaleFromSellerExists : error =', error);
+				itemForSaleFromSellerExistsError = error;
+  		});
+
+  		if (itemForSaleFromSellerExistsError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.itemForSaleFromSellerExists method: " +
+				itemForSaleFromSellerExistsError);
+		}
+
+		if (itemForSaleFromSellerExistsFlag === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.itemForSaleFromSellerExists method!");
+		}
+
+		console.log('itemForSaleFromSellerExistsFlag =', itemForSaleFromSellerExistsFlag);
+		if (!itemForSaleFromSellerExistsFlag) {
+			hideInfo();
+			return showError(`No such Item IPFS ID "${itemIpfsHashId}" is sold by Seller Ethereum Public Address ${sellerEthereumAddress} in the Franklin Decentralized Marketplace!`);
+		}
+
+		var getPriceOfItem = PROMISIFY(cb => decentralizedMarketplaceContract.getPriceOfItem(sellerEthereumAddress, itemIpfsHashId, cb));
+		let priceOfItemInWei = undefined;
+		let getPriceOfItemError = undefined;
+		await getPriceOfItem
+			.then(function (response) {
+				console.log('getPriceOfItem : response =', response);
+				priceOfItemInWei_X = response;
+				// let priceOfItemInWei = priceOfItemInWei_X.c[0];
+				priceOfItemInWei = convertMetamask_X_Value_to_IntegerString(priceOfItemInWei_X);
+			})
+			.catch(function (error) {
+				console.log('getPriceOfItem : error =', error);
+				getPriceOfItemError = error;
+		});
+
+		if (getPriceOfItemError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling ` +
+				`DecentralizedMarketplaceContract.getPriceOfItem(${sellerEthereumAddress}, ${itemIpfsHashId}) method: ` +
+				`${getPriceOfItemError}`);
+		}
+
+		if (priceOfItemInWei === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling DecentralizedMarketplaceContract.getPriceOfItem(${sellerEthereumAddress}, ${itemIpfsHashId}) method!`);
+		}
+
+		console.log('priceOfItemInWei =', priceOfItemInWei);
+
+		let priceOfItemInWei_BigInt = BigInt(priceOfItemInWei);
+		if (priceOfItemInWei_BigInt === BigInt(0)) {
+			hideInfo();
+			return showError(`The Price of Item IPFS ID ${itemIpfsHashId} sold by Seller Ethereum Public Address ${sellerEthereumAddress} is Zero ETH! ` +
+				`Cannot purchase an Item with a price of Zero ETH! The Seller has not set a price yet for the Item. Please contact the Seller directly and ask Seller ` +
+				`to set a non-zero price!`);
+		}
+
+		var getQuantityAvailableForSaleOfAnItemBySeller =
+				PROMISIFY(cb => decentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(sellerEthereumAddress, itemIpfsHashId, cb));
+		let quantityAvailableForSaleOfItem_BigInt = undefined;
+		let getQuantityAvailableForSaleOfAnItemBySellerError = undefined;
+		await getQuantityAvailableForSaleOfAnItemBySeller
+			.then(function (response) {
+				console.log('getQuantityAvailableForSaleOfAnItemBySeller : response =', response);
+				let quantityAvailableForSaleOfItem_X = response;
+				let quantityAvailableForSaleOfItem = convertMetamask_X_Value_to_IntegerString(quantityAvailableForSaleOfItem_X);
+				quantityAvailableForSaleOfItem_BigInt = BigInt(quantityAvailableForSaleOfItem);
+			})
+			.catch(function (error) {
+				console.log('getQuantityAvailableForSaleOfAnItemBySeller : error =', error);
+				getQuantityAvailableForSaleOfAnItemBySellerError = error;
+		});
+
+		if (getQuantityAvailableForSaleOfAnItemBySellerError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling ` +
+				`DecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySeller(${sellerEthereumAddress}, ${itemIpfsHashId}) method: ` +
+				`${getQuantityAvailableForSaleOfAnItemBySellerError}`);
+		}
+
+		if (quantityAvailableForSaleOfItem_BigInt === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling DecentralizedMarketplaceContract.getQuantityAvailableForSaleOfAnItemBySelle(${sellerEthereumAddress}, ${itemIpfsHashId}) ` +
+				`method!`);
+		}
+
+		console.log('quantityAvailableForSaleOfItem_BigInt.toString() =', quantityAvailableForSaleOfItem_BigInt.toString());
+
+		if (quantityAvailableForSaleOfItem_BigInt === BigInt(0)) {
+			hideInfo();
+			return showError(`Cannot purchase Item IPFS ID ${itemIpfsHashId} from Seller Ethereum Public Address ${sellerEthereumAddress} due to the Seller having no such ` +
+				`Item in stock!`);
+		}
+
+		if (quantityBeingPurchased_BigInt > quantityAvailableForSaleOfItem_BigInt) {
+			hideInfo();
+			return showError(`Not enough of the requested Item in stock! Cannot purchase Item IPFS ID ${itemIpfsHashId} from Seller Ethereum Public ` +
+				`Address ${sellerEthereumAddress} due to you requesting ${quantityBeingPurchased_BigInt.toString()} to purchase, but the Seller has only ` +
+				`${quantityAvailableForSaleOfItem_BigInt.toString()} of the Item in stock!` );
+		}
+
+		var getBalanceInWei = PROMISIFY(cb => web3.eth.getBalance(currentMetamaskEthereumAddress, cb));
+		let balanceInWei_BigInt = undefined;
+		let getBalanceInWeiError = undefined;
+		await getBalanceInWei
+			.then(function (response) {
+				console.log('getBalanceInWei : response =', response);
+				let balanceInWei_X = response;
+				let balanceInWeiStr = convertMetamask_X_Value_to_IntegerString(balanceInWei_X);
+				balanceInWei_BigInt = BigInt(balanceInWeiStr);
+			})
+			.catch(function (error) {
+				console.log('getBalanceInWei : error =', error);
+				getBalanceInWeiError = error;
+		});
+
+		if (getBalanceInWeiError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling web3.eth.getBalance(${currentMetamaskEthereumAddress}) method: ` +
+				`${getBalanceInWeiError}`);
+		}
+
+		if (balanceInWei_BigInt === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling web3.eth.getBalance(${currentMetamaskEthereumAddress}) method!`);
+		}
+
+		console.log('balanceInWei_BigInt.toString() =', balanceInWei_BigInt.toString());
+
+		let totalAmountOfPurchaseInWei_BigInt = quantityBeingPurchased_BigInt * priceOfItemInWei_BigInt;
+		if (balanceInWei_BigInt < totalAmountOfPurchaseInWei_BigInt) {
+			hideInfo();
+			return showError(`Not enough of a Balance to Purchase the requested Number of Items! Buyer Ethereum Public Address ${currentMetamaskEthereumAddress} ` +
+				` has a balance of ${covertWEI_StringValue_to_ETH_StringValue(balanceInWei_BigInt.toString())} ETH, but the amount needed to make the purchase is ` +
+				`${covertWEI_StringValue_to_ETH_StringValue(totalAmountOfPurchaseInWei_BigInt.toString())} ETH!`);
+		}
+
+		if (mediatorEthereumAddress === EMPTY_STRING) {
+			decentralizedMarketplaceContract.purchaseItemWithoutMediator(sellerEthereumAddress, itemIpfsHashId, quantityBeingPurchased_BigInt,
+					{ value: totalAmountOfPurchaseInWei_BigInt }, function (err, txHash) {
+				hideInfo();
+
+				if (err) {
+					// return showError("Smart contract call failed: " + err);
+					console.log('purchaseItemWithoutMediator : err =', err);
+					return showError(`DecentralizedMarketplaceMediationContract.purchaseItemWithoutMediator(${sellerEthereumAddress}, ${itemIpfsHashId}, ${quantityBeingPurchased_BigInt.toString()} ` +
+						`call failed:  + ${err.message}`);
+				}
+
+				let textAreaOutput = `Successful purchase made on Ethereum Blockchain WITHOUT Mediator...` + '\n\n' +
+					`Buyer Ethereum Address: ${currentMetamaskEthereumAddress}` + '\n' +
+					`Seller Ethereum Address: ${sellerEthereumAddress}` + '\n' +
+					`Item IPFS ID Purchased: ${itemIpfsHashId}` + '\n' +
+					`Quantity of the Item Purchased: ${quantityBeingPurchased_BigInt.toString()}` + '\n' +
+					`Total Purchase Amount (in ETH): ${covertWEI_StringValue_to_ETH_StringValue(totalAmountOfPurchaseInWei_BigInt.toString())}` + '\n' +
+					`Transaction Hash ID on Ethereum Blockchain: ${txHash}`;
+				$('#textareaPurchaseItemForSaleFromSellerResults').val(textAreaOutput);
+
+
+				showInfo(`Item IPFS ID ${itemIpfsHashId} from Seller Ethereum Address ${sellerEthereumAddress} with quantity ${quantityBeingPurchased_BigInt.toString()} ` +
+					`<b>successfully purchased</b> by Buyer Ethereum Address ${currentMetamaskEthereumAddress} in the Franklin Decentralized Marketplace. Transaction hash: ${txHash}`);
+			});
+		}
+		else {
+			let decentralizedMarketplaceMediationContract =
+				web3.eth.contract(decentralizedMarketplaceMediationContractABI).at(decentralizedMarketplaceMediationContractAddress);
+
+			var mediatorExists =
+					PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatorExists.call(mediatorEthereumAddress, cb));
+			let mediatorExistsFlag = undefined;
+			let mediatorExistsError = undefined;
+			await mediatorExists
+				.then(function (response) {
+					console.log('mediatorExists : response =', response);
+					mediatorExistsFlag = response;
+				})
+				.catch(function (error) {
+					console.log('mediatorExists : error =', error);
+					mediatorExistsError = error;
+			});
+
+			if (mediatorExistsError !== undefined) {
+				hideInfo();
+				return showError("Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatorExists method: " +
+					mediatorExistsError);
+			}
+
+			if (mediatorExistsFlag === undefined) {
+				hideInfo();
+				return showError("Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatorExists method!");
+			}
+
+			console.log('mediatorExistsFlag =', mediatorExistsFlag);
+			if (!mediatorExistsFlag) {
+				hideInfo();
+				return showError(`The entered Mediator Ethereum Public Address ${mediatorEthereumAddress} is not listed as a Mediator in the Franklin Decentralized Marketplace!`);
+			}
+
+			console.log('Purchase WITH Mediator will be coded later!');
 		}
 	}
 
@@ -1584,7 +1814,7 @@ $(document).ready(function () {
 		console.log('itemForSaleFromSellerExistsFlag =', itemForSaleFromSellerExistsFlag);
 		if (!itemForSaleFromSellerExistsFlag) {
 			hideInfo();
-			return showError(`No such Item ${itemIpfsHashId} is sold by Seller Ethereum Public Address ${ethereumPublicAddress} in the Franklin Decentralized Marketplace!`);
+			return showError(`No such Item IPFS ID "${itemIpfsHashId}" is sold by Seller Ethereum Public Address ${ethereumPublicAddress} in the Franklin Decentralized Marketplace!`);
 		}
 
 		let setPriceOfItemResponse_TxHash = undefined;
@@ -2811,7 +3041,7 @@ $(document).ready(function () {
 		console.log('itemForSaleFromSellerExistsFlag =', itemForSaleFromSellerExistsFlag);
 		if (!itemForSaleFromSellerExistsFlag) {
 			hideInfo();
-			return showError(`No such Item ${itemIpfsHashId} is sold by Seller Ethereum Public Address ${ethereumPublicAddress} in the Franklin Decentralized Marketplace!`);
+			return showError(`No such Item IPFS ID "${itemIpfsHashId}" is sold by Seller Ethereum Public Address ${ethereumPublicAddress} in the Franklin Decentralized Marketplace!`);
 		}
 
 		let sellerAddress = ethereumPublicAddress;
@@ -2856,7 +3086,7 @@ $(document).ready(function () {
 			.then(function (response) {
 				console.log('getQuantityAvailableForSaleOfAnItemBySeller : response =', response);
 				let quantityAvailableForSaleOfItem_X = response;
-				quantityAvailableForSaleOfItem = quantityAvailableForSaleOfItem_X.c[0];
+				quantityAvailableForSaleOfItem = convertMetamask_X_Value_to_IntegerString(quantityAvailableForSaleOfItem_X);
 			})
 			.catch(function (error) {
 				console.log('getQuantityAvailableForSaleOfAnItemBySeller : error =', error);
@@ -2906,7 +3136,7 @@ $(document).ready(function () {
 
 		$('#textViewDetailedInformationAboutItemBeingSoldBySellerName').val(ipfsFileGetForItemJson.name);
 		$('#textViewDetailedInformationAboutItemBeingSoldBySellerUnitPrice').val(priceOfItemInETH);
-		$('#textViewDetailedInformationAboutItemBeingSoldBySellerQuantityAvailable').val(convertNumberToString(quantityAvailableForSaleOfItem));
+		$('#textViewDetailedInformationAboutItemBeingSoldBySellerQuantityAvailable').val(quantityAvailableForSaleOfItem);
 		$('#textareaViewDetailedInformationAboutItemBeingSoldBySellerDescription').val(ipfsFileGetForItemJson.description);
 
 		let categoriesStr = '';
@@ -3700,6 +3930,8 @@ $(document).ready(function () {
 	}
 
 	// Reference --> https://www.reddit.com/r/ethdev/comments/8dyfyr/how_to_make_metamask_accept_promiseswait_for
+	// Not using below, but was a good educational experience on using PROMISE
+	/*
 	async function getBalanceInWei() {
 		var getBalanceInWei = PROMISIFY(cb => web3.eth.getBalance(currentMetamaskEthereumAddress, cb));
 		var localBalanceWei = undefined;
@@ -3719,6 +3951,7 @@ $(document).ready(function () {
 		// console.log('balanceInWei =', balanceInWei);
 		return balanceInWei;
 	}
+	*/
 
 	function showView(viewName) {
 		// Hide all views and show the selected view only
