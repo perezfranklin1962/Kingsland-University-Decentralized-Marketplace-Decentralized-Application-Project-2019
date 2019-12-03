@@ -1037,6 +1037,11 @@ $(document).ready(function () {
 	    showView("viewMediators");
     });
 
+	$('#linkPurchases').click(function () {
+		console.log('linkPurchases clicked');
+	    showView("viewPurchases");
+    });
+
     $('#buttonGetCurrentMediators').click(getCurrentMediators);
     $('#buttonClearCurrentMediatorsResults').click(clearCurrentMediatorsResults);
     $('#buttonClearAddUpdateYourselfAsMediator').click(clearAddUpdateYourselfAsMediator);
@@ -1063,6 +1068,9 @@ $(document).ready(function () {
     $('#buttonClearAddItemForSale').click(clearAddItemForSale);
 	$('#buttonMiscellaneousSettingsOfAnItemYouAreSelling').click(setMiscellaneousSettingsOfAnItemYouAreSelling);
 	$('#buttonClearSetMiscellaneousSettingsOfAnItemYouAreSelling').click(clearSetMiscellaneousSettingsOfAnItemYouAreSelling);
+
+	$('#buttonPurchaseItemForSale').click(purchaseItemForSale);
+	$('#buttonClearPurchaseItemForSale').click(clearPurchaseItemForSale);
 
 	// Attach AJAX "loading" event listener
 	$(document).on({
@@ -1165,6 +1173,7 @@ $(document).ready(function () {
 			$('#viewMediatorsYourCurrentMetamaskEthereumAddress').val('');
 			$('#viewSellersYourCurrentMetamaskEthereumAddress').val('');
 			$('#viewItemsYourCurrentMetamaskEthereumAddress').val('');
+			$('#viewPurchasesYourCurrentMetamaskEthereumAddress').val('');
 
 			showError("You must install the Metamask Ethereum Wallet plugin inside your browser in order to use this DApp. " +
 				"Please install MetaMask to access the Ethereum Web3 API from your browser. If you've already installede Metamask, then " +
@@ -1183,6 +1192,7 @@ $(document).ready(function () {
 			$('#viewMediatorsYourCurrentMetamaskEthereumAddress').val(currentMetamaskEthereumAddress);
 			$('#viewSellersYourCurrentMetamaskEthereumAddress').val(currentMetamaskEthereumAddress);
 			$('#viewItemsYourCurrentMetamaskEthereumAddress').val(currentMetamaskEthereumAddress);
+			$('#viewPurchasesYourCurrentMetamaskEthereumAddress').val(currentMetamaskEthereumAddress);
 		}
 	}
 
@@ -1238,6 +1248,13 @@ $(document).ready(function () {
 
 		$('#checkboxSetMiscellaneousSettingsOfAnItemYouAreSellingSettingUnitPrice')[0].checked = false;
 		$('#checkboxSetMiscellaneousSettingsOfAnItemYouAreSellingSettingQuantity')[0].checked = false;
+	}
+
+	function clearPurchaseItemForSale() {
+		$('#textPurchaseItemForSaleSellerEthereumAddress').val('');
+		$('#textPurchaseItemForSaleItemIpfsId').val('');
+		$('#textPurchaseItemForSaleItemQuantityBeingPurchased').val('');
+		$('#textPurchaseItemForSaleMediatorEthereumAddress').val('');
 	}
 
 	async function removeItemForSale() {
@@ -1329,6 +1346,111 @@ $(document).ready(function () {
 			showInfo(`Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} <b>successfully removed</b> from list of Items to Sell ` +
 				`in the Franklin Decentralized Marketplace. Transaction hash: ${txHash}`);
 		});
+	}
+
+	async function purchaseItemForSale() {
+		let sellerEthereumAddress = $('#textPurchaseItemForSaleSellerEthereumAddress').val().trim().toLowerCase();
+		if (sellerEthereumAddress.length === 0) {
+			showError('The Seller Ethereum Public Address cannot be an empty string or consist only of white space. Please enter a ' +
+				'Seller Ethereum Public Address value that is a 40-hex lowercase string.');
+			return;
+		}
+
+		if (sellerEthereumAddress.startsWith("0x")) {
+			if (sellerEthereumAddress.length > 2) {
+				sellerEthereumAddress = sellerEthereumAddress.substring(2);
+			}
+		}
+
+		if (!isValidPublicAddress(sellerEthereumAddress)) {
+			showError("Entered Seller Ethereum Public Address is not a 40-hex valued lower case string. " +
+				"Please enter a Seller Ethereum Public Address that is a 40-hex valued lower case string.");
+			return;
+		}
+
+		sellerEthereumAddress = "0x" + sellerEthereumAddress;
+
+		let itemIpfsHashId = $('#textPurchaseItemForSaleItemIpfsId').val().trim();
+		if (itemIpfsHashId.length === 0) {
+			showError('The Item IPFS ID identifying an Item cannot be an empty string or consist only of white space. Please enter an ' +
+				'Item IPFS ID value that has no spaces and is not an empty string.');
+			return;
+		}
+
+		let quantityBeingPurchasedStr = $('#textPurchaseItemForSaleItemQuantityBeingPurchased').val().trim();
+		let quantityBeingPurchased_BigInt = undefined;
+		if (quantityBeingPurchasedStr === EMPTY_STRING) {
+			showError('The Quantity Being Purchased cannot be an empty string or consist only of white space. Please enter a ' +
+				'Quantity Being Purchased that is a positive integer value greater than or equal to one!');
+			return;
+		}
+
+		if (!isNumeric(quantityBeingPurchasedStr)) {
+			showError('The Quantity Being Purchased that you set is not a positive integer greater than or equal ' +
+				'to one. Please enter a Quantity Being Purchased that is a positive integer greater than or equal to one!');
+			return;
+		}
+
+		if (quantityBeingPurchasedStr.equals('0')) {
+			showError('The Quantity Being Purchased that you set zero. You cannot make a purchase where the number of Items being purchased is zero. Please enter a ' +
+				'Quantity Being Purchased that is a positive integer greater than or equal to one!');
+			return;
+		}
+
+		let largestUint256 = 2**256 - 1;
+		let largestUint256_BigInt = BigInt(largestUint256);
+
+		quantityBeingPurchased_BigInt = BigInt(quantityBeingPurchasedStr);
+		if (quantityBeingPurchased_BigInt > largestUint256_BigInt) {
+			showError(`The Quantity Being Purchased that you entered has a ${quantityBeingPurchased_BigInt.toString()} integer value that is greater than the ` +
+				`${largestUint256_BigInt} maximum integer value that an Ethereum Smart Contract can handle!`);
+			return;
+		}
+
+		let mediatorEthereumAddress = $('#textPurchaseItemForSaleMediatorEthereumAddress').val().trim().toLowerCase();
+
+		if (mediatorEthereumAddress === EMPTY_STRING) {
+			showInfo(`Buyer Ethereum Address ${currentMetamaskEthereumAddress} is in the process of purchasing Item IPFS ID ${itemIpfsHashId} from Seller Ethereum Address ` +
+				`${sellerEthereumAddress} ....`);
+		}
+		else {
+			showInfo(`Buyer Ethereum Address ${currentMetamaskEthereumAddress} is in the process of purchasing Item IPFS ID ${itemIpfsHashId} from Seller Ethereum Address ` +
+				`${sellerEthereumAddress} via Mediator Ethereum Address ${mediatorEthereumAddress}....`);
+		}
+
+		let decentralizedMarketplaceContract =
+			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
+
+		var sellerExists =
+				PROMISIFY(cb => decentralizedMarketplaceContract.sellerExists.call(sellerEthereumAddress, cb));
+		let sellerExistsFlag = undefined;
+		let sellerExistsError = undefined;
+		await sellerExists
+			.then(function (response) {
+				console.log('sellerExists : response =', response);
+				sellerExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('sellerExists : error =', error);
+				sellerExistsError = error;
+  		});
+
+  		if (sellerExistsError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method: " +
+				sellerExistsError);
+		}
+
+		if (sellerExistsFlag === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method!");
+		}
+
+		console.log('sellerExistsFlag =', sellerExistsFlag);
+		if (!sellerExistsFlag) {
+			hideInfo();
+			return showError(`The Seller Ethereum Public Address ${sellerEthereumAddress} is not listed as a Seller in the Franklin Decentralized Marketplace!`);
+		}
 	}
 
 	async function setMiscellaneousSettingsOfAnItemYouAreSelling() {
@@ -1606,7 +1728,10 @@ $(document).ready(function () {
 				description: itemDescription
 		}
 
+		console.log('addItemForSale : fileContentsJson =', fileContentsJson);
+
 		let fileContents = JSON.stringify(fileContentsJson);
+		console.log('addItemForSale : fileContents =', fileContents);
 
 		var ipfsFileHash = undefined;
 		errorObject = undefined;
@@ -2197,13 +2322,13 @@ $(document).ready(function () {
 		console.log(`uploadPictureToIPFS : $('#' + inputFileElementId) =`, $('#' + inputFileElementId));
 
 		if ($('#' + inputFileElementId)[0].files.length === 0) {
-			console.log('uploadPictureToIPFS: No picture to upload!');
+			console.log(`uploadPictureToIPFS: No ${inputFileElementId} picture to upload!`);
 			return EMPTY_STRING;
 		}
 
-		showInfo("Loading chosen input picture file onto IPFS (InterPlanetary File System)....");
+		showInfo(`Loading chosen input picture "${inputFileElementId}" file onto IPFS (InterPlanetary File System) ....`);
 
-		console.log('uploadPicture: There IS a picture to upload!');
+		console.log(`uploadPicture: There IS a ${inputFileElementId} picture to upload!`);
 
 
 		let fileBuffer = undefined;
@@ -2328,7 +2453,11 @@ $(document).ready(function () {
 				description: aDescription
 		}
 
+
+		console.log('addUpdateDescriptionOfYourselfAsSeller : fileContentsJson =', fileContentsJson);
+
 		let fileContents = JSON.stringify(fileContentsJson);
+		console.log('addUpdateDescriptionOfYourselfAsSeller : fileContents =', fileContents);
 
 		hideInfo();
 		showInfo("Loading given input information about you as a Seller onto IPFS (InterPlanetary File System)....");
@@ -3042,7 +3171,8 @@ $(document).ready(function () {
 
 			if (categoryFilter !== EMPTY_STRING) {
 				// Coding Technique Reference --> https://www.w3schools.com/jsref/jsref_includes_array.asp
-				if (ipfsFileGetForItemJson.categories.includes(categoryFilter)) {
+				// Coding Technique Reference --> https://www.w3schools.com/jsref/jsref_tostring_array.asp
+				if (ipfsFileGetForItemJson.categories.toString().includes(categoryFilter)) {
 					currentItemsBeingSoldByGivenSellerArray.push(itemRecord);
 				}
 			} else {
@@ -3059,6 +3189,7 @@ $(document).ready(function () {
 		makeSureMetamaskInstalled();
 
 		showInfo("Getting Current Sellers in Franklin Decentralized Marketplace....");
+		clearCurrentSellersResults();
 
 		let decentralizedMarketplaceContract =
 			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
@@ -3262,6 +3393,7 @@ $(document).ready(function () {
 		makeSureMetamaskInstalled();
 
 		showInfo("Getting Current Mediators in Franklin Decentralized Marketplace....");
+		clearCurrentMediatorsResults();
 
 		let decentralizedMarketplaceMediationContract =
 			web3.eth.contract(decentralizedMarketplaceMediationContractABI).at(decentralizedMarketplaceMediationContractAddress);

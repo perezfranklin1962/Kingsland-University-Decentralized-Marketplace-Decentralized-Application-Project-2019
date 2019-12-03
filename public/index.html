@@ -18,6 +18,7 @@
     <a href="#" id="linkSellers">Sellers</a>
     <a href="#" id="linkItems">Items</a>
     <a href="#" id="linkMediators">Mediators</a>
+    <a href="#" id="linkPurchases">Purchases</a>
 </header>
 
 <main>
@@ -43,6 +44,23 @@
 		The way you add yourself as a Seller is to add an Item you wish to sell via the currently active Metamask Ethereum Address, and you will be automatically added as a Seller and
 		identified as a Seller via the currently active Metamask Ethereum Address you used to add the Item. You may use multiple Seller Ethereum Addresses if you'd like.
        	<br><br>
+        The <b>Franklin Decentralized Marketplace Mediation</b> Smart Contract will be used to store the Escrow ETH/WEI (i.e., "totalAmountOfWeiNeededToPurchase")
+        used to pay for Items involved in ALL Mediated Sales Transactions. The Mediated Sales Transaction works as follows:
+        <ul>
+        	<li>
+        		(1) If 2-out-of-3 of the Buyer, Seller, and/or Mediator Approves this Mediated Sales Transaction, then 95% of the "totalAmountOfWeiNeededToPurchase"
+        		will be sent to the Seller Address and 5% of the "totalAmountOfWeiNeededToPurchase" will be sent to the Mediator Address.
+        	</li>
+        	<li>
+        		(2) 2-out-of-3 of the Buyer, Seller, and/or Mediator Disapproves this Mediated Sales Transaction, then the "totalAmountOfWeiNeededToPurchase" will be
+        		sent back to the Buyer Address.
+        	</li>
+        	<li>
+        		If neither (1) or (2) above happens, then the Mediated Sales Transaction will be held in a State of Limbo and the "totalAmountOfWeiNeededToPurchase"
+        		will be kept inside of this Contract.
+        	</li>
+        </ul>
+
        	<b>Franklin Decentralized Marketplace DApp Functionality (for the currently active Metamask Ethereum Address):</b>
        	<ul>
 			<li><b>Sellers</b></li>
@@ -63,6 +81,11 @@
                     <li>View All currently available Mediators</li>
                     <li>Add or Update Yourself (i.e., currently active Metamask Ethereum Address) as a Mediator</li>
                     <li>Remove Yourself (i.e., currently active Metamask Ethereum Address) as a Mediator</li>
+                </ul>
+			<li><b>Purchases</b></li>
+				<ul>
+                    <li>Purchase an Item without a Mediator (where the Buyer is your currently active Metamask Ethereum Address)</li>
+                    <li>Purchase an Item with a Mediator (where the Buyer is your currently active Metamask Ethereum Address)</li>
                 </ul>
 			<li><b>Mediated Sales Transactions</b></li>
        	</ul>
@@ -271,6 +294,26 @@
    		Picture:<br><input type="file" id="fileAddUpdateYourselfAsMediatorPicture"><br><br>
     	Description:<br>
     	<textarea id="textareaAddUpdateYourselfAsMediatorDescription"></textarea><br>
+
+    </section>
+
+    <section id="viewPurchases">
+
+    	<b>Your Current Metamask Ethereum Address:</b> <input type="text" size="50" readonly="true" id="viewPurchasesYourCurrentMetamaskEthereumAddress"><br><br>
+    	<h1>Purchase Item for Sale from a Seller - You are Buyer Identified by Your Current Metamask Ethereum Address</h1>
+    	Seller Ethereum Public Address (40-Hex lowercase digits with optional '0x' at the beginning): <input type="text" size="50" id="textPurchaseItemForSaleSellerEthereumAddress"><br><br>
+    	Item IPFS ID: <input type="text" size="60" id="textPurchaseItemForSaleItemIpfsId"><br><br>
+    	Quantity Being Purchased: <input type="text" size="90" id="textPurchaseItemForSaleItemQuantityBeingPurchased"><br><br>
+		Mediator Ethereum Public Address (Optional) (40-Hex lowercase digits with optional '0x' at the beginning): <input type="text" size="50" id="textPurchaseItemForSaleMediatorEthereumAddress"> (Optional)<br><br>
+		Enter the Ethereum Public Address of a Mediator if you wish to make a Mediated Sales Transaction where a Buyer, Seller, and Mediator are involved in the Purchase.
+		With a Mediated Sales Transaction, it will take 2-out-of-3 of the Buyer, Seller, and/or Mediator to Approve/Disapprove the Purchase. Not all Sellers will allow a
+		Mediated Sales Transaction.
+		<br><br>
+		The Buyer, Seller, and Mediator Ethereum Public Adresses involved in a Purchase must all be different.
+		<br><br>
+		<input type="button" id="buttonPurchaseItemForSale" value="Purchase Item for Sale">
+		<input type="button" id="buttonClearPurchaseItemForSale" value="Clear Inputs for Purchase Item for Sale">
+    	<br><br>
 
     </section>
 
