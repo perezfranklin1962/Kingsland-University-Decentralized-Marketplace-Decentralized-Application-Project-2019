@@ -1059,6 +1059,7 @@ $(document).ready(function () {
     $('#buttonViewDetailedInformationAboutItemBeingSoldBySeller').click(viewDetailedInformationAboutItemBeingSoldBySeller);
     $('#buttonClearViewDetailedInformationAboutItemBeingSoldBySeller').click(clearViewDetailedInformationAboutItemBeingSoldBySeller);
     $('#buttonAddItemForSale').click(addItemForSale);
+    $('#buttonRemoveItemForSale').click(removeItemForSale);
     $('#buttonClearAddItemForSale').click(clearAddItemForSale);
 	$('#buttonMiscellaneousSettingsOfAnItemYouAreSelling').click(setMiscellaneousSettingsOfAnItemYouAreSelling);
 	$('#buttonClearSetMiscellaneousSettingsOfAnItemYouAreSelling').click(clearSetMiscellaneousSettingsOfAnItemYouAreSelling);
@@ -1239,11 +1240,102 @@ $(document).ready(function () {
 		$('#checkboxSetMiscellaneousSettingsOfAnItemYouAreSellingSettingQuantity')[0].checked = false;
 	}
 
-	async function setMiscellaneousSettingsOfAnItemYouAreSelling() {
-		let itemIpfsHashId = $('#textSetMiscellaneousSettingsOfAnItemYouAreSellingItemIpfsId').val();
+	async function removeItemForSale() {
+		let itemIpfsHashId = $('#textRemoveItemForSaleItemIpfsId').val().trim();
 		if (itemIpfsHashId.length === 0) {
 			showError('The Item IPFS ID identifying an Item cannot be an empty string or consist only of white space. Please enter an ' +
-				'Item IPFS ID value that has no spaces.');
+				'Item IPFS ID value that has no spaces and is not an empty string.');
+			return;
+		}
+
+		makeSureMetamaskInstalled();
+
+		showInfo(`Removing Item IPFS ID ${itemIpfsHashId} that you are currently Selling under Current Metamask Ethereum Public Address ${currentMetamaskEthereumAddress} ....`);
+
+		let decentralizedMarketplaceContract =
+			web3.eth.contract(decentralizedMarketplaceContractABI).at(decentralizedMarketplaceContractAddress);
+
+		var sellerExists =
+				PROMISIFY(cb => decentralizedMarketplaceContract.sellerExists.call(currentMetamaskEthereumAddress, cb));
+		let sellerExistsFlag = undefined;
+		let sellerExistsError = undefined;
+		await sellerExists
+			.then(function (response) {
+				console.log('sellerExists : response =', response);
+				sellerExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('sellerExists : error =', error);
+				sellerExistsError = error;
+  		});
+
+  		if (sellerExistsError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method: " +
+				sellerExistsError);
+		}
+
+		if (sellerExistsFlag === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.sellerExists method!");
+		}
+
+		console.log('sellerExistsFlag =', sellerExistsFlag);
+		if (!sellerExistsFlag) {
+			hideInfo();
+			return showError(`Your current Metamask Ethereum Public Address ${currentMetamaskEthereumAddress} is not listed as a Seller in the Franklin Decentralized Marketplace!`);
+		}
+
+		let ethereumPublicAddress = currentMetamaskEthereumAddress;
+		var itemForSaleFromSellerExists = PROMISIFY(cb => decentralizedMarketplaceContract.itemForSaleFromSellerExists(ethereumPublicAddress, itemIpfsHashId, cb));
+		let itemForSaleFromSellerExistsFlag = undefined;
+		let itemForSaleFromSellerExistsError = undefined;
+		await itemForSaleFromSellerExists
+			.then(function (response) {
+				console.log('itemForSaleFromSellerExists : response =', response);
+				itemForSaleFromSellerExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('itemForSaleFromSellerExists : error =', error);
+				itemForSaleFromSellerExistsError = error;
+  		});
+
+  		if (itemForSaleFromSellerExistsError !== undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.itemForSaleFromSellerExists method: " +
+				itemForSaleFromSellerExistsError);
+		}
+
+		if (itemForSaleFromSellerExistsFlag === undefined) {
+			hideInfo();
+			return showError("Error encountered while calling the DecentralizedMarketplaceContract.itemForSaleFromSellerExists method!");
+		}
+
+		console.log('itemForSaleFromSellerExistsFlag =', itemForSaleFromSellerExistsFlag);
+		if (!itemForSaleFromSellerExistsFlag) {
+			hideInfo();
+			return showError(`No such Item ${itemIpfsHashId} is sold by Seller Ethereum Public Address ${ethereumPublicAddress} in the Franklin Decentralized Marketplace!`);
+		}
+
+		decentralizedMarketplaceContract.removeItemForSale(itemIpfsHashId, function (err, txHash) {
+			hideInfo();
+
+			if (err) {
+				// return showError("Smart contract call failed: " + err);
+				console.log('err =', err);
+				return showError(`DecentralizedMarketplaceMediationContract.removeItemForSale(${itemIpfsHashId}) call failed:  + ${err.message}`);
+			}
+
+			showInfo(`Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} <b>successfully removed</b> from list of Items to Sell ` +
+				`in the Franklin Decentralized Marketplace. Transaction hash: ${txHash}`);
+		});
+	}
+
+	async function setMiscellaneousSettingsOfAnItemYouAreSelling() {
+		let itemIpfsHashId = $('#textSetMiscellaneousSettingsOfAnItemYouAreSellingItemIpfsId').val().trim();
+		if (itemIpfsHashId.length === 0) {
+			showError('The Item IPFS ID identifying an Item cannot be an empty string or consist only of white space. Please enter an ' +
+				'Item IPFS ID value that has no spaces and is not an empty string.');
 			return;
 		}
 
@@ -1425,9 +1517,20 @@ $(document).ready(function () {
 			}
 		}
 
-		let successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has successfully had it's Unit Price set ` +
+		let successString = undefined;
+		if (setPriceOfItemResponse_TxHash !== undefined && setQuantityAvailableForSaleOfAnItemResponse_TxHash === undefined) {
+			successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has successfully had it's Unit Price set ` +
+				`to ${unitPriceInWei_BigInt.toString()} WEI. Transaction hash: ${setPriceOfItemResponse_TxHash}`;
+		}
+		else if (setPriceOfItemResponse_TxHash === undefined && setQuantityAvailableForSaleOfAnItemResponse_TxHash !== undefined) {
+			successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has successfully had it's Quantity Available ` +
+				`set to ${quantityAvailable_BigInt.toString()}. Transaction hash: ${setQuantityAvailableForSaleOfAnItemResponse_TxHash}`;
+		}
+		else {
+			successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has successfully had it's Unit Price set ` +
 				`to ${unitPriceInWei_BigInt.toString()} WEI and it's Quantity Available set to ${quantityAvailable_BigInt.toString()}. ` +
 				`Transaction hashes: ${setPriceOfItemResponse_TxHash} and ${setQuantityAvailableForSaleOfAnItemResponse_TxHash}`;
+		}
 
 		hideInfo();
 		showInfo(successString);
