@@ -86,8 +86,10 @@
 				<ul>
                     <li>Purchase an Item without a Mediator (where the Buyer is your currently active Metamask Ethereum Address)</li>
                     <li>Purchase an Item with a Mediator (where the Buyer is your currently active Metamask Ethereum Address)</li>
+                    <li>View Mediated Sales Transactions an Ethereum Address is Involved either as a Buyer, Seller, or Mediator</li>
+                    <li>View Detailed Information about a Specific Mediated Sales Transaction</li>
+                    <li>Approve or Disapprove a Mediated Sales Transaction in which currently active Metamask Ethereum Address is it's Buyer, Seller, or Mediator</li>
                 </ul>
-			<li><b>Mediated Sales Transactions</b></li>
        	</ul>
     </section>
 
@@ -360,6 +362,13 @@
     	Quantity Of the Item Purchased: <input type="text" readonly="true" size="50" id="textViewDetailedInformationAboutSpecificMediatedSalesTransactionQuantityOfItemPurchased"><br><br>
 		Date and Timestamp of Sale: <input type="text" readonly="true" size="50" id="textViewDetailedInformationAboutSpecificMediatedSalesTransactionDateTimestamp"><br><br>
 
+		<br><hr><br>
+    	<h1>Approve or Disapprove a Specific Mediated Sales Transaction in which you are one of it's Participants - You are Participant Identified by Your Current Metamask Ethereum Address</h1>
+		Mediated Sales Transaction IPFS ID: <input type="text" size="60" id="textApproveOrDisapproveSpecificMediatedSalesTransactionIpfsId">
+		<input type="button" id="buttonClearApproveDisapproveSpecificMediatedSalesTransactionInput" value="Clear Input">
+		<br><br>
+		<input type="button" id="buttonApproveSpecificMediatedSalesTransaction" value="Approve">
+		<input type="button" id="buttonDisapproveSpecificMediatedSalesTransaction" value="Disapprove">
     </section>
 
 </main>
