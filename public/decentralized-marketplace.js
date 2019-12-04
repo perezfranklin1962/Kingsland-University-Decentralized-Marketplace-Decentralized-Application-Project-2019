@@ -3184,7 +3184,7 @@ $(document).ready(function () {
 				(currentMetamaskEthereumAddress === mediatorEthereumAddress);
 		if (!participantInMediatedSalesTransaction) {
 			hideInfo();
-			showInfo(`You - Ethereum Public Address ${currentMetamaskEthereumAddress} - cannot Approve Mediated Sales Transaction IPFS ID ${mediatedSalesTransactionIpfsId}, because ` +
+			return showError(`You - Ethereum Public Address ${currentMetamaskEthereumAddress} - cannot Approve Mediated Sales Transaction IPFS ID ${mediatedSalesTransactionIpfsId}, because ` +
 				`you are neither the Buyer, Seller, or Mediator!`);
 		}
 
@@ -3359,7 +3359,7 @@ $(document).ready(function () {
 				(currentMetamaskEthereumAddress === mediatorEthereumAddress);
 		if (!participantInMediatedSalesTransaction) {
 			hideInfo();
-			showInfo(`You - Ethereum Public Address ${currentMetamaskEthereumAddress} - cannot Approve Mediated Sales Transaction IPFS ID ${mediatedSalesTransactionIpfsId}, because ` +
+			return showError(`You - Ethereum Public Address ${currentMetamaskEthereumAddress} - cannot Disapprove Mediated Sales Transaction IPFS ID ${mediatedSalesTransactionIpfsId}, because ` +
 				`you are neither the Buyer, Seller, or Mediator!`);
 		}
 
