@@ -3216,7 +3216,7 @@ $(document).ready(function () {
 
 		if (mediatedSalesTransactionHasBeenDisapprovedFlag) {
 			hideInfo();
-			return showError(``You - Ethereum Public Address ${currentMetamaskEthereumAddress} - cannot Approve Mediated Sales Transaction IPFS ID ${mediatedSalesTransactionIpfsId}, because ` +
+			return showError(`You - Ethereum Public Address ${currentMetamaskEthereumAddress} - cannot Approve Mediated Sales Transaction IPFS ID ${mediatedSalesTransactionIpfsId}, because ` +
 				`it is already in the Disapproved Stated!`);
 		}
 
@@ -3391,7 +3391,7 @@ $(document).ready(function () {
 
 		if (mediatedSalesTransactionHasBeenApprovedFlag) {
 			hideInfo();
-			return showError(``You - Ethereum Public Address ${currentMetamaskEthereumAddress} - cannot Approved Mediated Sales Transaction IPFS ID ${mediatedSalesTransactionIpfsId}, because ` +
+			return showError(`You - Ethereum Public Address ${currentMetamaskEthereumAddress} - cannot Approved Mediated Sales Transaction IPFS ID ${mediatedSalesTransactionIpfsId}, because ` +
 				`it is already in the Approved Stated!`);
 		}
 
