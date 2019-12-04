@@ -1660,6 +1660,39 @@ $(document).ready(function () {
 			});
 		}
 		else {
+			var sellerIsWillingToSellItemsViaMediator =
+					PROMISIFY(cb => decentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(sellerEthereumAddress, cb));
+			let sellerIsWillingToSellItemsViaMediatorFlag = undefined;
+			let sellerIsWillingToSellItemsViaMediatorError = undefined;
+			await sellerIsWillingToSellItemsViaMediator
+				.then(function (response) {
+					console.log('sellerIsWillingToSellItemsViaMediator : response =', response);
+					sellerIsWillingToSellItemsViaMediatorFlag = response;
+				})
+				.catch(function (error) {
+					console.log('sellerIsWillingToSellItemsViaMediator : error =', error);
+					sellerIsWillingToSellItemsViaMediatorError = error;
+			});
+
+			if (sellerIsWillingToSellItemsViaMediatorError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling ` +
+					`DecentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(${sellerEthereumAddress}) method: ` +
+					`${sellerIsWillingToSellItemsViaMediatorError}`);
+			}
+
+			if (sellerIsWillingToSellItemsViaMediatorFlag === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling DecentralizedMarketplaceContract.sellerIsWillingToSellItemsViaMediator(${sellerEthereumAddress}) method!`);
+			}
+
+			console.log('sellerIsWillingToSellItemsViaMediatorFlag =', sellerIsWillingToSellItemsViaMediatorFlag);
+
+			if(!sellerIsWillingToSellItemsViaMediatorFlag) {
+				hideInfo();
+				return showError(`Seller Ethereum Address ${sellerEthereumAddress} does not allow Mediated Sales Transactions! Cannot proceed with requested Mediated Sales Transaction!`);
+			}
+
 			let decentralizedMarketplaceMediationContract =
 				web3.eth.contract(decentralizedMarketplaceMediationContractABI).at(decentralizedMarketplaceMediationContractAddress);
 
