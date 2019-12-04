@@ -962,7 +962,7 @@ $(document).ready(function () {
 
   	const EMPTY_STRING = "";
 
-	var  = undefined;
+	var currentMetamaskEthereumAddress =  undefined;
 	var accountIntervalFunction = undefined;
 	window.ethereum.enable();
 
