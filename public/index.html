@@ -317,6 +317,49 @@
     	<b>Results of Purchase (if successful) - Please keep and store for your records and future reference:</b> <br>
     	<textarea readonly="true" id="textareaPurchaseItemForSaleFromSellerResults"></textarea><br>
 
+    	<br><hr><br>
+    	<h1>View Mediated Sales Transactions an Ethereum Address is Involved either as a Buyer, Seller, or Mediator</h1>
+    	Ethereum Public Address (40-Hex lowercase digits with optional '0x' at the beginning): <input type="text" size="50" id="textViewMediatedSalesTransactionsEthereumAddressIsInvolvedEthereumAddress"><br><br>
+    	Filter By State:
+    	<input type="radio" id="radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedAll" name="radioViewMediatedSalesTransactionsEthereumAddressIsInvolved" checked>All</input>
+		<input type="radio" id="radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedNeitherApprovedNorDisapproved" name="radioViewMediatedSalesTransactionsEthereumAddressIsInvolved">Neither Approved/Disapproved</input>
+  		<input type="radio" id="radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedApproved" name="radioViewMediatedSalesTransactionsEthereumAddressIsInvolved">Approved</input>
+  		<input type="radio" id="radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedDisapproved" name="radioViewMediatedSalesTransactionsEthereumAddressIsInvolved">Disapproved</input>
+  		<br><br>
+		<input type="button" id="buttonViewMediatedSalesTransactionsEthereumAddressIsInvolved" value="Get Mediated Sales Transactions Ethereum Address is Involved">
+		<input type="button" id="buttonClearViewMediatedSalesTransactionsEthereumAddressIsInvolved" value="Clear Inputs and Outputs for Get Mediated Sales Transactions Ethereum Address is Involved">
+		<br><br>
+		<b>Results of Getting Mediated Sales Transactions an Ethereum Address is Involved:</b> <br><br>
+		Number of Mediated Sales Transactions Ethereum Address is Involved: <input type="text" size="10" readonly="true" id="textViewMediatedSalesTransactionsEthereumAddressIsInvolvedNumberInvolvedResults"><br><br>
+    	<div id="viewMediatedSalesTransactionsEthereumAddressIsInvolvedTableResultsDiv"></div><br>
+
+    	<br><hr><br>
+    	<h1>View Detailed Information about a Specific Mediated Sales Transaction</h1>
+    	Mediated Sales Transaction IPFS ID: <input type="text" size="60" id="textViewDetailedInformationAboutSpecificMediatedSalesTransactionIpfsId"><br><br>
+    	<input type="button" id="buttonViewDetailedInformationAboutSpecificMediatedSalesTransaction" value="View Mediated Sales Transaction Detailed Information">
+		<input type="button" id="buttonClearViewDetailedInformationAboutSpecificMediatedSalesTransaction" value="Clear Inputs and Ouputs for View Mediated Sales Transaction Detailed Information">
+		<br><br>
+    	<b>Results of Getting Detailed Information About a Mediated Sales Transaction:</b><br><br>
+    	<input type="checkbox" onclick="return false;" id="checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionApproved">Mediated Sales Transaction Approved</input>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<input type="checkbox" onclick="return false;" id="checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionDisapproved">Mediated Sales Transaction Disapproved</input>
+    	<br><br>
+    	Buyer Ethereum Public Address: <input type="text" size="50" readonly="true" id="textViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerEthereumAddress">&nbsp;
+    	<input type="checkbox" onclick="return false;" id="checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerApproved">Buyer Approved</input>&nbsp;&nbsp;&nbsp;&nbsp;
+    	<input type="checkbox" onclick="return false;" id="checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerDisapproved">Buyer Disapproved</input>
+    	<br><br>
+    	Seller Ethereum Public Address: <input type="text" size="50" readonly="true" id="textViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerEthereumAddress">&nbsp;
+    	<input type="checkbox" onclick="return false;" id="checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerApproved">Seller Approved</input>&nbsp;&nbsp;&nbsp;&nbsp;
+    	<input type="checkbox" onclick="return false;" id="checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerDisapproved">Seller Disapproved</input>
+    	<br><br>
+    	Mediator Ethereum Public Address: <input type="text" size="50" readonly="true" id="textViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorEthereumAddress">&nbsp;
+    	<input type="checkbox" onclick="return false;" id="checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorApproved">Mediator Approved</input>&nbsp;&nbsp;&nbsp;&nbsp;
+    	<input type="checkbox" onclick="return false;" id="checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorDisapproved">Mediator Disapproved</input>
+    	<br><br>
+    	Item IPFS ID: <input type="text" readonly="true" size="60" id="textViewDetailedInformationAboutSpecificMediatedSalesTransactionItemIpfsId"><br><br>
+    	Total Sales Amount (in ETH): <input type="text" readonly="true" size="50" id="textViewDetailedInformationAboutSpecificMediatedSalesTransactionTotalSalesAmount"><br><br>
+    	Quantity Of the Item Purchased: <input type="text" readonly="true" size="50" id="textViewDetailedInformationAboutSpecificMediatedSalesTransactionQuantityOfItemPurchased"><br><br>
+		Date and Timestamp of Sale: <input type="text" readonly="true" size="50" id="textViewDetailedInformationAboutSpecificMediatedSalesTransactionDateTimestamp"><br><br>
+
     </section>
 
 </main>

@@ -401,7 +401,7 @@ contract FranklinDecentralizedMarketplaceMediation {
         return (numberOfApprovals >= 2);
     }
     
-    // Determines if the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction is in the Disapprived State. It is in the Disapproved State 
+    // Determines if the given "_mediatedSalesTransactionIpfsHash" Mediated Sales Transaction is in the Disapproved State. It is in the Disapproved State 
     // if 2-out-of-3 Buyer, Seller, and/or Mediator Disapprove it.    
     function mediatedSalesTransactionHasBeenDisapproved(string memory _mediatedSalesTransactionIpfsHash) public view returns (bool) {
         require(mediatedSalesTransactionExists[_mediatedSalesTransactionIpfsHash], "Given Mediated Sales Transaction IPFS Hash does not exist!");

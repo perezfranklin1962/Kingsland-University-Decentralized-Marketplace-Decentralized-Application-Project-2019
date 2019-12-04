@@ -996,6 +996,9 @@ $(document).ready(function () {
 	// Used to keep track of the current items being sold by a given Seller
 	var currentItemsBeingSoldByGivenSellerArray = [ ];
 
+	// Used to keep track of the Mediated Sales Transactions an Ethereum Address is involved as a Buyer, Seller, or Mediator
+	var currentMediatedSalesTransactionsGivenEthereumAddressInvolvedArray = [ ];
+
 	showView("viewHome");
 
 	$('#linkHome').click(function () {
@@ -1023,6 +1026,7 @@ $(document).ready(function () {
 
 	$('#linkPurchases').click(function () {
 		console.log('linkPurchases clicked');
+		createMediatedSalesTransactionsGivenEthereumAddressInvolvedTable();
 	    showView("viewPurchases");
     });
 
@@ -1055,6 +1059,10 @@ $(document).ready(function () {
 
 	$('#buttonPurchaseItemForSale').click(purchaseItemForSale);
 	$('#buttonClearPurchaseItemForSale').click(clearPurchaseItemForSale);
+	$('#buttonViewMediatedSalesTransactionsEthereumAddressIsInvolved').click(viewMediatedSalesTransactionsEthereumAddressIsInvolved);
+	$('#buttonClearViewMediatedSalesTransactionsEthereumAddressIsInvolved').click(clearViewMediatedSalesTransactionsEthereumAddressIsInvolved);
+	$('#buttonViewDetailedInformationAboutSpecificMediatedSalesTransaction').click(viewDetailedInformationAboutSpecificMediatedSalesTransaction);
+	$('#buttonClearViewDetailedInformationAboutSpecificMediatedSalesTransaction').click(clearViewDetailedInformationAboutSpecificMediatedSalesTransaction);
 
 	// Attach AJAX "loading" event listener
 	$(document).on({
@@ -1626,7 +1634,7 @@ $(document).ready(function () {
 				if (err) {
 					// return showError("Smart contract call failed: " + err);
 					console.log('purchaseItemWithoutMediator : err =', err);
-					return showError(`DecentralizedMarketplaceMediationContract.purchaseItemWithoutMediator(${sellerEthereumAddress}, ${itemIpfsHashId}, ${quantityBeingPurchased_BigInt.toString()} ` +
+					return showError(`DecentralizedMarketplaceContract.purchaseItemWithoutMediator(${sellerEthereumAddress}, ${itemIpfsHashId}, ${quantityBeingPurchased_BigInt.toString()} ` +
 						`call failed:  + ${err.message}`);
 				}
 
@@ -1679,7 +1687,93 @@ $(document).ready(function () {
 				return showError(`The entered Mediator Ethereum Public Address ${mediatorEthereumAddress} is not listed as a Mediator in the Franklin Decentralized Marketplace!`);
 			}
 
-			console.log('Purchase WITH Mediator will be coded later!');
+			hideInfo();
+			showInfo('Loading information about the Mediated Sales Transaction onto IPFS (InterPlanetary File System).... ' +
+				`Buyer Ethereum Address ${currentMetamaskEthereumAddress} is in the process of purchasing Item IPFS ID ${itemIpfsHashId} from Seller Ethereum Address ` +
+				`${sellerEthereumAddress} via Mediator Ethereum Address ${mediatorEthereumAddress} as part of a Mediated Sales Transaction ....`);
+
+
+			let currentDateTime = new Date();
+			let randomBigInt = BigInt(Math.ceil(Math.random() * 10**20));
+			let mediatedSalesTransactionFileContentsJson = {
+					typeOfSalesTransaction: 'Mediated Sales Transaction',
+					buyerEthereumAddress: currentMetamaskEthereumAddress,
+					sellerEthereumAddress: sellerEthereumAddress,
+					mediatorEthereumAddress: mediatorEthereumAddress,
+					itemIpfsHashIdInPurchase: itemIpfsHashId,
+					quantityOfItemPurchased: quantityBeingPurchased_BigInt.toString(),
+					totalPurchaseAmountInETH: covertWEI_StringValue_to_ETH_StringValue(totalAmountOfPurchaseInWei_BigInt.toString()),
+					dateTimestampOfCreation: currentDateTime.toISOString(),
+					randomUnsignedInteger: randomBigInt.toString()
+			}
+
+			console.log('purchaseItemForSale : mediatedSalesTransactionFileContentsJson =', mediatedSalesTransactionFileContentsJson);
+			let mediatedSalesTransactionFileContentsJsonString = JSON.stringify(mediatedSalesTransactionFileContentsJson);
+			console.log('purchaseItemForSale : mediatedSalesTransactionFileContentsJsonString =', mediatedSalesTransactionFileContentsJsonString);
+
+			let mediatedSalesTransactionIpfsHash = undefined;
+			let errorObject = undefined;
+			try {
+				let fileBuffer = Buffer.from(mediatedSalesTransactionFileContentsJsonString);
+				var ipfsFileAdd = PROMISIFY(cb => IPFS.add(fileBuffer, cb));
+
+				let fileInfo = await ipfsFileAdd;
+				mediatedSalesTransactionIpfsHash = fileInfo[0].hash;;
+			} catch (error) {
+				console.log('purchaseItemForSale ipfsFileAdd : error =', error);
+				errorObject = error;
+			}
+
+			if (errorObject !== undefined) {
+				hideInfo();
+				showError(errorObject);
+				return;
+			}
+
+			if (mediatedSalesTransactionIpfsHash === undefined) {
+				hideInfo();
+				showError("Unable to add the information for the Mediated Sales Transaction onto IPFS!");
+				return;
+			}
+
+			hideInfo();
+			showInfo(`Buyer Ethereum Address ${currentMetamaskEthereumAddress} is in the process of purchasing Item IPFS ID ${itemIpfsHashId} from Seller Ethereum Address ` +
+				`${sellerEthereumAddress} via Mediator Ethereum Address ${mediatorEthereumAddress} as part of Mediated Sales Transaction IPFS ID ${mediatedSalesTransactionIpfsHash}....`);
+
+			decentralizedMarketplaceMediationContract.purchaseItemWithMediator(sellerEthereumAddress, mediatorEthereumAddress, itemIpfsHashId, mediatedSalesTransactionIpfsHash,
+					quantityBeingPurchased_BigInt, { value: totalAmountOfPurchaseInWei_BigInt }, function (err, txHash) {
+				hideInfo();
+
+				if (err) {
+					// return showError("Smart contract call failed: " + err);
+					console.log('purchaseItemWithMediator : err =', err);
+					return showError(`DecentralizedMarketplaceMediationContract.purchaseItemWithMediator(${sellerEthereumAddress}, ${mediatorEthereumAddress}, ` +
+						`${itemIpfsHashId}, ${mediatedSalesTransactionIpfsHash}, ${quantityBeingPurchased_BigInt.toString()} call failed:  + ${err.message}`);
+				}
+
+				let textAreaOutput = `Successfully created Mediated Sales Transaction ID ${mediatedSalesTransactionIpfsHash} Escrow purchase on Ethereum Blockchain WITH Mediator...` + '\n\n' +
+					`Buyer Public Ethereum Address: ${currentMetamaskEthereumAddress}` + '\n' +
+					`Seller Public Ethereum Address: ${sellerEthereumAddress}` + '\n' +
+					`Mediator Public Ethereum Address: ${mediatorEthereumAddress}` + '\n' +
+					`Item IPFS ID Purchased: ${itemIpfsHashId}` + '\n' +
+					`Quantity of the Item Purchased: ${quantityBeingPurchased_BigInt.toString()}` + '\n' +
+					`Total Purchase Amount (in ETH): ${covertWEI_StringValue_to_ETH_StringValue(totalAmountOfPurchaseInWei_BigInt.toString())}` + '\n' +
+					`Transaction Hash ID on Ethereum Blockchain: ${txHash}` + '\n' +
+					`Mediated Sales Transaction IPFS ID: ${mediatedSalesTransactionIpfsHash}` + '\n\n' +
+					`The ETH for this purchase has been sent in Escrow temporarily to the FranklinDecentralizedMarketplaceMediation Smart Contract located at the ` +
+					`${decentralizedMarketplaceMediationContractAddress} Ethereum Address until 2-out-of-3 of the Buyer, Seller, and/or Mediator decide whether to Approve or Disapprove this ` +
+					'Mediated Sales Transaction. The three parties involved in this Mediated Sales Transaction will need to communicate with each other on how to proceed further. ' +
+					'Upon 2-out-of-3 of the Buyer, Seller, and/or Mediator doing Approval or Disapproval - whichever comed first - the ETH Amount held in Escrow by the FranklinDecentralizedMarketplaceMediation Smart Contract ' +
+					'will be sent from Escrow Smart Contract Account to the appropriate parties as explained in the "Home" Tab of this DApp.' + '\n\n' +
+					`You may see information about this Mediated Sales Transaction by going to the https://ipfs.infura.io/ipfs/${mediatedSalesTransactionIpfsHash} web page. You may also do ` +
+					'appropriate queries on the "Purchases" Tab of this DApp.'
+				$('#textareaPurchaseItemForSaleFromSellerResults').val(textAreaOutput);
+
+				showInfo(`Successfully created Mediated Sales Transaction ID ${mediatedSalesTransactionIpfsHash} Escrow purchase on Ethereum Blockchain WITH Mediator Ethereum ` +
+					`Address ${mediatorEthereumAddress}... ` +
+					`Item IPFS ID ${itemIpfsHashId} from Seller Ethereum Address ${sellerEthereumAddress} with quantity ${quantityBeingPurchased_BigInt.toString()} ` +
+					`<b>successfully Escrow purchased</b> by Buyer Ethereum Address ${currentMetamaskEthereumAddress} in the Franklin Decentralized Marketplace. Transaction hash: ${txHash}`);
+			});
 		}
 	}
 
@@ -2923,6 +3017,748 @@ $(document).ready(function () {
 		$('#textViewCurrentItemsBeingSoldByCurrentSellerNumberOfDifferentItemsBeingSoldByGivenSellerResults').val('');
 	}
 
+	function clearViewMediatedSalesTransactionsEthereumAddressIsInvolved() {
+		currentMediatedSalesTransactionsGivenEthereumAddressInvolvedArray = [ ];
+		createMediatedSalesTransactionsGivenEthereumAddressInvolvedTable();
+
+		$('#textViewMediatedSalesTransactionsEthereumAddressIsInvolvedEthereumAddress').val('');
+		$('#textViewMediatedSalesTransactionsEthereumAddressIsInvolvedNumberInvolvedResults').val('');
+
+		$('#radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedAll')[0].checked = true;
+		$('#radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedNeitherApprovedNorDisapproved')[0].checked = false;
+		$('#radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedApproved')[0].checked = false;
+		$('#radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedDisapproved')[0].checked = false;
+	}
+
+	function clearViewDetailedInformationAboutSpecificMediatedSalesTransaction() {
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionIpfsId').val('');
+
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerEthereumAddress').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerEthereumAddress').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorEthereumAddress').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionItemIpfsId').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionTotalSalesAmount').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionQuantityOfItemPurchased').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionDateTimestamp').val('');
+
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionApproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionDisapproved')[0].checked = false;
+
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerApproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerDisapproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerApproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerDisapproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorApproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorDisapproved')[0].checked = false;
+	}
+
+	async function viewDetailedInformationAboutSpecificMediatedSalesTransaction() {
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerEthereumAddress').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerEthereumAddress').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorEthereumAddress').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionItemIpfsId').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionTotalSalesAmount').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionQuantityOfItemPurchased').val('');
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionDateTimestamp').val('');
+
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionApproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionDisapproved')[0].checked = false;
+
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerApproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerDisapproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerApproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerDisapproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorApproved')[0].checked = false;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorDisapproved')[0].checked = false;
+
+		let mediatedSalesTransactionIpfsId = $('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionIpfsId').val().trim();
+		if (mediatedSalesTransactionIpfsId.length === 0) {
+			showError('The Mediated Sales Transaction IPFS ID cannot be an empty string or consist only of white space. Please enter an ' +
+				'Mediated Sales Transaction IPFS ID value that has no spaces and is not an empty string.');
+			return;
+		}
+
+		showInfo(`Getting Detailed Information about Mediated Sales Transaction ID IPFS ${mediatedSalesTransactionIpfsId} ....`);
+
+		makeSureMetamaskInstalled();
+
+		let decentralizedMarketplaceMediationContract =
+			web3.eth.contract(decentralizedMarketplaceMediationContractABI).at(decentralizedMarketplaceMediationContractAddress);
+
+		var mediatedSalesTransactionExists =
+					PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionExists.call(mediatedSalesTransactionIpfsId, cb));
+		let mediatedSalesTransactionExistsFlag = undefined;
+		let mediatedSalesTransactionExistsError = undefined;
+		await mediatedSalesTransactionExists
+			.then(function (response) {
+				console.log('mediatedSalesTransactionExists : response =', response);
+				mediatedSalesTransactionExistsFlag = response;
+			})
+			.catch(function (error) {
+				console.log('mediatedSalesTransactionExists : error =', error);
+				mediatedSalesTransactionExistsError = error;
+			});
+
+		if (mediatedSalesTransactionExistsError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling ` +
+				`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionExists(${mediatedSalesTransactionIpfsId}) method: ` +
+				`${mediatedSalesTransactionExistsError}`);
+		}
+
+		if (mediatedSalesTransactionExistsFlag === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling DecentralizedMarketplaceContract.mediatedSalesTransactionExists(${mediatedSalesTransactionIpfsId}) method!`);
+		}
+
+		if (!mediatedSalesTransactionExistsFlag) {
+			hideInfo();
+			return showError(`Mediated Sales Transaction IPFS ID ${mediatedSalesTransactionIpfsId} is not listed as a Mediated Sales Transaction in the Franklin Decentralized Marketplace!`);
+		}
+
+		var mediatedSalesTransactionHasBeenApproved = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved(mediatedSalesTransactionIpfsId, cb));
+		let mediatedSalesTransactionHasBeenApprovedFlag = undefined;
+		let mediatedSalesTransactionHasBeenApprovedError = undefined;
+		await mediatedSalesTransactionHasBeenApproved
+			.then(function (response) {
+				mediatedSalesTransactionHasBeenApprovedFlag = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				mediatedSalesTransactionHasBeenApprovedError = error;
+		});
+
+		if (mediatedSalesTransactionHasBeenApprovedError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved(${mediatedSalesTransactionIpfsId}) ` +
+				`method: ` + mediatedSalesTransactionHasBeenApprovedError);
+		}
+
+		if (mediatedSalesTransactionHasBeenApprovedFlag === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the ` +
+				`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved(${mediatedSalesTransactionIpfsId}) method!`);
+		}
+
+		console.log('mediatedSalesTransactionHasBeenApprovedFlag =', mediatedSalesTransactionHasBeenApprovedFlag);
+
+		var mediatedSalesTransactionHasBeenDisapproved = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved(mediatedSalesTransactionIpfsId, cb));
+		let mediatedSalesTransactionHasBeenDisapprovedFlag = undefined;
+		let mediatedSalesTransactionHasBeenDisapprovedError = undefined;
+		await mediatedSalesTransactionHasBeenDisapproved
+			.then(function (response) {
+				mediatedSalesTransactionHasBeenDisapprovedFlag = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				mediatedSalesTransactionHasBeenDisapprovedError = error;
+		});
+
+		if (mediatedSalesTransactionHasBeenDisapprovedError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved(${mediatedSalesTransactionIpfsId}) ` +
+				`method: ` + mediatedSalesTransactionHasBeenDisapprovedError);
+		}
+
+		if (mediatedSalesTransactionHasBeenDisapprovedFlag === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the ` +
+				`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved(${mediatedSalesTransactionIpfsId}) method!`);
+		}
+
+		console.log('mediatedSalesTransactionHasBeenDisapprovedFlag =', mediatedSalesTransactionHasBeenDisapprovedFlag);
+
+		var getBuyerEthereumAddress = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsId, 0, cb));
+		let buyerEthereumAddress = undefined;
+		let getBuyerEthereumAddressError = undefined;
+		await getBuyerEthereumAddress
+			.then(function (response) {
+				buyerEthereumAddress = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				getBuyerEthereumAddressError = error;
+		});
+
+		if (getBuyerEthereumAddressError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 0) ` +
+				`method: ` + getBuyerEthereumAddressError);
+		}
+
+		if (buyerEthereumAddress === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 0) method!`);
+		}
+
+		console.log('buyerEthereumAddress =', buyerEthereumAddress);
+
+		var getSellerEthereumAddress = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsId, 1, cb));
+		let sellerEthereumAddress = undefined;
+		let getSellerEthereumAddressError = undefined;
+		await getSellerEthereumAddress
+			.then(function (response) {
+				sellerEthereumAddress = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				getSellerEthereumAddressError = error;
+		});
+
+		if (getSellerEthereumAddressError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 1) ` +
+				`method: ` + getSellerEthereumAddressError);
+		}
+
+		if (sellerEthereumAddress === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 1) method!`);
+		}
+
+		console.log('sellerEthereumAddress =', sellerEthereumAddress);
+
+		var getMediatorEthereumAddress = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsId, 2, cb));
+		let mediatorEthereumAddress = undefined;
+		let getMediatorEthereumAddressError = undefined;
+		await getMediatorEthereumAddress
+			.then(function (response) {
+				mediatorEthereumAddress = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				getMediatorEthereumAddressError = error;
+		});
+
+		if (getMediatorEthereumAddressError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 2) ` +
+				`method: ` + getMediatorEthereumAddressError);
+		}
+
+		if (mediatorEthereumAddress === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 2) method!`);
+		}
+
+		console.log('mediatorEthereumAddress =', mediatorEthereumAddress);
+
+		var getSalesAmountInWei = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionAmount.call(mediatedSalesTransactionIpfsId, cb));
+		let salesAmountInETH = undefined;
+		let getSalesAmountInWeiError = undefined;
+		await getSalesAmountInWei
+			.then(function (response) {
+				let salesAmount_Metamask_X = response;
+				let salesAmountInWei = convertMetamask_X_Value_to_IntegerString(salesAmount_Metamask_X);
+				salesAmountInETH = covertWEI_StringValue_to_ETH_StringValue(salesAmountInWei);
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				getMediatorEthereumAddressError = error;
+		});
+
+		if (getSalesAmountInWeiError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAmount(${mediatedSalesTransactionIpfsId}) ` +
+				`method: ` + getSalesAmountInWeiError);
+		}
+
+		if (salesAmountInETH === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAmount(${mediatedSalesTransactionIpfsId}) method!`);
+		}
+
+		console.log('salesAmountInETH =', salesAmountInETH);
+
+		var ipfsFileGetForMediatedSalesTransaction = PROMISIFY(cb => IPFS.get(mediatedSalesTransactionIpfsId, {timeout: '8000ms'}, cb));
+		let ipfsFileGetForMediatedSalesTransactionJson = undefined;
+		let ipfsFileGetForMediatedSalesTransactionError = undefined;
+		await ipfsFileGetForMediatedSalesTransaction
+			.then(function (response) {
+				console.log('ipfsFileGetForMediatedSalesTransaction : response =', response);
+				let ipfsFileGetForMediatedSalesTransactionJsonString = response[0].content.toString();
+				ipfsFileGetForMediatedSalesTransactionJson = JSON.parse(ipfsFileGetForMediatedSalesTransactionJsonString);
+			})
+			.catch(function (error) {
+				console.log('ipfsFileGetForMediatedSalesTransaction : error =', error);
+				ipfsFileGetForMediatedSalesTransactionError = error;
+			});
+
+		if (ipfsFileGetForMediatedSalesTransactionError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling IPFS.get(${mediatedSalesTransactionIpfsId}) method: ${ipfsFileGetForMediatedSalesTransactionError}`);
+		}
+
+		if (ipfsFileGetForMediatedSalesTransactionJson === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling IPFS.get(${mediatedSalesTransactionIpfsId}) method!`);
+		}
+
+		console.log('ipfsFileGetForMediatedSalesTransactionJson =', ipfsFileGetForMediatedSalesTransactionJson);
+
+		var mediatedSalesTransactionApprovedByBuyer =
+			PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(mediatedSalesTransactionIpfsId, 0, cb));
+		let mediatedSalesTransactionApprovedByBuyerFlag = undefined;
+		let mediatedSalesTransactionApprovedByBuyerError = undefined;
+		await mediatedSalesTransactionApprovedByBuyer
+			.then(function (response) {
+				mediatedSalesTransactionApprovedByBuyerFlag = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				mediatedSalesTransactionApprovedByBuyerError = error;
+		});
+
+		if (mediatedSalesTransactionApprovedByBuyerError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties(${mediatedSalesTransactionIpfsId}, 0) ` +
+				`method: ` + mediatedSalesTransactionApprovedByBuyerError);
+		}
+
+		if (mediatedSalesTransactionApprovedByBuyerFlag === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the ` +
+				`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties(${mediatedSalesTransactionIpfsId}, 0) method!`);
+		}
+
+		console.log('mediatedSalesTransactionApprovedByBuyerFlag =', mediatedSalesTransactionApprovedByBuyerFlag);
+
+		var mediatedSalesTransactionApprovedBySeller =
+			PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(mediatedSalesTransactionIpfsId, 1, cb));
+		let mediatedSalesTransactionApprovedBySellerFlag = undefined;
+		let mediatedSalesTransactionApprovedBySellerError = undefined;
+		await mediatedSalesTransactionApprovedBySeller
+			.then(function (response) {
+				mediatedSalesTransactionApprovedBySellerFlag = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				mediatedSalesTransactionApprovedBySellerError = error;
+		});
+
+		if (mediatedSalesTransactionApprovedBySellerError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties(${mediatedSalesTransactionIpfsId}, 1) ` +
+				`method: ` + mediatedSalesTransactionApprovedBySellerError);
+		}
+
+		if (mediatedSalesTransactionApprovedBySellerFlag === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the ` +
+				`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties(${mediatedSalesTransactionIpfsId}, 1) method!`);
+		}
+
+		console.log('mediatedSalesTransactionApprovedBySellerFlag =', mediatedSalesTransactionApprovedBySellerFlag);
+
+		var mediatedSalesTransactionApprovedByMediator =
+			PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties.call(mediatedSalesTransactionIpfsId, 2, cb));
+		let mediatedSalesTransactionApprovedByMediatorFlag = undefined;
+		let mediatedSalesTransactionApprovedByMediatorError = undefined;
+		await mediatedSalesTransactionApprovedByMediator
+			.then(function (response) {
+				mediatedSalesTransactionApprovedByMediatorFlag = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				mediatedSalesTransactionApprovedByMediatorError = error;
+		});
+
+		if (mediatedSalesTransactionApprovedByMediatorError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties(${mediatedSalesTransactionIpfsId}, 2) ` +
+				`method: ` + mediatedSalesTransactionApprovedByMediatorError);
+		}
+
+		if (mediatedSalesTransactionApprovedByMediatorFlag === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the ` +
+				`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionApprovedByParties(${mediatedSalesTransactionIpfsId}, 2) method!`);
+		}
+
+		console.log('mediatedSalesTransactionApprovedByMediatorFlag =', mediatedSalesTransactionApprovedByMediatorFlag);
+
+		var mediatedSalesTransactionDisapprovedByBuyer =
+			PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(mediatedSalesTransactionIpfsId, 0, cb));
+		let mediatedSalesTransactionDisapprovedByBuyerFlag = undefined;
+		let mediatedSalesTransactionDisapprovedByBuyerError = undefined;
+		await mediatedSalesTransactionDisapprovedByBuyer
+			.then(function (response) {
+				mediatedSalesTransactionDisapprovedByBuyerFlag = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				mediatedSalesTransactionDisapprovedByBuyerError = error;
+		});
+
+		if (mediatedSalesTransactionDisapprovedByBuyerError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties(${mediatedSalesTransactionIpfsId}, 0) ` +
+				`method: ` + mediatedSalesTransactionDisapprovedByBuyerError);
+		}
+
+		if (mediatedSalesTransactionDisapprovedByBuyerFlag === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the ` +
+				`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties(${mediatedSalesTransactionIpfsId}, 0) method!`);
+		}
+
+		console.log('mediatedSalesTransactionDisapprovedByBuyerFlag =', mediatedSalesTransactionDisapprovedByBuyerFlag);
+
+		var mediatedSalesTransactionDisapprovedBySeller =
+			PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(mediatedSalesTransactionIpfsId, 1, cb));
+		let mediatedSalesTransactionDisapprovedBySellerFlag = undefined;
+		let mediatedSalesTransactionDisapprovedBySellerError = undefined;
+		await mediatedSalesTransactionDisapprovedBySeller
+			.then(function (response) {
+				mediatedSalesTransactionDisapprovedBySellerFlag = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				mediatedSalesTransactionDisapprovedBySellerError = error;
+		});
+
+		if (mediatedSalesTransactionDisapprovedBySellerError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties(${mediatedSalesTransactionIpfsId}, 1) ` +
+				`method: ` + mediatedSalesTransactionDisapprovedBySellerError);
+		}
+
+		if (mediatedSalesTransactionDisapprovedBySellerFlag === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the ` +
+				`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties(${mediatedSalesTransactionIpfsId}, 1) method!`);
+		}
+
+		console.log('mediatedSalesTransactionDisapprovedBySellerFlag =', mediatedSalesTransactionDisapprovedBySellerFlag);
+
+		var mediatedSalesTransactionDisapprovedByMediator =
+			PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties.call(mediatedSalesTransactionIpfsId, 2, cb));
+		let mediatedSalesTransactionDisapprovedByMediatorFlag = undefined;
+		let mediatedSalesTransactionDisapprovedByMediatorError = undefined;
+		await mediatedSalesTransactionDisapprovedByMediator
+			.then(function (response) {
+				mediatedSalesTransactionDisapprovedByMediatorFlag = response;
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				mediatedSalesTransactionDisapprovedByMediatorError = error;
+		});
+
+		if (mediatedSalesTransactionDisapprovedByMediatorError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties(${mediatedSalesTransactionIpfsId}, 2) ` +
+				`method: ` + mediatedSalesTransactionDisapprovedByMediatorError);
+		}
+
+		if (mediatedSalesTransactionDisapprovedByMediatorFlag === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the ` +
+				`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionDisapprovedByParties(${mediatedSalesTransactionIpfsId}, 2) method!`);
+		}
+
+		console.log('mediatedSalesTransactionDisapprovedByMediatorFlag =', mediatedSalesTransactionDisapprovedByMediatorFlag);
+
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerEthereumAddress').val(buyerEthereumAddress);
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerEthereumAddress').val(sellerEthereumAddress);
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorEthereumAddress').val(mediatorEthereumAddress);
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionItemIpfsId').val(ipfsFileGetForMediatedSalesTransactionJson.itemIpfsHashIdInPurchase);
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionTotalSalesAmount').val(salesAmountInETH);
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionQuantityOfItemPurchased').val(ipfsFileGetForMediatedSalesTransactionJson.quantityOfItemPurchased);
+		$('#textViewDetailedInformationAboutSpecificMediatedSalesTransactionDateTimestamp').val(ipfsFileGetForMediatedSalesTransactionJson.dateTimestampOfCreation);
+
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionApproved')[0].checked = mediatedSalesTransactionHasBeenApprovedFlag;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionDisapproved')[0].checked = mediatedSalesTransactionHasBeenDisapprovedFlag;
+
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerApproved')[0].checked = mediatedSalesTransactionApprovedByBuyerFlag;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionBuyerDisapproved')[0].checked = mediatedSalesTransactionDisapprovedByBuyerFlag;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerApproved')[0].checked = mediatedSalesTransactionApprovedBySellerFlag;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionSellerDisapproved')[0].checked = mediatedSalesTransactionDisapprovedBySellerFlag;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorApproved')[0].checked = mediatedSalesTransactionApprovedByMediatorFlag;
+		$('#checkboxViewDetailedInformationAboutSpecificMediatedSalesTransactionMediatorDisapproved')[0].checked = mediatedSalesTransactionDisapprovedByMediatorFlag;
+
+		hideInfo();
+	}
+
+	async function viewMediatedSalesTransactionsEthereumAddressIsInvolved() {
+		currentMediatedSalesTransactionsGivenEthereumAddressInvolvedArray = [ ];
+		createMediatedSalesTransactionsGivenEthereumAddressInvolvedTable();
+		$('#textViewMediatedSalesTransactionsEthereumAddressIsInvolvedNumberInvolvedResults').val('');
+
+		let ethereumPublicAddress = $('#textViewMediatedSalesTransactionsEthereumAddressIsInvolvedEthereumAddress').val().trim().toLowerCase();
+		if (ethereumPublicAddress.length === 0) {
+			showError('The Ethereum Public Address cannot be an empty string or consist only of white space. Please enter a ' +
+				'Seller Ethereum Public Address value that is a 40-hex lowercase string.');
+			return;
+		}
+
+		if (ethereumPublicAddress.startsWith("0x")) {
+			if (ethereumPublicAddress.length > 2) {
+				ethereumPublicAddress = ethereumPublicAddress.substring(2);
+			}
+		}
+
+		if (!isValidPublicAddress(ethereumPublicAddress)) {
+			showError("Entered Ethereum Public Address is not a 40-hex valued lower case string. " +
+				"Please enter an Ethereum Public Address that is a 40-hex valued lower case string.");
+			return;
+		}
+
+		ethereumPublicAddress = "0x" + ethereumPublicAddress;
+
+		makeSureMetamaskInstalled();
+
+		showInfo(`Getting Mediated Sales Transaction Ethereum Public Address ${ethereumPublicAddress} is involved based on Filter criteria ....`);
+
+		let filterNeitherApprovedNorDisapprovedFlag = $('#radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedNeitherApprovedNorDisapproved')[0].checked;
+		let filterApprovedOnlyFlag = $('#radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedApproved')[0].checked;
+		let filterDisapprovedOnlyFlag = $('#radioViewMediatedSalesTransactionsEthereumAddressIsInvolvedDisapproved')[0].checked;
+
+		let decentralizedMarketplaceMediationContract =
+			web3.eth.contract(decentralizedMarketplaceMediationContractABI).at(decentralizedMarketplaceMediationContractAddress);
+
+		var getNumberOfMediatedSalesTransactionsAddressInvolved =
+			PROMISIFY(cb => decentralizedMarketplaceMediationContract.numberOfMediatedSalesTransactionsAddressInvolved(ethereumPublicAddress, cb));
+		let numberOfMediatedSalesTransactionsAddressInvolved_BigInt = undefined;
+		let getNumberOfMediatedSalesTransactionsAddressInvolvedError = undefined;
+		await getNumberOfMediatedSalesTransactionsAddressInvolved
+			.then(function (response) {
+				let numberOfMediatedSalesTransactionsInvolved_X = response;
+				numberOfMediatedSalesTransactionsAddressInvolved_BigInt = BigInt(convertMetamask_X_Value_to_IntegerString(numberOfMediatedSalesTransactionsInvolved_X));
+			})
+			.catch(function (error) {
+				// console.log('error =', error);
+				getNumberOfMediatedSalesTransactionsAddressInvolvedError = error;
+  		});
+
+  		if (getNumberOfMediatedSalesTransactionsAddressInvolvedError !== undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.numberOfMediatedSalesTransactionsAddressInvolved(${ethereumPublicAddress}) ` +
+				`method: ` + getNumberOfMediatedSalesTransactionsAddressInvolvedError);
+		}
+
+		if (numberOfMediatedSalesTransactionsAddressInvolved_BigInt === undefined) {
+			hideInfo();
+			return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.numberOfMediatedSalesTransactionsAddressInvolved(${ethereumPublicAddress}) method!`);
+		}
+
+		for (let i = BigInt(0); i < numberOfMediatedSalesTransactionsAddressInvolved_BigInt; i++) {
+			var getMediatedSalesTransactionAddressInvolved =
+				PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionsAddressInvolved.call(ethereumPublicAddress, i, cb));
+			let mediatedSalesTransactionIpfsId = undefined;
+			let getMediatedSalesTransactionAddressInvolvedError = undefined;
+			await getMediatedSalesTransactionAddressInvolved
+				.then(function (response) {
+					mediatedSalesTransactionIpfsId = response;
+				})
+				.catch(function (error) {
+					// console.log('error =', error);
+					getMediatedSalesTransactionAddressInvolvedError = error;
+			});
+
+			if (getMediatedSalesTransactionAddressInvolvedError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionsAddressInvolved(${ethereumPublicAddress}, ${i.toString()}) ` +
+					`method: ` + getMediatedSalesTransactionAddressInvolvedError);
+			}
+
+			if (mediatedSalesTransactionIpfsId === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionsAddressInvolved(${ethereumPublicAddress}, ${i.toString()}) method!`);
+			}
+
+			console.log('mediatedSalesTransactionIpfsId =', mediatedSalesTransactionIpfsId);
+
+			var mediatedSalesTransactionHasBeenApproved = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved(mediatedSalesTransactionIpfsId, cb));
+			let mediatedSalesTransactionHasBeenApprovedFlag = undefined;
+			let mediatedSalesTransactionHasBeenApprovedError = undefined;
+			await mediatedSalesTransactionHasBeenApproved
+				.then(function (response) {
+					mediatedSalesTransactionHasBeenApprovedFlag = response;
+				})
+				.catch(function (error) {
+					// console.log('error =', error);
+					mediatedSalesTransactionHasBeenApprovedError = error;
+			});
+
+			if (mediatedSalesTransactionHasBeenApprovedError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved(${mediatedSalesTransactionIpfsId}) ` +
+					`method: ` + mediatedSalesTransactionHasBeenApprovedError);
+			}
+
+			if (mediatedSalesTransactionHasBeenApprovedFlag === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the ` +
+					`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenApproved(${mediatedSalesTransactionIpfsId}) method!`);
+			}
+
+			console.log('mediatedSalesTransactionHasBeenApprovedFlag =', mediatedSalesTransactionHasBeenApprovedFlag);
+
+			var mediatedSalesTransactionHasBeenDisapproved = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved(mediatedSalesTransactionIpfsId, cb));
+			let mediatedSalesTransactionHasBeenDisapprovedFlag = undefined;
+			let mediatedSalesTransactionHasBeenDisapprovedError = undefined;
+			await mediatedSalesTransactionHasBeenDisapproved
+				.then(function (response) {
+					mediatedSalesTransactionHasBeenDisapprovedFlag = response;
+				})
+				.catch(function (error) {
+					// console.log('error =', error);
+					mediatedSalesTransactionHasBeenDisapprovedError = error;
+			});
+
+			if (mediatedSalesTransactionHasBeenDisapprovedError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved(${mediatedSalesTransactionIpfsId}) ` +
+					`method: ` + mediatedSalesTransactionHasBeenDisapprovedError);
+			}
+
+			if (mediatedSalesTransactionHasBeenDisapprovedFlag === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the ` +
+					`DecentralizedMarketplaceMediationContract.mediatedSalesTransactionHasBeenDisapproved(${mediatedSalesTransactionIpfsId}) method!`);
+			}
+
+			console.log('mediatedSalesTransactionHasBeenDisapprovedFlag =', mediatedSalesTransactionHasBeenDisapprovedFlag);
+
+			// Do filtering here to only take the ones that align with the Filter...
+			if (filterNeitherApprovedNorDisapprovedFlag) {
+				if (mediatedSalesTransactionHasBeenApprovedFlag || mediatedSalesTransactionHasBeenDisapprovedFlag) {
+					continue;
+				}
+			}
+			else if (filterApprovedOnlyFlag) {
+				if (!mediatedSalesTransactionHasBeenApprovedFlag) {
+					continue;
+				}
+			}
+			else if (filterDisapprovedOnlyFlag) {
+				if (!mediatedSalesTransactionHasBeenDisapprovedFlag) {
+					continue;
+				}
+			}
+
+			var getBuyerEthereumAddress = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsId, 0, cb));
+			let buyerEthereumAddress = undefined;
+			let getBuyerEthereumAddressError = undefined;
+			await getBuyerEthereumAddress
+				.then(function (response) {
+					buyerEthereumAddress = response;
+				})
+				.catch(function (error) {
+					// console.log('error =', error);
+					getBuyerEthereumAddressError = error;
+			});
+
+			if (getBuyerEthereumAddressError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 0) ` +
+					`method: ` + getBuyerEthereumAddressError);
+			}
+
+			if (buyerEthereumAddress === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 0) method!`);
+			}
+
+			console.log('buyerEthereumAddress =', buyerEthereumAddress);
+
+			var getSellerEthereumAddress = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsId, 1, cb));
+			let sellerEthereumAddress = undefined;
+			let getSellerEthereumAddressError = undefined;
+			await getSellerEthereumAddress
+				.then(function (response) {
+					sellerEthereumAddress = response;
+				})
+				.catch(function (error) {
+					// console.log('error =', error);
+					getSellerEthereumAddressError = error;
+			});
+
+			if (getSellerEthereumAddressError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 1) ` +
+					`method: ` + getSellerEthereumAddressError);
+			}
+
+			if (sellerEthereumAddress === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 1) method!`);
+			}
+
+			console.log('sellerEthereumAddress =', sellerEthereumAddress);
+
+			var getMediatorEthereumAddress = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses.call(mediatedSalesTransactionIpfsId, 2, cb));
+			let mediatorEthereumAddress = undefined;
+			let getMediatorEthereumAddressError = undefined;
+			await getMediatorEthereumAddress
+				.then(function (response) {
+					mediatorEthereumAddress = response;
+				})
+				.catch(function (error) {
+					// console.log('error =', error);
+					getMediatorEthereumAddressError = error;
+			});
+
+			if (getMediatorEthereumAddressError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 2) ` +
+					`method: ` + getMediatorEthereumAddressError);
+			}
+
+			if (mediatorEthereumAddress === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAddresses(${mediatedSalesTransactionIpfsId}, 2) method!`);
+			}
+
+			console.log('mediatorEthereumAddress =', mediatorEthereumAddress);
+
+			var getSalesAmountInWei = PROMISIFY(cb => decentralizedMarketplaceMediationContract.mediatedSalesTransactionAmount.call(mediatedSalesTransactionIpfsId, cb));
+			let salesAmountInETH = undefined;
+			let getSalesAmountInWeiError = undefined;
+			await getSalesAmountInWei
+				.then(function (response) {
+					let salesAmount_Metamask_X = response;
+					let salesAmountInWei = convertMetamask_X_Value_to_IntegerString(salesAmount_Metamask_X);
+					salesAmountInETH = covertWEI_StringValue_to_ETH_StringValue(salesAmountInWei);
+				})
+				.catch(function (error) {
+					// console.log('error =', error);
+					getMediatorEthereumAddressError = error;
+			});
+
+			if (getSalesAmountInWeiError !== undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAmount(${mediatedSalesTransactionIpfsId}) ` +
+					`method: ` + getSalesAmountInWeiError);
+			}
+
+			if (salesAmountInETH === undefined) {
+				hideInfo();
+				return showError(`Error encountered while calling the DecentralizedMarketplaceMediationContract.mediatedSalesTransactionAmount(${mediatedSalesTransactionIpfsId}) method!`);
+			}
+
+			console.log('salesAmountInETH =', salesAmountInETH);
+
+			let mediatedSalesTransactionRecord = {
+					mediatedSalesTransactionIpfsId: mediatedSalesTransactionIpfsId,
+					buyerEthereumAddress: buyerEthereumAddress,
+					sellerEthereumAddress: sellerEthereumAddress,
+					mediatorEthereumAddress: mediatorEthereumAddress,
+					salesAmountInETH: salesAmountInETH,
+					approved: mediatedSalesTransactionHasBeenApprovedFlag,
+					disapproved: mediatedSalesTransactionHasBeenDisapprovedFlag
+			}
+
+			console.log('mediatedSalesTransactionRecord =', mediatedSalesTransactionRecord);
+
+			currentMediatedSalesTransactionsGivenEthereumAddressInvolvedArray.push(mediatedSalesTransactionRecord);
+		}
+
+		createMediatedSalesTransactionsGivenEthereumAddressInvolvedTable();
+		$('#textViewMediatedSalesTransactionsEthereumAddressIsInvolvedNumberInvolvedResults').val(currentMediatedSalesTransactionsGivenEthereumAddressInvolvedArray.length);
+		hideInfo();
+	}
+
 	function clearViewDetailedInformationAboutItemBeingSoldBySeller() {
 		$('#textViewDetailedInformationAboutItemBeingSoldBySellerEthereumAddress').val('');
 		$('#textViewDetailedInformationAboutItemBeingSoldBySellerItemIpfsId').val('');
@@ -3927,6 +4763,61 @@ $(document).ready(function () {
 
         table_body += '</table>';
         $('#currentItemsBeingSoldByCurrentSellerViewTableResultsDiv').html(table_body);
+	}
+
+    function createMediatedSalesTransactionsGivenEthereumAddressInvolvedTable() {
+        var number_of_rows = currentMediatedSalesTransactionsGivenEthereumAddressInvolvedArray.length;
+        var number_of_cols = 7;
+
+        var table_body = '<table style="width:100%">';
+        table_body += '<tr>';
+		table_body += '<th>Mediated Sales Transaction IPFS ID</th>';
+		table_body += '<th>Buyer Ethereum Address</th>';
+		table_body += '<th>Seller Ethereum Address</th>';
+		table_body += '<th>Mediator Ethereum Address</th>';
+		table_body += '<th>Sales Amount (in ETH)</th>';
+		table_body += '<th>Approved</th>';
+		table_body += '<th>Disapproved</th>';
+  		table_body += '</tr>';
+
+        for (var i = 0 ; i < number_of_rows; i++) {
+			table_body += '<tr>';
+            for (var j = 0; j < number_of_cols; j++) {
+            	table_body += '<td>';
+
+				let rowData = currentMediatedSalesTransactionsGivenEthereumAddressInvolvedArray[i];
+                let table_data = '';
+                if (j === 0) {
+					table_data += rowData.mediatedSalesTransactionIpfsId;
+				}
+				else if (j === 1) {
+					table_data += rowData.buyerEthereumAddress;
+				}
+				else if (j === 2) {
+					table_data += rowData.sellerEthereumAddress;
+				}
+				else if (j === 3) {
+					table_data += rowData.mediatorEthereumAddress;
+				}
+				else if (j === 4) {
+					table_data += rowData.salesAmountInETH;
+				}
+				else if (j === 5) {
+					table_data += rowData.approved;
+				}
+				else if (j === 6) {
+					table_data += rowData.disapproved;
+				}
+
+                table_body += table_data;
+                table_body += '</td>';
+             }
+
+             table_body += '</tr>';
+        }
+
+        table_body += '</table>';
+        $('#viewMediatedSalesTransactionsEthereumAddressIsInvolvedTableResultsDiv').html(table_body);
 	}
 
 	// Reference --> https://www.reddit.com/r/ethdev/comments/8dyfyr/how_to_make_metamask_accept_promiseswait_for
