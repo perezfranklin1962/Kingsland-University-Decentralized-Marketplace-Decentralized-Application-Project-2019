@@ -2007,15 +2007,15 @@ $(document).ready(function () {
 
 		let successString = undefined;
 		if (setPriceOfItemResponse_TxHash !== undefined && setQuantityAvailableForSaleOfAnItemResponse_TxHash === undefined) {
-			successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has successfully had it's Unit Price set ` +
+			successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has <b>successfully</b> had it's Unit Price set ` +
 				`to ${unitPriceInWei_BigInt.toString()} WEI. Transaction hash: ${setPriceOfItemResponse_TxHash}`;
 		}
 		else if (setPriceOfItemResponse_TxHash === undefined && setQuantityAvailableForSaleOfAnItemResponse_TxHash !== undefined) {
-			successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has successfully had it's Quantity Available ` +
+			successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has <b>successfully</b> had it's Quantity Available ` +
 				`set to ${quantityAvailable_BigInt.toString()}. Transaction hash: ${setQuantityAvailableForSaleOfAnItemResponse_TxHash}`;
 		}
 		else {
-			successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has successfully had it's Unit Price set ` +
+			successString = `Item IPFS ID ${itemIpfsHashId} for Seller Ethereum Address ${currentMetamaskEthereumAddress} has <b>successfully</b> had it's Unit Price set ` +
 				`to ${unitPriceInWei_BigInt.toString()} WEI and it's Quantity Available set to ${quantityAvailable_BigInt.toString()}. ` +
 				`Transaction hashes: ${setPriceOfItemResponse_TxHash} and ${setQuantityAvailableForSaleOfAnItemResponse_TxHash}`;
 		}

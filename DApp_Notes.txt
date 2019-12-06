@@ -9,19 +9,20 @@ Mediator Ethereum Addreseses (from my Metamask Chrome Plugin)
 -------------------------------------------------------------
 1) Account 2: 0xB3fEf2923c9406678a95626F14DaCd4b054B2A12
 2) Account 3: 0x4Ace507d182cA40974A3EAe4406215bD0A8eC706
+3) Account 4: 0x60893A749520aAe711b1aE96Af65F1eD169feD30 (Added and then Deleted as Seller)
 
 
 Seller Ethereum Addresses (from my Metamask Chrome Plugin)
 ------------------------------------------------------------
 1) Account 6: 0x03e7a2ed36eb7188c91c112e7a05742acb221136
 2) Account 7: 0x41B5Aff1Affebf369690de7e8b741faFE755790c
-3) Account 8: 0xde424C7E4025937c86756DF4fEa9a4d0DF752007 (Added and Then Deleted as Seller)
+3) Account 8: 0xde424C7E4025937c86756DF4fEa9a4d0DF752007 (Added and then Deleted as Seller)
 
 
 Buyer Ethereum Addresses (from my Metamask Chrome Plugin)
 -----------------------------------------------------------
 1) Account 11: 0x40E2D2E930F4C75582f3cdb74df8A871a645c517 (Bought Item without use of Mediator)
-   a) Balance before Purchase: 25 ETH
+   a) Balance of Buyer before Purchase: 25 ETH
    b) Balance of Seller (0x41b5aff1affebf369690de7e8b741fafe755790c) before Sale: 24.998592603 ETH
    c) Purchase Amount: 0.63 ETH
    d) Gas Fee (Metamask): 0.000092 ETH
@@ -36,6 +37,79 @@ Buyer Ethereum Addresses (from my Metamask Chrome Plugin)
    g) Transaction Hash ID on Ethereum Blockchain: 0x684c7d6e4bcb1c728eeba5eda563266bda3ad3437c03954f3537a882003209a8
       a) Value: 0.63 ETH
       b) Transaction Fee: 0.000061216 ETH
-   h) Balance after Purchase: 24.369938784 ETH
-   i) Balance of  
+   h) Balance of Buyer after Purchase: 24.369938784 ETH
+   i) Balance of Seller (0x41b5aff1affebf369690de7e8b741fafe755790c) after Sale: 25.628592603
    j) Note Quantity Before And After - Note Balances Before and After
+
+2) Account 12: 0x7C09304bF27e336f27770938EbeE5968632C55Df (Bought Item with use of Mediator - Approval done by Buyer and Mediator)
+   a) Balance of Buyer before Purchase: 25 ETH
+   b) Balance of Seller (0x03e7a2ed36eb7188c91c112e7a05742acb221136) before Purchase: 24.998532054 ETH
+   c) Balance of Mediator (0xb3fef2923c9406678a95626f14dacd4b054b2a12) before Purchase: 24.999687850999910626 ETH
+   d) Balance of Franklin Decentralized Marketplace Mediation Smart Contract before Purchase: 0 ETH
+   e) Purchase Amount: 3 ETH
+   f) Gas Fee (Metamask): 0.000732 ETH
+   g) Total (AMOUNT + GAS FEE, Metamask): 3.000732 ETH
+   h) Successfully created Mediated Sales Transaction ID QmZ6adkDNGVRkHhGN1prbb9bVtbq3LAScR1VG6fx9UfmEL Escrow purchase on Ethereum Blockchain WITH Mediator...
+	Buyer Public Ethereum Address: 0x7c09304bf27e336f27770938ebee5968632c55df
+	Seller Public Ethereum Address: 0x03e7a2ed36eb7188c91c112e7a05742acb221136
+	Mediator Public Ethereum Address: 0xb3fef2923c9406678a95626f14dacd4b054b2a12
+	Item IPFS ID Purchased: QmQQxYJBEtjamG6Et62WuriAnDWDuVN5vjDLSfAbY3k9MM
+	Quantity of the Item Purchased: 2
+	Total Purchase Amount (in ETH): 3
+	Transaction Hash ID on Ethereum Blockchain: 0xd649ca538c46dfadcf14a7d0c5922fb13cdffbad39cd1a703a8cdc144b609235
+	Mediated Sales Transaction IPFS ID: QmZ6adkDNGVRkHhGN1prbb9bVtbq3LAScR1VG6fx9UfmEL
+
+	The ETH for this purchase has been sent in Escrow temporarily to the FranklinDecentralizedMarketplaceMediation Smart Contract located at the 0x79fb169CbeDCc388b39Cb9189337Cc30700a094f Ethereum
+ 	Address until 2-out-of-3 of the Buyer, Seller, and/or Mediator decide whether to Approve or Disapprove this Mediated Sales Transaction. The three parties involved in this Mediated Sales Transaction
+        will need to communicate with each other on how to proceed further. Upon 2-out-of-3 of the Buyer, Seller, and/or Mediator doing Approval or Disapproval - whichever comed first - the ETH Amount held
+        in Escrow by the FranklinDecentralizedMarketplaceMediation Smart Contract will be sent from Escrow Smart Contract Account to the appropriate parties as explained in the "Home" Tab of this DApp.
+
+	You may see information about this Mediated Sales Transaction by going to the https://ipfs.infura.io/ipfs/QmZ6adkDNGVRkHhGN1prbb9bVtbq3LAScR1VG6fx9UfmEL web page. You may also do appropriate 
+	queries on the "Purchases" Tab of this DApp.
+   i) Transaction Hash ID on Ethereum Blockchain: 0xd649ca538c46dfadcf14a7d0c5922fb13cdffbad39cd1a703a8cdc144b609235
+      A) Value: 3 ETH
+      B) Real Transaction Fee: 0.000488137 ETH
+   j) Balance of Buyer after Purchase: 21.999511863 ETH
+   k) Balance of Franklin Decentralized Marketplace Mediation Smart Contract after Purchase: 3 ETH
+   l) Buyer Approves Mediated Sales Transaction - Transaction Hash ID on Ethereum Blockchain: 0x4fa748c762c99d8612aa67138e7cff8c8c0b421e7738b2fdc244cbe82cc2b6d4
+      A) Balance before Approval: 21.999511863
+      B) Gas Fee (Metamask): 0.000104 ETH
+      C) Total (AMOUNT + GAS FEE, Metamask): 0.000104 ETH
+      D) Real Transaction Fee (Zero Amount): 0.000069395 ETH
+      E) Balance after Approval: 21.999442468 ETH
+   m) Mediator (0xb3fef2923c9406678a95626f14dacd4b054b2a12) Approves Mediated Sales Transaction - Transaction Hash ID on Ethereum Blockchain: 0x8a547290d336d04a2978effb07303353e0f73bce93c6801bca46703250966f5f
+      A) Balance of Mediator before Approval: 24.999687850999910626 ETH
+      B) Balance of Seller (0x03e7a2ed36eb7188c91c112e7a05742acb221136) before Approval: 24.998532054 ETH
+      C) Gas Fee (Metamask): 0.000118 ETH
+      D) Total (AMOUNT + GAS FEE, Metamask): 0.000118 ETH
+      E) Balance of Mediator after Approval: 25.149609182999910626 ETH
+      F) Balance of Seller (0x03e7a2ed36eb7188c91c112e7a05742acb221136) after Approval: 27.848532054
+      G) Transaction Details:
+         1) Amount going to Seller (0x03e7a2ed36eb7188c91c112e7a05742acb221136): 2.85 ETH --> 95% of 3 ETH
+         2) Amount going to Mediator: 0.15 ETH --> 5% of 3 ETH
+         3) Real Transaction Fee Paid by Mediator: 0.000078668 ETH
+
+3) Account 13: 0x1384796089935d0cd88c924a7427d9a32818abac (Bought Item with use of Mediator - Disapproval done by Buyer and Mediator)
+   a) Successfully created Mediated Sales Transaction ID QmNiG1wWYXd7gMYbcYEZyRnoMHkqNc4Ef3QUqHCbYnkLZB Escrow purchase on Ethereum Blockchain WITH Mediator...
+
+	Buyer Public Ethereum Address: 0x1384796089935d0cd88c924a7427d9a32818abac
+	Seller Public Ethereum Address: 0x03e7a2ed36eb7188c91c112e7a05742acb221136
+	Mediator Public Ethereum Address: 0xb3fef2923c9406678a95626f14dacd4b054b2a12
+	Item IPFS ID Purchased: QmQQxYJBEtjamG6Et62WuriAnDWDuVN5vjDLSfAbY3k9MM
+	Quantity of the Item Purchased: 2
+	Total Purchase Amount (in ETH): 3
+	Transaction Hash ID on Ethereum Blockchain: 0x9cc5d3d4b8afff3ef21a829b857acb9a72422abeae5cc3cd5cf9d29626d7a984
+	Mediated Sales Transaction IPFS ID: QmNiG1wWYXd7gMYbcYEZyRnoMHkqNc4Ef3QUqHCbYnkLZB
+
+	The ETH for this purchase has been sent in Escrow temporarily to the FranklinDecentralizedMarketplaceMediation Smart Contract located at the 0x79fb169CbeDCc388b39Cb9189337Cc30700a094f Ethereum Address 
+	until 2-out-of-3 of the Buyer, Seller, and/or Mediator decide whether to Approve or Disapprove this Mediated Sales Transaction. The three parties involved in this Mediated Sales Transaction will need to
+ 	communicate with each other on how to proceed further. Upon 2-out-of-3 of the Buyer, Seller, and/or Mediator doing Approval or Disapproval - whichever comed first - the ETH Amount held in Escrow by the
+	FranklinDecentralizedMarketplaceMediation Smart Contract will be sent from Escrow Smart Contract Account to the appropriate parties as explained in the "Home" Tab of this DApp.
+
+	You may see information about this Mediated Sales Transaction by going to the https://ipfs.infura.io/ipfs/QmNiG1wWYXd7gMYbcYEZyRnoMHkqNc4Ef3QUqHCbYnkLZB web page. You may also do appropriate queries on the 
+        "Purchases" Tab of this DApp.
+   b) Buyer Disapproves --> Ethereum Transaction Hash ID 0x065a1b91c1a396f94e74b343df2e57bf8de08cbef221caea6d9c28cd41922946
+   c) Seller Approves ---> Ethereum Transaction Hash ID 0xd4f23873f47da4ed167c37032c34444697a4e3c85038054473c897a12265efa5
+   d) Mediator Approves ---> Ethereum Transaction Hash ID 0xc8cddeb7ce5d8459de4054419ffd3bcd9bba7f0b08860e13d1fda06873fa8e08
+      --> Buyer gets back his/her entire 3 ETH of the purchase amount
+      
