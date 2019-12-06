@@ -9,3 +9,33 @@ Mediator Ethereum Addreseses (from my Metamask Chrome Plugin)
 -------------------------------------------------------------
 1) Account 2: 0xB3fEf2923c9406678a95626F14DaCd4b054B2A12
 2) Account 3: 0x4Ace507d182cA40974A3EAe4406215bD0A8eC706
+
+
+Seller Ethereum Addresses (from my Metamask Chrome Plugin)
+------------------------------------------------------------
+1) Account 6: 0x03e7a2ed36eb7188c91c112e7a05742acb221136
+2) Account 7: 0x41B5Aff1Affebf369690de7e8b741faFE755790c
+3) Account 8: 0xde424C7E4025937c86756DF4fEa9a4d0DF752007 (Added and Then Deleted as Seller)
+
+
+Buyer Ethereum Addresses (from my Metamask Chrome Plugin)
+-----------------------------------------------------------
+1) Account 11: 0x40E2D2E930F4C75582f3cdb74df8A871a645c517 (Bought Item without use of Mediator)
+   a) Balance before Purchase: 25 ETH
+   b) Balance of Seller (0x41b5aff1affebf369690de7e8b741fafe755790c) before Sale: 24.998592603 ETH
+   c) Purchase Amount: 0.63 ETH
+   d) Gas Fee (Metamask): 0.000092 ETH
+   e) Total (AMOUNT + GAS FEE, Metamask): 0.630092ETH
+   f) Successful purchase made on Ethereum Blockchain WITHOUT Mediator...
+	Buyer Ethereum Address: 0x40e2d2e930f4c75582f3cdb74df8a871a645c517
+	Seller Ethereum Address: 0x41b5aff1affebf369690de7e8b741fafe755790c
+	Item IPFS ID Purchased: QmQQxYJBEtjamG6Et62WuriAnDWDuVN5vjDLSfAbY3k9MM
+	Quantity of the Item Purchased: 2
+	Total Purchase Amount (in ETH): 0.63
+	Transaction Hash ID on Ethereum Blockchain: 0x684c7d6e4bcb1c728eeba5eda563266bda3ad3437c03954f3537a882003209a8
+   g) Transaction Hash ID on Ethereum Blockchain: 0x684c7d6e4bcb1c728eeba5eda563266bda3ad3437c03954f3537a882003209a8
+      a) Value: 0.63 ETH
+      b) Transaction Fee: 0.000061216 ETH
+   h) Balance after Purchase: 24.369938784 ETH
+   i) Balance of  
+   j) Note Quantity Before And After - Note Balances Before and After
