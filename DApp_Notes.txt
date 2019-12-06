@@ -1,0 +1,11 @@
+Smart Contract Deploymnents on Ethereum Ropsten Test Network
+--------------------------------------------------------------
+1) Owner of the Smart Contracts (Account 1 of my Metamask Chrome Plugin): 0x89ae2e0e0be3043b0b656d578233fc3705a306b7
+2) FranklinDecentralizedMarketplace Contract Address: 0xc6224EE6074A9D223B410EC2fF68198F87A9C34d
+3) FranklinDecentralizedMarketplaceMediation Contract Address: 0x79fb169CbeDCc388b39Cb9189337Cc30700a094f
+
+
+Mediator Ethereum Addreseses (from my Metamask Chrome Plugin)
+-------------------------------------------------------------
+1) Account 2: 0xB3fEf2923c9406678a95626F14DaCd4b054B2A12
+2) Account 3: 0x4Ace507d182cA40974A3EAe4406215bD0A8eC706

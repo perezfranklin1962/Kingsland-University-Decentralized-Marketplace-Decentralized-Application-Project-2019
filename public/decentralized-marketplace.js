@@ -1,5 +1,6 @@
 $(document).ready(function () {
-	const decentralizedMarketplaceContractAddress = "0xC1f5106f4df7d679b6a2df9c0E3ac3E555CCd6Aa";
+	// const decentralizedMarketplaceContractAddress = "0xC1f5106f4df7d679b6a2df9c0E3ac3E555CCd6Aa";
+	const decentralizedMarketplaceContractAddress = "0xc6224EE6074A9D223B410EC2fF68198F87A9C34d"; // Ethereum Ropsten Test Network
 	const decentralizedMarketplaceContractABI = [
 		{
 		  "constant": true,
@@ -472,7 +473,8 @@ $(document).ready(function () {
 		}
   	];
 
-  	const decentralizedMarketplaceMediationContractAddress = "0xD4117eb19678E6dB410c53268542c8eedf36fff9";
+  	// const decentralizedMarketplaceMediationContractAddress = "0xD4117eb19678E6dB410c53268542c8eedf36fff9";
+  	const decentralizedMarketplaceMediationContractAddress = "0x79fb169CbeDCc388b39Cb9189337Cc30700a094f"; // Ethereum Ropsten Test Network
   	const decentralizedMarketplaceMediationContractABI = [
 		{
 		  "constant": true,
